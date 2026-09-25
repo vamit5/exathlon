@@ -260,8 +260,10 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
 .winbanner b{font-family:var(--display);font-weight:800;font-size:40px;line-height:1;letter-spacing:.04em}
 .winbanner span{font-weight:700;font-size:15px}
 @keyframes winIn{0%{opacity:0;transform:translate(-50%,-50%) scale(.5)}12%{opacity:1;transform:translate(-50%,-50%) scale(1)}85%{opacity:1}100%{opacity:0;transform:translate(-50%,-60%) scale(1)}}
-.rules{margin:-6px 0 14px;font-size:13px;color:var(--dim);line-height:1.5}
+.rules{margin:-6px 0 14px;padding:12px 14px;border-radius:var(--r);background:var(--panel);border:1px solid var(--line);font-size:13px;color:var(--dim);line-height:1.5}
 .rules b{color:var(--metal)}
+.rules ol{margin:6px 0 0;padding-left:20px}
+.rules li{padding:1px 0}
 .empty.hotmsg{background:linear-gradient(100deg,rgba(255,59,43,.2),var(--panel) 70%);border:1px solid rgba(255,122,26,.5);color:var(--text);font-family:var(--display);font-weight:800;font-size:22px;letter-spacing:.02em}
 /* tab bar */
 .tabbar{display:none}
@@ -349,7 +351,8 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
   <section class="screen" id="s-rang">
     <div class="pagehead"><h1>Rang lista</h1>
       <div class="seg" id="rangSeg"><button data-m="danas" aria-pressed="true">DANAS</button><button data-m="ukupno" aria-pressed="false">UKUPNO</button></div></div>
-    <p class="rules">Redosled: <b>1.</b> više pogodaka · <b>2.</b> manje promašaja · <b>3.</b> duži niz pogodaka zaredom · <b>4.</b> ko je ranije glasao. Ako je sve isto, igrači dele mesto.</p>
+    <div class="rules"><b>Rangiranje u slučaju istog broja poena:</b>
+      <ol><li>Najduži niz pogodaka zaredom</li><li>Ko je ranije glasao</li><li>Ako je i to isto, igrači dele mesto</li></ol></div>
     <div class="board" id="board"></div>
   </section>
 
@@ -525,9 +528,9 @@ function standings(day){
     const n=Object.keys(p.picks||{}).filter(id=>day?inDay(id):S.DUELS.some(x=>x.id===id)).length;
     return {uid,nick:(p.nick||'').trim(),c,w,n,best,lead:k?lead/k:0};})
     .filter(x=>x.nick&&x.n>0)
-    .sort((a,b)=>b.c-a.c||a.w-b.w||b.best-a.best||b.lead-a.lead||a.nick.localeCompare(b.nick,'sr'));
+    .sort((a,b)=>b.c-a.c||b.best-a.best||b.lead-a.lead||a.nick.localeCompare(b.nick,'sr'));
   // deljeno mesto kad je sve isto
-  list.forEach((x,i)=>{const q=list[i-1];x.rank=(q&&q.c===x.c&&q.w===x.w&&q.best===x.best&&Math.abs(q.lead-x.lead)<1000)?q.rank:i+1;});
+  list.forEach((x,i)=>{const q=list[i-1];x.rank=(q&&q.c===x.c&&q.best===x.best&&Math.abs(q.lead-x.lead)<1000)?q.rank:i+1;});
   return list;
 }
 function crowd(d){let a=0,b=0;for(const p of Object.values(S.PLAYERS)){const v=p.picks&&p.picks[d.id];if(v==='a')a++;else if(v==='b')b++;}return {a,b,t:a+b};}
@@ -650,7 +653,7 @@ let rangMode='danas';
 $('#rangSeg').onclick=e=>{const b=e.target.closest('button');if(!b)return;rangMode=b.dataset.m;$('#rangSeg').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));renderBoard();};
 function renderBoard(){
   if(!S.ready)return;const day=rangMode==='danas',list=standings(day?todayBG():null);
-  $('#board').innerHTML=list.length?list.map((p,i)=>`<div class="brow${p.rank===1?' first':''}${p.uid===S.uid?' me':''}"><span class="rk">${p.rank}</span><span class="un">${esc(p.nick)}</span><span class="pt">${p.c}<small>${p.c+p.w?'od '+(p.c+p.w):'čeka rezultat'}</small></span></div>`).join('')
+  $('#board').innerHTML=list.length?list.map((p,i)=>`<div class="brow${p.rank===1?' first':''}${p.uid===S.uid?' me':''}"><span class="rk">${p.rank}</span><span class="un">${esc(p.nick)}</span><span class="pt">${p.c}<small>${p.c+p.w?`od ${p.c+p.w} · niz ${p.best}`:'čeka rezultat'}</small></span></div>`).join('')
     :`<div class="empty">${day?'Danas još niko nije dao prognozu.':'Još niko nije dao prognozu.'}</div>`;
 }
 
