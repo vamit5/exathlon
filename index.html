@@ -720,12 +720,18 @@ function renderAdmin(){
       <select data-f="status" aria-label="Status">${STATUSES.map(s=>`<option>${s}</option>`).join('')}</select>
       <label class="upl">${a.photo?'Promeni sliku':'Dodaj sliku'}<input type="file" accept="image/*" data-k="p"></label>
       <label class="upl ghost">360° snimci<input type="file" accept="image/*" multiple data-k="f"></label>
-      ${a.photo?'<button type="button" class="guest" data-rm="1" style="padding:2px">Ukloni sliku</button>':''}</div></div>`).join('');
+      ${a.photo?'<button type="button" class="guest" data-rm="1" style="padding:2px">Ukloni sliku</button>':''}
+      <button type="button" class="guest" data-del="1" style="padding:2px;color:var(--loss)">Obriši takmičara</button></div></div>`).join('');
     hydrate(box);
     box.querySelectorAll('.aath').forEach(c=>{const a=S.ATH[c.dataset.a];
       c.querySelector('[data-f="tim"]').value=a.team;c.querySelector('[data-f="status"]').value=STATUSES.includes(a.status)?a.status:'Aktivan';
       c.querySelectorAll('select').forEach(s=>s.onchange=async()=>{if(await w(S.sb.from('athletes').update({[s.dataset.f]:s.value}).eq('id',a.id),'Sačuvano')){await loadAthletes();renderAll();}});
       c.querySelectorAll('input[type=file]').forEach(i=>i.onchange=()=>upload(a,i));
+      const del=c.querySelector('[data-del]');del.onclick=async()=>{
+        if(!del.dataset.sure){const n=S.DUELS.filter(d=>d.a===a.id||d.b===a.id).length;del.dataset.sure=1;del.textContent=n?`Potvrdi brisanje (ima ${n} ${n===1?'duel':'duela'})`:'Potvrdi brisanje';return;}
+        const {data,error}=await S.sb.from('athletes').delete().eq('id',a.id).select('id');
+        if(error||!data||!data.length){toast(error?'Brisanje nije uspelo: '+error.message:'Nemaš admin dozvolu.');return;}
+        toast('Takmičar je obrisan');await loadAthletes();renderAll();};
       const rm=c.querySelector('[data-rm]');if(rm)rm.onclick=async()=>{if(await w(S.sb.from('athletes').update({portret:null,snimci:[]}).eq('id',a.id),'Slika je uklonjena')){await loadAthletes();renderAll();}};});
   }
 }
