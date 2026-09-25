@@ -352,7 +352,7 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
     <div class="pagehead"><h1>Rang lista</h1>
       <div class="seg" id="rangSeg"><button data-m="danas" aria-pressed="true">DANAS</button><button data-m="ukupno" aria-pressed="false">UKUPNO</button></div></div>
     <div class="rules"><b>Rangiranje u slučaju istog broja poena:</b>
-      <ol><li>Najduži niz pogodaka zaredom</li><li>Ko je ranije glasao</li><li>Ako je i to isto, igrači dele mesto</li></ol></div>
+      <ol><li>Bolji procenat pogodaka (7 od 9 je ispred 7 od 14)</li><li>Najduži niz pogodaka zaredom</li><li>Ko je ranije glasao</li><li>Ako je i to isto, igrači dele mesto</li></ol></div>
     <div class="board" id="board"></div>
   </section>
 
@@ -528,9 +528,9 @@ function standings(day){
     const n=Object.keys(p.picks||{}).filter(id=>day?inDay(id):S.DUELS.some(x=>x.id===id)).length;
     return {uid,nick:(p.nick||'').trim(),c,w,n,best,lead:k?lead/k:0};})
     .filter(x=>x.nick&&x.n>0)
-    .sort((a,b)=>b.c-a.c||b.best-a.best||b.lead-a.lead||a.nick.localeCompare(b.nick,'sr'));
+    .sort((a,b)=>b.c-a.c||(b.c/(b.c+b.w||1))-(a.c/(a.c+a.w||1))||b.best-a.best||b.lead-a.lead||a.nick.localeCompare(b.nick,'sr'));
   // deljeno mesto kad je sve isto
-  list.forEach((x,i)=>{const q=list[i-1];x.rank=(q&&q.c===x.c&&q.best===x.best&&Math.abs(q.lead-x.lead)<1000)?q.rank:i+1;});
+  list.forEach((x,i)=>{const q=list[i-1];x.rank=(q&&q.c===x.c&&q.w===x.w&&q.best===x.best&&Math.abs(q.lead-x.lead)<1000)?q.rank:i+1;});
   return list;
 }
 function crowd(d){let a=0,b=0;for(const p of Object.values(S.PLAYERS)){const v=p.picks&&p.picks[d.id];if(v==='a')a++;else if(v==='b')b++;}return {a,b,t:a+b};}
@@ -653,7 +653,7 @@ let rangMode='danas';
 $('#rangSeg').onclick=e=>{const b=e.target.closest('button');if(!b)return;rangMode=b.dataset.m;$('#rangSeg').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));renderBoard();};
 function renderBoard(){
   if(!S.ready)return;const day=rangMode==='danas',list=standings(day?todayBG():null);
-  $('#board').innerHTML=list.length?list.map((p,i)=>`<div class="brow${p.rank===1?' first':''}${p.uid===S.uid?' me':''}"><span class="rk">${p.rank}</span><span class="un">${esc(p.nick)}</span><span class="pt">${p.c}<small>${p.c+p.w?`od ${p.c+p.w} · niz ${p.best}`:'čeka rezultat'}</small></span></div>`).join('')
+  $('#board').innerHTML=list.length?list.map((p,i)=>`<div class="brow${p.rank===1?' first':''}${p.uid===S.uid?' me':''}"><span class="rk">${p.rank}</span><span class="un">${esc(p.nick)}</span><span class="pt">${p.c}<small>${p.c+p.w?`od ${p.c+p.w} · ${Math.round(p.c/(p.c+p.w)*100)}% · niz ${p.best}`:'čeka rezultat'}</small></span></div>`).join('')
     :`<div class="empty">${day?'Danas još niko nije dao prognozu.':'Još niko nije dao prognozu.'}</div>`;
 }
 
