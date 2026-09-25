@@ -3,621 +3,700 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#060708">
+<meta name="theme-color" content="#07080a">
 <title>Exatlon Liga</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Extra+Condensed:ital,wght@0,600;0,800;0,900;1,800;1,900&family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap">
 <style>
-*{box-sizing:border-box}html,body{margin:0}img{max-width:100%}[hidden]{display:none!important}
-:root{padding-top:env(safe-area-inset-top,0px)}
 :root{
   color-scheme:dark;
-  --bg:#060708; --carbon:#0c0e11; --panel:#111317; --panel-2:#171a1f; --line:#252930; --line-2:#343942;
-  --metal:#a3a9b3; --text:#eef0f3; --dim:#7b818b; --faint:#4a4f58;
-  --red:#ff2d1f; --orange:#ff7a18; --hot:linear-gradient(90deg,#ff2d1f,#ff7a18);
-  --team-red:#d4261c; --team-blue:#2f63ff;
-  --win:#3ddc84; --loss:#ff4d4d;
-  --display:"Saira Extra Condensed","Arial Narrow",Impact,sans-serif;
+  --bg:#07080a;--panel:#111318;--panel2:#181b21;--line:#242830;--line2:#323741;
+  --text:#f1f2f4;--metal:#a7acb5;--dim:#7c828c;--faint:#4d535c;
+  --red:#ff3b2b;--orange:#ff7a1a;--hot:linear-gradient(90deg,#ff3b2b,#ff7a1a);
+  --tred:#d8281d;--tblue:#2f66ff;--win:#34d37f;--loss:#ff5252;
+  --display:"Saira Condensed","Arial Narrow",system-ui,sans-serif;
   --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
-  --num:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
-  --cut:14px;
+  --r:10px;
 }
-html,body{height:100%}
-body{background:var(--bg);color:var(--text);font-family:var(--body);font-size:15px;line-height:1.45;overflow-x:hidden;-webkit-font-smoothing:antialiased}
 *{box-sizing:border-box}
-button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
-button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
-.carbon{background-color:var(--carbon);background-image:linear-gradient(45deg,rgba(255,255,255,.022) 25%,transparent 25%,transparent 75%,rgba(255,255,255,.022) 75%),linear-gradient(45deg,rgba(255,255,255,.022) 25%,transparent 25%,transparent 75%,rgba(255,255,255,.022) 75%);background-size:6px 6px;background-position:0 0,3px 3px}
-.cut{clip-path:polygon(var(--cut) 0,100% 0,100% calc(100% - var(--cut)),calc(100% - var(--cut)) 100%,0 100%,0 var(--cut))}
-.metal-edge{position:relative}
-.metal-edge::before{content:"";position:absolute;inset:0;pointer-events:none;border-top:1px solid rgba(255,255,255,.09);border-bottom:1px solid rgba(0,0,0,.6);background:linear-gradient(180deg,rgba(255,255,255,.035),transparent 30%)}
-#embers{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
-.stadium{position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse 70% 45% at 50% -8%,rgba(255,90,30,.16),transparent 70%),radial-gradient(ellipse 40% 30% at 12% 0%,rgba(255,255,255,.05),transparent 70%),radial-gradient(ellipse 40% 30% at 88% 0%,rgba(255,255,255,.05),transparent 70%)}
+html,body{margin:0;min-height:100%}
+body{background:var(--bg);color:var(--text);font-family:var(--body);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased;overflow-x:hidden;
+  background-image:radial-gradient(ellipse 80% 40% at 50% -10%,rgba(255,90,30,.14),transparent 70%)}
+img{max-width:100%}
+[hidden]{display:none!important}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
+input,select{font:inherit;color:var(--text)}
 
-/* top bar */
-.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;display:flex;align-items:center;gap:24px;padding:12px 24px;background:rgba(6,7,8,.82);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
-.logo{display:flex;align-items:baseline;gap:8px;font-family:var(--display);font-style:italic;font-weight:900;font-size:28px;letter-spacing:.02em;line-height:1;white-space:nowrap}
-.logo span{font-size:15px;font-weight:800;padding:3px 8px 2px;background:var(--hot);color:#fff;transform:skewX(-12deg);letter-spacing:.14em}
-.nav{display:flex;gap:4px;margin-left:12px}
-.nav button{font-family:var(--display);font-weight:800;font-size:17px;letter-spacing:.12em;padding:8px 14px;color:var(--dim);position:relative;transition:color .2s}
-.nav button[aria-current="page"]{color:var(--text)}
-.nav button[aria-current="page"]::after{content:"";position:absolute;left:14px;right:14px;bottom:0;height:3px;background:var(--hot);transform:skewX(-20deg)}
-.nav button:hover{color:var(--text)}
-.chip{margin-left:auto;display:flex;align-items:center;gap:10px;padding:6px 14px 6px 6px;background:var(--panel);border:1px solid var(--line)}
-.chip .hex{width:30px;height:30px;font-size:12px}
-.chip b{font-family:var(--num);font-size:18px;font-variant-numeric:tabular-nums}
-.chip small{display:block;font-size:10px;letter-spacing:.14em;color:var(--dim);line-height:1}
+/* header */
+.top{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:18px;padding:calc(10px + env(safe-area-inset-top,0px)) 20px 10px;background:rgba(7,8,10,.88);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.logo{font-family:var(--display);font-weight:800;font-size:24px;letter-spacing:.04em;line-height:1;white-space:nowrap}
+.logo b{color:var(--orange)}
+.nav{display:flex;gap:2px}
+.nav button{font-family:var(--display);font-weight:700;font-size:17px;letter-spacing:.06em;padding:8px 12px;color:var(--dim);border-radius:8px}
+.nav button[aria-current="page"]{color:var(--text);background:var(--panel2)}
+.chip{margin-left:auto;display:flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;background:var(--panel2);border:1px solid var(--line2);font-family:var(--display);font-weight:700;font-size:17px;white-space:nowrap}
+.chip i{font-style:normal;color:var(--orange)}
+main{max-width:980px;margin:0 auto;padding-inline:16px;padding-block:18px 110px}
+.screen{display:none}
+.screen.on{display:block;animation:fade .35s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}}
+.sec{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:28px 0 10px;font-family:var(--display);font-weight:700;font-size:18px;letter-spacing:.08em;color:var(--metal);text-transform:uppercase}
+.sec:first-child{margin-top:4px}
+.sec small{font-family:var(--body);font-weight:500;font-size:13px;letter-spacing:0;text-transform:none;color:var(--dim)}
+.muted{color:var(--dim);font-size:14px}
+.empty{padding:22px;border-radius:var(--r);background:var(--panel);color:var(--metal);text-align:center}
+.pagehead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:6px 0 16px}
+.pagehead h1{margin:0;font-family:var(--display);font-weight:800;font-size:34px;letter-spacing:.02em;line-height:1.1}
+.seg{display:inline-flex;padding:3px;border-radius:999px;background:var(--panel2);border:1px solid var(--line)}
+.seg button{font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:.08em;padding:7px 16px;border-radius:999px;color:var(--dim)}
+.seg button[aria-pressed="true"]{background:var(--text);color:#0b0c0f}
 
-main{position:relative;z-index:1;max-width:1240px;margin:0 auto;padding-inline:24px;padding-block:28px 120px}
-.screen{display:none;animation:screenIn .5s cubic-bezier(.2,.8,.2,1)}
-.screen.on{display:block}
-@keyframes screenIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
-
-.eyebrow{font-family:var(--num);font-weight:600;font-size:12px;letter-spacing:.24em;text-transform:uppercase;color:var(--orange)}
-.h1{font-family:var(--display);font-style:italic;font-weight:900;font-size:clamp(46px,8vw,92px);line-height:.86;letter-spacing:-.005em;text-transform:uppercase;margin:4px 0 0;text-wrap:balance}
-.h1 em{font-style:italic;background:var(--hot);-webkit-background-clip:text;background-clip:text;color:transparent}
-.screen-head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:26px}
-.sub{color:var(--dim);font-size:14px;max-width:52ch}
-.btn{font-family:var(--display);font-weight:800;font-size:18px;letter-spacing:.12em;padding:12px 22px;background:var(--hot);color:#fff;clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%);transition:filter .2s,transform .15s}
-.btn:hover{filter:brightness(1.12)}
-.btn:active{transform:scale(.97)}
-.btn.ghost{background:var(--panel-2);color:var(--text);box-shadow:inset 0 0 0 1px var(--line-2)}
-
-/* hexagon avatar */
-.hex{display:grid;place-items:center;width:40px;height:40px;clip-path:polygon(25% 3%,75% 3%,100% 50%,75% 97%,25% 97%,0 50%);background:linear-gradient(145deg,#3a3f48,#1a1d22);font-family:var(--display);font-weight:800;font-size:16px;letter-spacing:.04em;flex:none}
-
-/* ================= DUELS ================= */
-.duels{display:grid;gap:22px}
-.duel{position:relative;background:var(--panel);overflow:hidden}
-.duel-meta{position:relative;z-index:3;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 20px;font-family:var(--num);font-weight:600;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--metal)}
-.tag{display:inline-flex;align-items:center;gap:8px;color:var(--text)}
-.tag i{width:8px;height:8px;background:var(--orange);transform:rotate(45deg)}
-.stage{position:relative;display:grid;grid-template-columns:1fr auto 1fr;align-items:end;height:clamp(250px,34vw,380px);isolation:isolate}
-.stage::before{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(ellipse 40% 70% at 50% 100%,rgba(255,110,30,.20),transparent 70%),radial-gradient(ellipse 30% 80% at 20% 30%,rgba(212,38,28,.16),transparent 70%),radial-gradient(ellipse 30% 80% at 80% 30%,rgba(47,99,255,.14),transparent 70%)}
-.stage::after{content:"";position:absolute;left:0;right:0;bottom:0;height:40%;z-index:2;pointer-events:none;background:linear-gradient(0deg,var(--panel),transparent)}
-.side{position:relative;height:100%;min-width:0;transition:filter .6s ease,opacity .6s ease}
-.side canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
-.side.a canvas{left:12%}
-.side.b canvas{left:-12%}
-.nameplate{position:absolute;bottom:18px;z-index:3;display:grid;gap:2px}
-.side.a .nameplate{left:20px}
-.side.b .nameplate{right:20px;text-align:right}
-.nameplate b{font-family:var(--display);font-style:italic;font-weight:900;font-size:clamp(34px,5.4vw,64px);line-height:.85;letter-spacing:.01em}
-.nameplate span{font-family:var(--num);font-weight:600;font-size:13px;letter-spacing:.14em;color:var(--metal);text-transform:uppercase}
-.teamline{display:inline-flex;align-items:center;gap:8px}
-.teamline::before{content:"";width:14px;height:4px;background:var(--tc,var(--red));transform:skewX(-20deg)}
-.side.b .teamline{flex-direction:row-reverse}
-.vs{position:relative;z-index:4;align-self:center;font-family:var(--display);font-style:italic;font-weight:900;font-size:clamp(46px,7vw,84px);line-height:1;padding:0 4px;background:linear-gradient(180deg,#fff 20%,#9aa0aa 60%,#5a5f68);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 22px rgba(255,90,30,.55))}
-.vs::before{content:"";position:absolute;left:50%;top:-120px;bottom:-160px;width:2px;background:linear-gradient(180deg,transparent,rgba(255,122,24,.8),transparent);transform:translateX(-50%) skewX(-14deg);z-index:-1}
-.who{text-align:center;font-family:var(--display);font-weight:800;font-size:15px;letter-spacing:.34em;color:var(--metal);padding:6px 0 12px;position:relative;z-index:3}
-.picks{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 20px 22px;position:relative;z-index:3}
-.pick{position:relative;height:74px;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 22px;background:var(--panel-2);box-shadow:inset 0 0 0 1px var(--line-2);font-family:var(--display);font-style:italic;font-weight:900;font-size:clamp(24px,3.6vw,36px);letter-spacing:.03em;overflow:hidden;transition:background .3s,box-shadow .3s,transform .15s,opacity .4s,filter .4s}
-.pick.a{clip-path:polygon(0 0,100% 0,calc(100% - 18px) 100%,0 100%)}
-.pick.b{clip-path:polygon(18px 0,100% 0,100% 100%,0 100%);flex-direction:row-reverse}
-.pick small{font-family:var(--num);font-style:normal;font-weight:600;font-size:14px;letter-spacing:.1em;color:var(--dim)}
-.pick::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.22) 50%,transparent 70%);transform:translateX(-120%)}
-.pick:not(:disabled):hover{box-shadow:inset 0 0 0 1px var(--orange);background:#1c1f25}
-.pick:not(:disabled):active{transform:scale(.98)}
-.pick.sel{background:var(--hot);box-shadow:none;color:#fff}
-.pick.sel small{color:rgba(255,255,255,.85)}
-.pick.sel::after{animation:sweep .9s ease .1s}
-.pick.off{opacity:.38;filter:grayscale(1)}
+/* hero duel */
+.status{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.pill{white-space:nowrap;display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border-radius:999px;background:var(--panel2);border:1px solid var(--line2);font-size:13px;font-weight:600;color:var(--metal)}
+.pill b{color:var(--text)}
+.pill.live{background:var(--red);border-color:var(--red);color:#fff}
+.pill.live i{width:7px;height:7px;border-radius:50%;background:#fff;animation:blink 1.1s infinite}
+.pill.soon{border-color:rgba(255,122,26,.5);color:var(--orange)}
+@keyframes blink{50%{opacity:.25}}
+.hero{position:relative;border-radius:16px;overflow:hidden;background:var(--panel);border:1px solid var(--line)}
+.hero.live{border-color:rgba(255,59,43,.6);box-shadow:0 20px 60px -30px rgba(255,59,43,.6)}
+.hero-top{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px 16px 0}
+.hero-top .kind{font-size:13px;font-weight:600;letter-spacing:.06em;color:var(--dim);text-transform:uppercase;text-align:right}
+.faces{position:relative;display:grid;grid-template-columns:1fr auto 1fr;align-items:end;padding:10px 12px 0}
+.face{position:relative;display:grid;justify-items:center;gap:8px;min-width:0;transition:filter .5s,opacity .5s}
+.photo{position:relative;width:100%;max-width:260px;aspect-ratio:3/4;border-radius:12px;overflow:hidden;background:radial-gradient(ellipse at 50% 35%,color-mix(in srgb,var(--tc) 45%,#15171c),#0d0e11 75%)}
+.photo img,.photo canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 15%;display:block}
+.photo::after{content:"";position:absolute;inset:auto 0 0 0;height:35%;background:linear-gradient(0deg,rgba(0,0,0,.55),transparent)}
+.photo .team{position:absolute;left:8px;bottom:8px;z-index:1;font-size:11px;font-weight:700;letter-spacing:.1em;padding:3px 8px;border-radius:999px;background:var(--tc);color:#fff}
+.fname{font-family:var(--display);font-weight:800;font-size:clamp(24px,5vw,38px);line-height:1.05;letter-spacing:.02em;text-align:center;max-width:100%;overflow-wrap:anywhere;padding-inline:2px}
+.fsub{margin-top:-6px;font-size:13px;color:var(--dim);text-align:center}
+.mid{align-self:center;display:grid;justify-items:center;gap:4px;padding:0 8px;margin-bottom:60px}
+.vs{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:var(--bg);border:1px solid var(--line2);font-family:var(--display);font-weight:800;font-size:16px;color:var(--metal)}
+.score{font-family:var(--display);font-weight:800;font-size:clamp(46px,11vw,76px);line-height:1;font-variant-numeric:tabular-nums;white-space:nowrap}
+.score span{display:inline-block}
+.score .c{color:var(--faint);margin:0 4px}
+.score .bump{animation:bump .6s cubic-bezier(.2,1.5,.4,1)}
+@keyframes bump{0%{transform:scale(1.35);color:var(--orange)}}
+.target{font-size:12px;color:var(--dim);font-weight:600;letter-spacing:.06em}
+.hero[data-pick="a"] .face.b,.hero[data-pick="b"] .face.a{filter:grayscale(.9);opacity:.5}
+.picks{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:16px}
+.pick{min-height:58px;border-radius:12px;background:var(--panel2);border:1px solid var(--line2);font-family:var(--display);font-weight:800;font-size:clamp(18px,4vw,24px);letter-spacing:.03em;padding:6px 10px;overflow-wrap:anywhere;transition:transform .12s,background .2s,border-color .2s,opacity .3s}
+.pick:not(:disabled):hover{border-color:var(--orange)}
+.pick:not(:disabled):active{transform:scale(.97)}
+.pick.sel{background:var(--hot);border-color:transparent;color:#fff}
+.pick.off{opacity:.35}
 .pick:disabled{cursor:default}
-@keyframes sweep{to{transform:translateX(120%)}}
-.duel[data-pick="a"] .side.b,.duel[data-pick="b"] .side.a{filter:grayscale(.85) brightness(.55)}
-.duel[data-pick="a"] .side.a,.duel[data-pick="b"] .side.b{filter:drop-shadow(0 0 30px rgba(255,90,30,.35))}
-.stamp{position:absolute;left:50%;top:44%;z-index:6;transform:translate(-50%,-50%) rotate(-6deg) scale(2.2);opacity:0;pointer-events:none;font-family:var(--display);font-style:italic;font-weight:900;font-size:clamp(22px,3.4vw,34px);letter-spacing:.16em;white-space:nowrap;padding:8px 22px;border:3px solid #fff;color:#fff;background:rgba(255,45,31,.18);backdrop-filter:blur(3px)}
-.duel.locking .stamp{animation:stampIn .55s cubic-bezier(.2,1.6,.4,1) forwards,stampOut .5s ease 1.6s forwards}
-@keyframes stampIn{to{opacity:1;transform:translate(-50%,-50%) rotate(-6deg) scale(1)}}
-@keyframes stampOut{to{opacity:0;transform:translate(-50%,-60%) rotate(-6deg) scale(1)}}
-.duel.locking::after{content:"";position:absolute;inset:0;z-index:5;pointer-events:none;background:radial-gradient(circle at 50% 50%,rgba(255,122,24,.35),transparent 60%);animation:flash .9s ease forwards}
-@keyframes flash{from{opacity:1}to{opacity:0}}
-.split{position:relative;z-index:3;margin:-8px 20px 20px;display:none}
-.duel[data-pick] .split{display:block}
-.split .bar{display:flex;height:6px;background:var(--line)}
-.split .bar i{display:block;height:100%;background:var(--team-red);transition:width 1s cubic-bezier(.2,.8,.2,1)}
-.split .bar i+i{background:var(--team-blue)}
-.split .lbl{display:flex;justify-content:space-between;margin-top:6px;font-family:var(--num);font-size:12px;letter-spacing:.14em;color:var(--dim);text-transform:uppercase}
-.lockline{color:var(--orange)}
+.hint{padding:0 16px 16px;margin-top:-4px;font-size:13px;color:var(--dim);text-align:center}
+.split{padding:0 16px 16px}
+.split .bar{display:flex;height:6px;border-radius:999px;overflow:hidden;background:var(--line)}
+.split .bar i{display:block;height:100%;background:var(--tred);transition:width .8s}
+.split .bar i+i{background:var(--tblue)}
+.split .lbl{display:flex;justify-content:space-between;margin-top:6px;font-size:12px;color:var(--dim);font-weight:600}
+.hero.locking::after{content:"✓ PROGNOZA ZAKLJUČANA";position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);padding:10px 18px;border-radius:999px;background:var(--hot);color:#fff;font-family:var(--display);font-weight:800;font-size:18px;letter-spacing:.08em;white-space:nowrap;animation:stamp 1.8s ease forwards;pointer-events:none}
+@keyframes stamp{0%{opacity:0;transform:translate(-50%,-50%) scale(1.6)}15%{opacity:1;transform:translate(-50%,-50%) scale(1)}80%{opacity:1}100%{opacity:0}}
 
-/* LIVE */
-.duel.live{background:#0b0c0f;box-shadow:0 0 0 1px rgba(255,45,31,.35),0 30px 80px -30px rgba(255,45,31,.45)}
-.duel.live .stage{height:clamp(270px,36vw,400px)}
-.duel.live .stage::before{background:radial-gradient(ellipse 50% 80% at 50% 110%,rgba(255,60,20,.35),transparent 70%),radial-gradient(ellipse 30% 80% at 20% 30%,rgba(212,38,28,.22),transparent 70%),radial-gradient(ellipse 30% 80% at 80% 30%,rgba(47,99,255,.2),transparent 70%)}
-.livepill{display:inline-flex;align-items:center;gap:8px;padding:4px 12px 3px;background:var(--red);color:#fff;font-family:var(--display);font-weight:900;font-style:italic;font-size:16px;letter-spacing:.2em;transform:skewX(-10deg)}
-.livepill i{width:8px;height:8px;border-radius:50%;background:#fff;animation:pulse 1.2s infinite}
-@keyframes pulse{50%{opacity:.2}}
-.scoreboard{position:relative;z-index:4;align-self:center;display:grid;justify-items:center;gap:6px;padding:0 6px}
-.score{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:900;font-size:clamp(64px,11vw,128px);line-height:.8;font-variant-numeric:tabular-nums}
-.score .d{display:inline-block;min-width:.55em;text-align:center}
-.score .c{color:var(--faint);font-size:.6em}
-.score .d.bump{animation:bump .7s cubic-bezier(.2,1.5,.4,1)}
-@keyframes bump{0%{transform:translateY(-30%) scale(1.25);color:var(--orange);text-shadow:0 0 30px var(--orange)}100%{transform:none}}
-.target{font-family:var(--num);font-weight:600;font-size:12px;letter-spacing:.2em;color:var(--metal);text-transform:uppercase;text-align:center}
-.livepanel{position:relative;z-index:3;display:grid;grid-template-columns:1fr 1fr;gap:14px 24px;padding:0 20px 20px}
-.prog{display:grid;gap:6px}
-.prog .row{display:flex;justify-content:space-between;font-family:var(--num);font-weight:600;font-size:13px;letter-spacing:.12em;color:var(--metal)}
-.prog .track{height:8px;background:var(--line);overflow:hidden;clip-path:polygon(4px 0,100% 0,calc(100% - 4px) 100%,0 100%)}
-.prog .track i{display:block;height:100%;width:0;transition:width .8s cubic-bezier(.2,.8,.2,1)}
-.prog.b .row{flex-direction:row-reverse}
-.prog.b .track{transform:scaleX(-1)}
-.momentum{grid-column:1/-1;display:grid;gap:6px}
-.mom-track{position:relative;height:14px;background:linear-gradient(90deg,rgba(212,38,28,.25),var(--line) 50%,rgba(47,99,255,.25))}
-.mom-track::before{content:"";position:absolute;left:50%;top:-3px;bottom:-3px;width:2px;background:var(--metal)}
-.mom-knob{position:absolute;top:50%;left:50%;width:18px;height:18px;background:#fff;transform:translate(-50%,-50%) rotate(45deg);box-shadow:0 0 16px var(--orange);transition:left 1s cubic-bezier(.2,.8,.2,1)}
-.feed{grid-column:1/-1;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-family:var(--num);font-size:13px;letter-spacing:.1em;color:var(--dim);text-transform:uppercase}
-.feed b{color:var(--text);font-weight:700}
-.winner-banner{position:absolute;inset:0;z-index:7;display:grid;place-items:center;background:rgba(6,7,8,.72);opacity:0;pointer-events:none;transition:opacity .5s}
-.winner-banner.on{opacity:1}
-.winner-banner div{text-align:center;font-family:var(--display);font-style:italic;font-weight:900;font-size:clamp(40px,7vw,80px);line-height:.9;text-transform:uppercase}
-.winner-banner small{display:block;font-family:var(--num);font-style:normal;font-size:14px;letter-spacing:.24em;color:var(--orange);margin-top:10px}
+/* list rows */
+.list{display:grid;gap:8px}
+.row{display:grid;grid-template-columns:62px minmax(0,1fr) auto;align-items:center;gap:12px;padding:12px 14px;border-radius:var(--r);background:var(--panel);border:1px solid var(--line)}
+.row .when{font-size:12px;font-weight:600;color:var(--dim);line-height:1.25}
+.row .when b{display:block;font-family:var(--display);font-size:18px;color:var(--text);letter-spacing:.02em}
+.row .pair{font-family:var(--display);font-weight:700;font-size:19px;letter-spacing:.02em;line-height:1.15;min-width:0;overflow-wrap:anywhere}
+.row .pair small{display:block;font-family:var(--body);font-weight:500;font-size:12px;color:var(--dim);letter-spacing:0}
+.mini{display:flex;gap:6px}
+.mini button{min-width:54px;padding:8px 10px;border-radius:8px;background:var(--panel2);border:1px solid var(--line2);font-family:var(--display);font-weight:700;font-size:14px;letter-spacing:.03em;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mini button.sel{background:var(--hot);border-color:transparent;color:#fff}
+.mini button.off{opacity:.35}
+.mini button:disabled{cursor:default}
+.res{display:grid;grid-template-columns:62px minmax(0,1fr) auto minmax(0,1fr) 28px;align-items:center;gap:10px;padding:11px 14px;border-radius:var(--r);background:var(--panel)}
+.res .n{font-family:var(--display);font-weight:700;font-size:18px;line-height:1.15;overflow-wrap:anywhere}
+.res .n.l{color:var(--faint)}
+.res .n.b{text-align:right}
+.res .s{font-family:var(--display);font-weight:800;font-size:20px;font-variant-numeric:tabular-nums;color:var(--metal);text-align:center;min-width:44px}
+.res .m{font-weight:800;text-align:center}
+.res .m.W{color:var(--win)}.res .m.L{color:var(--loss)}
+.more{display:block;margin:10px auto 0;padding:8px 16px;border-radius:999px;background:var(--panel2);color:var(--metal);font-size:13px;font-weight:600}
 
-/* ================= ROSTER ================= */
-.roster{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:18px}
-.acard{position:relative;display:block;text-align:left;height:420px;background:var(--panel);overflow:hidden;transition:transform .35s cubic-bezier(.2,.8,.2,1)}
-.acard canvas{position:absolute;inset:0;width:100%;height:100%;display:block;transition:transform .6s cubic-bezier(.2,.8,.2,1)}
-.acard::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 50% 30%,color-mix(in srgb,var(--tc) 30%,transparent),transparent 70%)}
-.acard::after{content:"";position:absolute;left:0;right:0;bottom:0;height:62%;background:linear-gradient(0deg,#0a0b0d 30%,transparent)}
-.acard:hover{transform:translateY(-4px)}
-.acard:hover canvas{transform:scale(1.04)}
-.acard .num{position:absolute;right:14px;top:8px;z-index:2;font-family:var(--display);font-style:italic;font-weight:900;font-size:86px;line-height:1;color:transparent;-webkit-text-stroke:1px rgba(255,255,255,.14)}
-.acard .info{position:absolute;left:0;right:0;bottom:0;z-index:3;padding:16px 18px 18px;display:grid;gap:10px}
-.acard .nm{font-family:var(--display);font-style:italic;font-weight:900;font-size:44px;line-height:.82;text-transform:uppercase}
-.acard .nm small{display:block;font-size:20px;color:var(--metal);font-weight:800;letter-spacing:.04em;margin-top:4px}
-.statrow{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;border-top:1px solid var(--line-2);padding-top:10px}
-.statrow div{display:grid;gap:1px}
-.statrow b{font-family:var(--num);font-weight:700;font-size:20px;font-variant-numeric:tabular-nums;line-height:1}
-.statrow span{font-size:10px;letter-spacing:.16em;color:var(--dim);text-transform:uppercase}
-.status{position:absolute;left:14px;top:14px;z-index:3;font-family:var(--num);font-weight:700;font-size:11px;letter-spacing:.18em;padding:4px 10px;background:rgba(0,0,0,.55);box-shadow:inset 0 0 0 1px var(--line-2);text-transform:uppercase}
-.status.hot{background:var(--hot);box-shadow:none}
-.form{display:flex;gap:4px}
-.form i{width:16px;height:16px;display:grid;place-items:center;font-style:normal;font-family:var(--num);font-weight:700;font-size:10px;clip-path:polygon(3px 0,100% 0,calc(100% - 3px) 100%,0 100%)}
-.form i.W{background:rgba(61,220,132,.2);color:var(--win)}
-.form i.L{background:rgba(255,77,77,.18);color:var(--loss)}
+/* roster */
+.roster{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.acard{position:relative;text-align:left;border-radius:12px;overflow:hidden;background:var(--panel);border:1px solid var(--line)}
+.acard .photo{max-width:none;border-radius:0}
+.acard .info{padding:10px 12px 12px}
+.acard .nm{font-family:var(--display);font-weight:800;font-size:21px;line-height:1.1;overflow-wrap:anywhere}
+.acard .sub{font-size:12px;color:var(--dim);margin-top:2px}
+.acard .st{position:absolute;right:8px;top:8px;z-index:1;font-size:11px;font-weight:700;letter-spacing:.06em;padding:3px 8px;border-radius:999px;background:rgba(0,0,0,.6);color:#fff}
+.acard .st.hot{background:var(--hot)}
+.acard.out{opacity:.45;filter:grayscale(1)}
 
-/* ================= VIEWER ================= */
-.viewer{position:fixed;inset:0;z-index:50;background:#030304;overflow:hidden;animation:vin .5s ease}
-@keyframes vin{from{opacity:0}}
-.viewer canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
-#vFig{cursor:grab;touch-action:none}
-#vFig.drag{cursor:grabbing}
-.v-ui{position:absolute;pointer-events:none;z-index:3}
-.v-ui *{pointer-events:auto}
-.v-top{left:0;right:0;top:0;display:flex;justify-content:space-between;align-items:center;padding:calc(16px + env(safe-area-inset-top,0px)) 24px 16px;background:linear-gradient(180deg,rgba(0,0,0,.7),transparent)}
-.v-close{font-family:var(--display);font-weight:800;letter-spacing:.14em;font-size:16px;padding:10px 16px;background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1px var(--line-2)}
-.v-left{left:24px;top:50%;transform:translateY(-50%);width:min(320px,34vw);display:grid;gap:18px;pointer-events:none}
-.v-name{font-family:var(--display);font-style:italic;font-weight:900;font-size:clamp(56px,7vw,104px);line-height:.8;text-transform:uppercase;text-shadow:0 10px 40px rgba(0,0,0,.8)}
-.v-name small{display:block;font-size:.34em;color:var(--metal);letter-spacing:.05em;margin-top:8px}
-.v-meta{display:flex;gap:8px;flex-wrap:wrap}
-.v-meta span{font-family:var(--num);font-weight:600;font-size:12px;letter-spacing:.16em;padding:5px 10px;background:rgba(0,0,0,.5);box-shadow:inset 0 0 0 1px var(--line-2);text-transform:uppercase}
-.v-stats{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);box-shadow:0 0 0 1px var(--line)}
-.v-stats div{background:rgba(10,11,13,.86);padding:12px 14px;display:grid;gap:2px}
-.v-stats b{font-family:var(--num);font-weight:700;font-size:30px;line-height:1;font-variant-numeric:tabular-nums}
-.v-stats span{font-size:10px;letter-spacing:.18em;color:var(--dim);text-transform:uppercase}
-.v-stats .wide{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between}
-.predbar{height:6px;background:var(--line);margin-top:6px}
-.predbar i{display:block;height:100%;background:var(--hot)}
-.v-right{right:24px;top:50%;transform:translateY(-50%);width:min(260px,28vw);display:grid;gap:10px}
-.v-src{background:rgba(10,11,13,.86);box-shadow:inset 0 0 0 1px var(--line-2);padding:14px;display:grid;gap:10px}
-.v-src h4{margin:0;font-family:var(--num);font-weight:700;font-size:11px;letter-spacing:.2em;color:var(--dim)}
-.v-src p{margin:0;font-size:13px;color:var(--metal)}
-.v-src label{display:block;text-align:center;font-family:var(--display);font-weight:800;font-size:15px;letter-spacing:.12em;padding:9px 10px;background:var(--panel-2);box-shadow:inset 0 0 0 1px var(--line-2);cursor:pointer}
-.v-src label:hover{box-shadow:inset 0 0 0 1px var(--orange)}
-.v-src input{position:absolute;width:1px;height:1px;opacity:0}
-.v-src button{font-size:12px;color:var(--dim);text-decoration:underline;justify-self:start}
-.v-bottom{left:0;right:0;bottom:0;display:grid;justify-items:center;gap:8px;padding:16px 16px calc(24px + env(safe-area-inset-bottom,0px));background:linear-gradient(0deg,rgba(0,0,0,.75),transparent)}
-.dial{display:flex;align-items:center;gap:14px;font-family:var(--num);font-weight:700;font-size:13px;letter-spacing:.3em;color:var(--metal)}
-.dial svg{width:46px;height:46px}
-.dial b{font-variant-numeric:tabular-nums;color:var(--text);letter-spacing:.08em;min-width:4ch}
-
-/* ================= LEADERBOARD ================= */
+/* board */
 .board{display:grid;gap:6px}
-.board-head,.lrow{display:grid;grid-template-columns:64px 52px minmax(0,1fr) 110px 90px 120px 70px;align-items:center;gap:12px;padding:0 18px}
-.board-head{font-family:var(--num);font-weight:600;font-size:11px;letter-spacing:.2em;color:var(--dim);padding-bottom:6px}
-.lrow{height:64px;background:var(--panel);position:relative;clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px);will-change:transform}
-.lrow.me{box-shadow:inset 3px 0 0 var(--orange)}
-.lrow .rk{font-family:var(--display);font-style:italic;font-weight:900;font-size:34px;color:var(--metal);font-variant-numeric:tabular-nums}
-.lrow .un{font-family:var(--display);font-weight:800;font-size:24px;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.lrow .pts{font-family:var(--num);font-weight:700;font-size:22px;font-variant-numeric:tabular-nums;text-align:right}
-.lrow .stk{font-family:var(--num);font-weight:700;font-size:16px;color:var(--orange);text-align:center}
-.mv{font-family:var(--num);font-weight:700;font-size:14px;text-align:right;font-variant-numeric:tabular-nums}
-.mv.up{color:var(--win)}.mv.dn{color:var(--loss)}.mv.eq{color:var(--faint)}
-.mv.new{color:#fff;background:var(--hot);padding:2px 6px;justify-self:end;font-size:11px;letter-spacing:.14em}
-.lrow.first{height:112px;background:linear-gradient(100deg,rgba(255,45,31,.28),rgba(255,122,24,.1) 45%,var(--panel) 80%);box-shadow:inset 0 0 0 1px rgba(255,122,24,.45)}
-.lrow.first .rk{font-size:64px;color:#fff;text-shadow:0 0 30px rgba(255,90,30,.8)}
-.lrow.first .un{font-size:40px}
-.lrow.first .hex{width:64px;height:64px;font-size:22px;background:var(--hot)}
-.lrow.first .crown{display:block}
-.crown{display:none;font-family:var(--num);font-weight:700;font-size:11px;letter-spacing:.24em;color:var(--orange)}
-.lrow.flash{animation:rowflash 1s ease}
-@keyframes rowflash{0%{background-color:rgba(255,122,24,.25)}}
+.brow{display:grid;grid-template-columns:40px minmax(0,1fr) auto;align-items:center;gap:12px;padding:12px 16px;border-radius:var(--r);background:var(--panel);border:1px solid var(--line)}
+.brow .rk{font-family:var(--display);font-weight:800;font-size:22px;color:var(--dim);font-variant-numeric:tabular-nums}
+.brow .un{font-family:var(--display);font-weight:700;font-size:20px;letter-spacing:.02em;overflow-wrap:anywhere}
+.brow .pt{font-family:var(--display);font-weight:800;font-size:24px;font-variant-numeric:tabular-nums;text-align:right;line-height:1}
+.brow .pt small{display:block;font-family:var(--body);font-weight:500;font-size:11px;color:var(--dim)}
+.brow.first{background:linear-gradient(100deg,rgba(255,59,43,.22),var(--panel) 70%);border-color:rgba(255,122,26,.45)}
+.brow.first .rk{color:var(--orange)}
+.brow.me{box-shadow:inset 3px 0 0 var(--orange)}
 
-/* ================= PROFILE ================= */
-.phead{position:relative;display:grid;grid-template-columns:auto 1fr auto;gap:28px;align-items:center;padding:34px 30px;background:var(--panel);overflow:hidden}
-.phead::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 50% 90% at 0% 50%,rgba(255,45,31,.28),transparent 70%)}
-.phead>*{position:relative}
-.pemblem{width:140px;height:140px;font-size:54px;background:var(--hot);color:#fff}
-.puser{font-family:var(--display);font-style:italic;font-weight:900;font-size:clamp(64px,10vw,120px);line-height:.8;text-transform:uppercase}
-.prank{text-align:right}
-.prank b{display:block;font-family:var(--display);font-style:italic;font-weight:900;font-size:clamp(60px,9vw,110px);line-height:.8;background:var(--hot);-webkit-background-clip:text;background-clip:text;color:transparent}
-.pgrid{display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:var(--line);margin-top:1px}
-.pgrid div{background:var(--carbon);padding:18px 18px 16px;display:grid;gap:4px}
-.pgrid b{font-family:var(--num);font-weight:700;font-size:34px;line-height:1;font-variant-numeric:tabular-nums}
-.pgrid span{font-size:10px;letter-spacing:.2em;color:var(--dim);text-transform:uppercase}
-.section-title{display:flex;align-items:center;gap:14px;margin:34px 0 14px;font-family:var(--display);font-weight:800;font-size:26px;letter-spacing:.12em;text-transform:uppercase}
-.section-title::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--line-2),transparent)}
-.chartbox{background:var(--panel);padding:18px 18px 10px;overflow-x:auto}
-.chartbox svg{display:block;width:100%;min-width:560px;height:auto}
-.hist{display:grid;gap:6px}
-.hrow{display:grid;grid-template-columns:44px minmax(0,1fr) auto 70px;align-items:center;gap:14px;padding:10px 16px;background:var(--panel)}
-.res{font-family:var(--display);font-weight:900;font-size:20px;text-align:center;padding:4px 0;clip-path:polygon(5px 0,100% 0,calc(100% - 5px) 100%,0 100%)}
-.res.W{background:rgba(61,220,132,.18);color:var(--win)}.res.L{background:rgba(255,77,77,.16);color:var(--loss)}.res.P{background:rgba(255,122,24,.16);color:var(--orange);font-size:13px;letter-spacing:.1em}
-.hrow .m{font-family:var(--display);font-weight:800;font-size:20px;letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.hrow .m small{font-family:var(--body);font-weight:500;font-size:12px;color:var(--dim);letter-spacing:0;margin-left:8px}
-.hrow .p{font-family:var(--num);font-weight:700;font-size:18px;text-align:right;font-variant-numeric:tabular-nums}
-
-/* ================= LEAGUES ================= */
-.lgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:20px;align-items:start}
-.lcol{display:grid;gap:12px}
-.lcard{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;padding:16px 18px;background:var(--panel);text-align:left;transition:box-shadow .2s}
-.lcard[aria-pressed="true"]{box-shadow:inset 0 0 0 1px var(--orange);background:linear-gradient(100deg,rgba(255,45,31,.14),var(--panel) 60%)}
-.lcard .hex{width:48px;height:48px}
-.lcard h3{margin:0;font-family:var(--display);font-weight:800;font-size:24px;letter-spacing:.05em;line-height:1}
-.lcard p{margin:3px 0 0;font-size:12px;color:var(--dim);letter-spacing:.06em}
-.lcard .myrk{font-family:var(--display);font-style:italic;font-weight:900;font-size:34px;color:var(--metal)}
-.form-panel{background:var(--panel);padding:18px;display:grid;gap:10px}
-.form-panel h4{margin:0;font-family:var(--num);font-weight:700;font-size:12px;letter-spacing:.2em;color:var(--dim)}
-.inrow{display:flex;gap:8px}
-.inrow input{flex:1;min-width:0;height:48px;padding:0 14px;background:var(--bg);border:1px solid var(--line-2);color:var(--text);font-family:var(--display);font-weight:800;font-size:20px;letter-spacing:.08em;text-transform:uppercase}
-.inrow input::placeholder{color:var(--faint)}
-.inrow .btn{font-size:16px;padding:0 18px;white-space:nowrap}
-.msg{font-size:13px;color:var(--dim);min-height:1.2em;margin:0}
+/* profile */
+.phead{display:flex;align-items:center;gap:16px;padding:18px;border-radius:14px;background:var(--panel);border:1px solid var(--line)}
+.avatar{width:62px;height:62px;border-radius:50%;display:grid;place-items:center;flex:none;background:var(--hot);font-family:var(--display);font-weight:800;font-size:28px;color:#fff}
+.phead h1{margin:0;font-family:var(--display);font-weight:800;font-size:30px;line-height:1.1;overflow-wrap:anywhere}
+.phead .muted{margin-top:2px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
+.stat{padding:14px;border-radius:var(--r);background:var(--panel);border:1px solid var(--line)}
+.stat b{display:block;font-family:var(--display);font-weight:800;font-size:28px;line-height:1;font-variant-numeric:tabular-nums}
+.stat span{font-size:12px;color:var(--dim)}
+.inline{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.inp{height:46px;padding:0 14px;border-radius:10px;background:var(--bg);border:1px solid var(--line2);font-size:16px;min-width:0}
+.btn{height:46px;padding:0 20px;border-radius:10px;background:var(--hot);color:#fff;font-family:var(--display);font-weight:800;font-size:17px;letter-spacing:.06em;white-space:nowrap}
+.btn.ghost{background:var(--panel2);border:1px solid var(--line2);color:var(--text)}
+.btn.small{height:38px;padding:0 14px;font-size:15px}
+.btn:disabled{opacity:.5}
+.msg{min-height:1.2em;margin:6px 0 0;font-size:13px;color:var(--dim)}
 .msg.err{color:var(--loss)}.msg.ok{color:var(--win)}
-.ldetail{background:var(--panel);padding:24px;display:grid;gap:18px}
-.ldetail .top{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
-.ldetail h2{margin:0;font-family:var(--display);font-style:italic;font-weight:900;font-size:clamp(44px,6vw,70px);line-height:.85;text-transform:uppercase}
-.code{display:flex;align-items:center;gap:10px;padding:8px 8px 8px 14px;background:var(--bg);box-shadow:inset 0 0 0 1px var(--line-2)}
-.code span{font-size:10px;letter-spacing:.2em;color:var(--dim)}
-.code b{font-family:var(--num);font-weight:700;font-size:20px;letter-spacing:.14em;user-select:all}
-.code button{font-family:var(--num);font-weight:700;font-size:12px;letter-spacing:.16em;padding:6px 10px;background:var(--panel-2);box-shadow:inset 0 0 0 1px var(--line-2)}
-.mrow{display:grid;grid-template-columns:40px 40px minmax(0,1fr) auto;gap:12px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
-.mrow .rk{font-family:var(--display);font-style:italic;font-weight:900;font-size:26px;color:var(--metal)}
-.mrow .un{font-family:var(--display);font-weight:800;font-size:21px;letter-spacing:.04em;text-transform:uppercase}
-.mrow .pts{font-family:var(--num);font-weight:700;font-size:19px;font-variant-numeric:tabular-nums}
-.mrow.me .un{color:var(--orange)}
-.mrow:first-of-type .rk{color:var(--orange)}
 
-/* tab bar (mobile) */
-.tabbar{display:none}
-.toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom,0px));z-index:60;transform:translate(-50%,20px);opacity:0;pointer-events:none;padding:12px 22px;background:var(--hot);color:#fff;font-family:var(--display);font-weight:900;font-style:italic;font-size:20px;letter-spacing:.1em;clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%);transition:all .35s cubic-bezier(.2,1.4,.4,1);white-space:nowrap}
-.toast.on{opacity:1;transform:translate(-50%,0)}
-.note{margin-top:28px;font-size:12px;color:var(--faint);letter-spacing:.04em}
-
-@media (max-width:900px){
-  .nav{display:none}
-  .topbar{padding:10px 16px}
-  main{padding-inline:16px;padding-block:20px 120px}
-  .tabbar{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;left:0;right:0;bottom:0;z-index:30;padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px));background:rgba(8,9,11,.94);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--line)}
-  .tabbar button{display:grid;justify-items:center;gap:3px;padding:6px 0;font-family:var(--display);font-weight:800;font-size:12px;letter-spacing:.14em;color:var(--dim)}
-  .tabbar button svg{width:22px;height:22px}
-  .tabbar button[aria-current="page"]{color:var(--text)}
-  .tabbar button[aria-current="page"] svg{color:var(--orange)}
-  .board-head{display:none}
-  .board-head,.lrow{grid-template-columns:36px 40px minmax(0,1fr) auto 48px;gap:10px;padding:0 12px}
-  .lrow .stk,.lrow .form{display:none}
-  .lrow .rk{font-size:26px}
-  .lrow .hex{width:34px;height:34px;font-size:13px}
-  .lrow .un{font-size:20px}
-  .lrow .pts{font-size:18px}
-  .lrow.first{height:92px}
-  .lrow.first .rk{font-size:44px}
-  .lrow.first .un{font-size:28px}
-  .lrow.first .hex{width:44px;height:44px;font-size:16px}
-  .phead{grid-template-columns:auto 1fr;padding:22px 18px;gap:16px}
-  .pemblem{width:84px;height:84px;font-size:32px}
-  .prank{grid-column:1/-1;text-align:left;display:flex;align-items:baseline;gap:12px}
-  .pgrid{grid-template-columns:repeat(2,1fr)}
-  .lgrid{grid-template-columns:1fr}
-  .v-left{left:16px;right:16px;top:auto;bottom:calc(96px + env(safe-area-inset-bottom,0px));transform:none;width:auto;gap:10px}
-  .v-name{font-size:54px}
-  .v-stats{grid-template-columns:repeat(4,1fr)}
-  .v-stats div{padding:8px 10px}
-  .v-stats b{font-size:20px}
-  .v-stats .wide{display:none}
-  .v-right{right:16px;top:calc(70px + env(safe-area-inset-top,0px));transform:none;width:180px}
-  .v-src p{display:none}
-  .v-meta{display:none}
-}
-@media (max-width:560px){
-  .stage{height:250px}
-  .duel.live .stage{height:270px}
-  .nameplate b{font-size:30px}
-  .side.a .nameplate{left:12px}.side.b .nameplate{right:12px}
-  .pick{height:62px;padding:0 14px;font-size:22px}
-  .picks{padding:0 12px 16px;gap:8px}
-  .livepanel{padding:0 12px 16px;gap:12px}
-  .duel-meta{padding:12px 14px;font-size:11px}
-  .hrow{grid-template-columns:40px minmax(0,1fr) 56px;padding:10px 12px}
-  .hrow .pk{display:none}
-  .chip small{display:none}
-  .logo{font-size:24px}
-  .logo span{font-size:12px}
-}
-@media (prefers-reduced-motion:reduce){
-  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
-}
-
-/* ===== dodaci za verziju sa stvarnim podacima ===== */
-.vs{font-size:clamp(26px,4vw,50px);letter-spacing:.04em}
-.block-title{display:flex;align-items:center;gap:14px;margin:34px 0 14px;font-family:var(--display);font-weight:800;font-size:24px;letter-spacing:.12em;text-transform:uppercase}
-.block-title::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--line-2),transparent)}
-.block-title:first-child{margin-top:0}
-.najava{display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center;padding:20px 22px;background:linear-gradient(100deg,rgba(255,45,31,.18),var(--panel) 55%)}
-.najava .time{font-family:var(--display);font-style:italic;font-weight:900;font-size:clamp(40px,6vw,64px);line-height:.85}
-.najava h3{margin:0 0 4px;font-family:var(--display);font-weight:800;font-size:22px;letter-spacing:.06em;text-transform:uppercase}
-.najava p{margin:0;color:var(--metal);font-size:14px;max-width:62ch}
-.results{display:grid;gap:6px}
-.rrow{display:grid;grid-template-columns:110px minmax(0,1fr) auto minmax(0,1fr) 90px;gap:14px;align-items:center;padding:12px 18px;background:var(--panel)}
-.rrow .dt{font-family:var(--num);font-weight:600;font-size:13px;letter-spacing:.1em;color:var(--dim);text-transform:uppercase}
-.rrow .nm{font-family:var(--display);font-weight:800;font-size:22px;letter-spacing:.03em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.rrow .nm.w{color:var(--text)}
-.rrow .nm.l{color:var(--faint)}
-.rrow .nm.b{text-align:right}
-.rrow .sc{font-family:var(--display);font-weight:900;font-size:26px;font-variant-numeric:tabular-nums;min-width:70px;text-align:center}
-.rrow .kind{font-size:11px;letter-spacing:.14em;color:var(--dim);text-transform:uppercase;text-align:right}
-.rrow .mine{display:block;font-family:var(--num);font-size:11px;letter-spacing:.12em}
-.empty{padding:28px 22px;background:var(--panel);color:var(--metal);font-size:15px}
-.empty b{display:block;font-family:var(--display);font-weight:800;font-size:22px;letter-spacing:.06em;color:var(--text);margin-bottom:4px;text-transform:uppercase}
-.teamfilter{display:flex;gap:6px;flex-wrap:wrap}
-.teamfilter button{font-family:var(--display);font-weight:800;font-size:16px;letter-spacing:.12em;padding:8px 16px;background:var(--panel);box-shadow:inset 0 0 0 1px var(--line-2);color:var(--dim)}
-.teamfilter button[aria-pressed="true"]{color:#fff;background:var(--panel-2);box-shadow:inset 0 -3px 0 var(--orange),inset 0 0 0 1px var(--line-2)}
-.acard.out{filter:grayscale(1) brightness(.6)}
-.acard .job{font-size:12px;color:var(--metal);letter-spacing:.02em;line-height:1.35}
-.nick{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
-.nick input{height:40px;padding:0 12px;background:var(--bg);border:1px solid var(--line-2);color:var(--text);font-family:var(--display);font-weight:800;font-size:18px;letter-spacing:.06em;text-transform:uppercase;width:min(240px,100%)}
-.nick .btn{font-size:15px;padding:9px 16px}
-.banner{padding:12px 16px;margin-bottom:18px;background:rgba(255,122,24,.1);box-shadow:inset 3px 0 0 var(--orange);color:var(--metal);font-size:14px}
-.banner b{color:var(--text)}
+/* login */
+.login{position:fixed;inset:0;z-index:60;display:grid;place-items:center;padding:24px 16px;overflow-y:auto;background:var(--bg);background-image:radial-gradient(ellipse 90% 50% at 50% 0%,rgba(255,80,30,.22),transparent 70%)}
+.lbox{width:100%;max-width:380px;display:grid;gap:14px}
+.lbox .logo{font-size:40px;text-align:center}
+.lbox .tag{text-align:center;color:var(--metal);margin-top:-8px}
+.lcard{display:grid;gap:10px;padding:20px;border-radius:16px;background:var(--panel);border:1px solid var(--line)}
+.lcard .inp{width:100%}
+.lcard .btn{width:100%}
+.link{color:var(--orange);font-weight:600;font-size:14px;text-align:center;padding:6px}
+.guest{color:var(--dim);font-size:14px;text-align:center;text-decoration:underline;padding:6px}
 
 /* admin */
-.admin-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:20px;align-items:start}
-.apanel{background:var(--panel);padding:20px;display:grid;gap:14px}
-.apanel h3{margin:0;font-family:var(--display);font-weight:800;font-size:22px;letter-spacing:.1em;text-transform:uppercase}
-.field{display:grid;gap:5px}
-.field label{font-family:var(--num);font-weight:600;font-size:11px;letter-spacing:.2em;color:var(--dim);text-transform:uppercase}
-.field input,.field select,.field textarea{height:44px;padding:0 12px;background:var(--bg);border:1px solid var(--line-2);color:var(--text);font-family:var(--body);font-size:15px;width:100%}
-.field textarea{height:84px;padding:10px 12px;resize:vertical}
-.frow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.adl{display:grid;gap:8px}
-.adrow{display:grid;gap:10px;padding:14px 16px;background:var(--panel-2);box-shadow:inset 0 0 0 1px var(--line)}
-.adrow.done{opacity:.8}
-.adrow.isLive{box-shadow:inset 0 0 0 1px var(--red)}
-.adrow .t{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-family:var(--num);font-weight:600;font-size:12px;letter-spacing:.14em;color:var(--dim);text-transform:uppercase}
-.adrow .p{font-family:var(--display);font-weight:800;font-size:22px;letter-spacing:.03em;text-transform:uppercase}
-.acts{display:flex;gap:6px;flex-wrap:wrap}
-.acts button{font-family:var(--display);font-weight:800;font-size:14px;letter-spacing:.1em;padding:8px 12px;background:var(--bg);box-shadow:inset 0 0 0 1px var(--line-2)}
-.acts button:hover{box-shadow:inset 0 0 0 1px var(--orange)}
-.acts button.on{background:var(--hot);box-shadow:none;color:#fff}
+.apanel{padding:16px;border-radius:14px;background:var(--panel);border:1px solid var(--line);display:grid;gap:10px;margin-bottom:14px}
+.apanel h3{margin:0;font-family:var(--display);font-weight:800;font-size:20px;letter-spacing:.04em}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.fl{display:grid;gap:4px;font-size:12px;font-weight:600;color:var(--dim)}
+.fl .inp,.fl select{height:44px;padding:0 10px;border-radius:10px;background:var(--bg);border:1px solid var(--line2);font-size:15px;width:100%}
+.adr{display:grid;gap:8px;padding:12px;border-radius:10px;background:var(--panel2);border:1px solid var(--line)}
+.adr.live{border-color:var(--red)}
+.adr .t{font-size:12px;color:var(--dim);font-weight:600}
+.adr .p{font-family:var(--display);font-weight:800;font-size:19px;overflow-wrap:anywhere}
+.acts{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.acts button{padding:8px 12px;border-radius:8px;background:var(--bg);border:1px solid var(--line2);font-size:13px;font-weight:700}
+.acts button.on{background:var(--hot);border-color:transparent;color:#fff}
 .acts button.danger{color:var(--loss)}
-.acts .scorebox{display:flex;align-items:center;gap:4px;font-family:var(--num);font-weight:700;font-size:18px;padding:0 6px}
-.atable{display:grid;gap:6px}
-.arow{display:grid;grid-template-columns:minmax(0,1fr) 110px 130px auto;gap:10px;align-items:center;padding:10px 12px;background:var(--panel-2)}
-.arow b{font-family:var(--display);font-weight:800;font-size:19px;letter-spacing:.03em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.arow select{height:36px;background:var(--bg);border:1px solid var(--line-2);color:var(--text);font-size:13px;padding:0 6px;min-width:0}
-.arow label{font-family:var(--num);font-weight:700;font-size:12px;letter-spacing:.1em;padding:8px 10px;background:var(--bg);box-shadow:inset 0 0 0 1px var(--line-2);cursor:pointer;white-space:nowrap}
-.arow input[type=file]{position:absolute;width:1px;height:1px;opacity:0}
-.arow .ph{font-size:11px;color:var(--win);letter-spacing:.1em}
-.confirm{display:flex;gap:6px;align-items:center;font-size:13px;color:var(--loss)}
-.state{padding:40px 22px;text-align:center;color:var(--metal)}
-@media (max-width:900px){
-  .tabbar{grid-template-columns:repeat(var(--tabs,5),1fr)}
-  .admin-grid{grid-template-columns:1fr}
-  .rrow{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);row-gap:4px;padding:12px}
-  .rrow .dt{grid-column:1/-1}
-  .rrow .kind{grid-column:1/-1;text-align:left}
-  .arow{grid-template-columns:minmax(0,1fr) 1fr;}
+.acts .sc{font-family:var(--display);font-weight:800;font-size:20px;padding:0 6px}
+.agrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+.aath{border-radius:12px;overflow:hidden;background:var(--panel2);border:1px solid var(--line)}
+.aath .photo{max-width:none;border-radius:0;aspect-ratio:1}
+.aath .body{padding:10px;display:grid;gap:6px}
+.aath b{font-family:var(--display);font-weight:800;font-size:17px;line-height:1.1}
+.aath select{height:34px;border-radius:8px;background:var(--bg);border:1px solid var(--line2);font-size:13px;padding:0 6px;width:100%}
+.upl{display:block;text-align:center;padding:8px;border-radius:8px;background:var(--hot);color:#fff;font-weight:700;font-size:13px;cursor:pointer}
+.upl input{position:absolute;width:1px;height:1px;opacity:0}
+.upl.ghost{background:var(--bg);border:1px solid var(--line2);color:var(--metal)}
+
+/* tab bar */
+.tabbar{display:none}
+.toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom,0px));z-index:70;transform:translate(-50%,16px);opacity:0;pointer-events:none;padding:11px 20px;border-radius:999px;background:var(--text);color:#0b0c0f;font-weight:700;font-size:14px;transition:all .3s;white-space:nowrap;max-width:92vw;overflow:hidden;text-overflow:ellipsis}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+
+/* viewer */
+.viewer{position:fixed;inset:0;z-index:50;background:#030304}
+.viewer canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+#vFig{cursor:grab;touch-action:none}
+.vclose{position:absolute;right:16px;top:calc(14px + env(safe-area-inset-top,0px));z-index:3;height:40px;padding:0 16px;border-radius:999px;background:rgba(255,255,255,.1);font-weight:700}
+.vinfo{position:absolute;left:0;right:0;bottom:0;z-index:3;padding:20px 20px calc(24px + env(safe-area-inset-bottom,0px));background:linear-gradient(0deg,rgba(0,0,0,.85),transparent)}
+.vinfo h2{margin:0;font-family:var(--display);font-weight:800;font-size:40px;line-height:1.05}
+.vinfo p{margin:4px 0 0;color:var(--metal);font-size:14px}
+.vhint{position:absolute;left:50%;top:calc(22px + env(safe-area-inset-top,0px));transform:translateX(-50%);z-index:3;font-size:12px;font-weight:700;letter-spacing:.14em;color:var(--dim)}
+
+@media (max-width:760px){
+  .nav{display:none}
+  .top{padding-inline:16px}
+  .tabbar{display:grid;grid-template-columns:repeat(var(--tabs,4),1fr);position:fixed;left:0;right:0;bottom:0;z-index:30;padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px));background:rgba(10,11,13,.95);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--line)}
+  .tabbar button{display:grid;justify-items:center;gap:2px;padding:6px 0;font-size:11px;font-weight:700;letter-spacing:.04em;color:var(--dim)}
+  .tabbar svg{width:22px;height:22px}
+  .tabbar button[aria-current="page"]{color:var(--text)}
+  .tabbar button[aria-current="page"] svg{color:var(--orange)}
+  .faces{padding:8px 8px 0}
+  .mid{margin-bottom:54px;padding:0 4px}
+  .vs{width:38px;height:38px;font-size:13px}
+  .stats{grid-template-columns:1fr 1fr}
+  .res{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) 22px}
+  .res .d{display:none}
+  .row{grid-template-columns:52px minmax(0,1fr);row-gap:10px}
+  .row .mini{grid-column:1/-1}
+  .row .mini button{flex:1;max-width:none}
 }
-
-.howto{list-style:none;margin:-6px 0 18px;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line)}
-.howto li{display:flex;gap:14px;align-items:flex-start;padding:16px 18px;background:var(--panel)}
-.howto li>b{flex:none;width:38px;height:38px;display:grid;place-items:center;font-family:var(--display);font-style:italic;font-weight:900;font-size:24px;background:var(--hot);color:#fff;clip-path:polygon(25% 3%,75% 3%,100% 50%,75% 97%,25% 97%,0 50%)}
-.howto span{font-size:14px;color:var(--metal);line-height:1.4}
-.howto strong{display:block;font-family:var(--display);font-weight:800;font-size:20px;letter-spacing:.05em;color:var(--text);text-transform:uppercase;margin-bottom:2px}
-.todaystatus{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;padding:14px 18px;margin-bottom:22px;background:var(--panel);box-shadow:inset 3px 0 0 var(--win)}
-.todaystatus.todo{box-shadow:inset 3px 0 0 var(--orange);background:linear-gradient(100deg,rgba(255,122,24,.14),var(--panel) 60%)}
-.todaystatus b{font-family:var(--display);font-weight:800;font-size:22px;letter-spacing:.04em;text-transform:uppercase}
-.todaystatus span{color:var(--metal);font-size:14px}
-@media (max-width:760px){.howto{grid-template-columns:1fr}.howto li{padding:12px 14px}}
-
-.authbox{margin-top:30px;font-size:13px;color:var(--dim)}
-.authbox summary{cursor:pointer;color:var(--faint);letter-spacing:.06em}
-.authbox .btn{font-size:14px;padding:8px 14px}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 </style>
 </head>
 <body>
-<div class="stadium" aria-hidden="true"></div>
-<canvas id="embers" aria-hidden="true"></canvas>
 
-<header class="topbar">
-  <div class="logo">EXATLON <span>LIGA</span></div>
+<div class="login" id="login" hidden>
+  <div class="lbox">
+    <div class="logo">EXATLON <b>LIGA</b></div>
+    <div class="tag">Pogodi pobednika. Skupljaj poene.</div>
+    <form class="lcard" id="authForm">
+      <input class="inp" id="lNick" placeholder="Ime u igri" maxlength="16" autocomplete="nickname" hidden>
+      <input class="inp" id="lEmail" type="email" placeholder="Email" autocomplete="email" required>
+      <input class="inp" id="lPass" type="password" placeholder="Lozinka (najmanje 6 znakova)" minlength="6" autocomplete="current-password" required>
+      <button class="btn" type="submit" id="lSubmit">PRIJAVI SE</button>
+      <p class="msg" id="lMsg"></p>
+      <button type="button" class="link" id="lSwitch">Nemaš nalog? Registruj se</button>
+    </form>
+    <button type="button" class="guest" id="lGuest">Nastavi bez naloga</button>
+  </div>
+</div>
+
+<header class="top">
+  <div class="logo">EXATLON <b>LIGA</b></div>
   <nav class="nav" aria-label="Glavni meni">
     <button data-go="home">DUELI</button>
     <button data-go="roster">TAKMIČARI</button>
-    <button data-go="global">RANG LISTA</button>
-    <button data-go="profile">PROFIL</button>
-    <button data-go="admin" hidden class="admin-only">ADMIN</button>
+    <button data-go="rang">RANG LISTA</button>
+    <button data-go="profil">PROFIL</button>
+    <button data-go="admin" class="admin-only" hidden>ADMIN</button>
   </nav>
-  <button class="chip" data-go="profile" aria-label="Otvori moj profil">
-    <span class="hex" id="chipHex">?</span>
-    <span><b id="chipPts">0</b><small>POGODAKA</small></span>
-  </button>
+  <button class="chip" data-go="profil" aria-label="Moji poeni"><i>●</i><span id="chipPts">0</span> poena</button>
 </header>
 
 <main>
-  <section class="screen" id="s-home" aria-labelledby="h-home">
-    <div class="screen-head">
-      <div>
-        <div class="eyebrow" id="todayLbl">EXATLON SRBIJA · DRUGA SEZONA</div>
-        <h1 class="h1" id="h-home">Današnji <em>dueli</em></h1>
-      </div>
-    </div>
-    <ol class="howto cut" aria-label="Kako se igra">
-      <li><b>1</b><span><strong>Izaberi pobednika</strong>Za svaki današnji duel klikni na takmičara ili tim za koji misliš da pobeđuje.</span></li>
-      <li><b>2</b><span><strong>Pre početka emisije</strong>Prognoze se zaključavaju kada emisija počne, obično u 21:30.</span></li>
-      <li><b>3</b><span><strong>1 pogodak = 1 poen</strong>Svaki pogođen duel donosi poen. Na rang listi se vidi ko je najbolji danas i ukupno.</span></li>
-    </ol>
-    <div id="todayStatus" class="todaystatus" hidden></div>
-    <div id="home"><div class="state">Učitavam podatke takmičenja…</div></div>
+  <section class="screen" id="s-home">
+    <div id="home"><div class="empty">Učitavam…</div></div>
   </section>
 
-  <section class="screen" id="s-roster" aria-labelledby="h-roster">
-    <div class="screen-head">
-      <div>
-        <div class="eyebrow" id="rosterLbl">DRUGA SEZONA · DOMINIKANSKA REPUBLIKA</div>
-        <h1 class="h1" id="h-roster">Takmi<em>čari</em></h1>
-      </div>
-      <div class="teamfilter" id="teamFilter">
-        <button data-f="svi" aria-pressed="true">SVI</button>
-        <button data-f="crveni" aria-pressed="false">CRVENI</button>
-        <button data-f="plavi" aria-pressed="false">PLAVI</button>
-      </div>
-    </div>
+  <section class="screen" id="s-roster">
+    <div class="pagehead"><h1>Takmičari</h1>
+      <div class="seg" id="teamSeg"><button data-f="svi" aria-pressed="true">SVI</button><button data-f="crveni" aria-pressed="false">CRVENI</button><button data-f="plavi" aria-pressed="false">PLAVI</button></div></div>
     <div class="roster" id="roster"></div>
   </section>
 
-  <section class="screen" id="s-global" aria-labelledby="h-global">
-    <div class="screen-head">
-      <div>
-        <div class="eyebrow" id="globalLbl">Svi igrači · broj pogođenih duela</div>
-        <h1 class="h1" id="h-global">Rang <em>lista</em></h1>
-      </div>
-      <div class="teamfilter" id="boardMode">
-        <button data-m="danas" aria-pressed="true">DANAS</button>
-        <button data-m="ukupno" aria-pressed="false">UKUPNO</button>
-      </div>
-    </div>
-    <div class="board" id="board">
-      <div class="board-head"><span>MESTO</span><span></span><span>IGRAČ</span><span style="text-align:right">POGOCI</span><span style="text-align:center">NIZ</span><span>FORMA</span><span style="text-align:right" id="mvHead">PROMENA</span></div>
-    </div>
+  <section class="screen" id="s-rang">
+    <div class="pagehead"><h1>Rang lista</h1>
+      <div class="seg" id="rangSeg"><button data-m="danas" aria-pressed="true">DANAS</button><button data-m="ukupno" aria-pressed="false">UKUPNO</button></div></div>
+    <div class="board" id="board"></div>
   </section>
 
-  <section class="screen" id="s-profile" aria-labelledby="h-profile">
-    <div class="phead cut">
-      <div class="hex pemblem" id="pHex">?</div>
-      <div>
-        <div class="eyebrow">Profil igrača · druga sezona</div>
-        <h1 class="puser" id="h-profile">IGRAČ</h1>
-        <form class="nick" id="nickForm">
-          <input id="nickIn" maxlength="16" placeholder="TVOJE IME U IGRI" aria-label="Tvoje ime u igri" autocomplete="off">
-          <button class="btn ghost" type="submit">SAČUVAJ IME</button>
-          <span class="msg" id="nickMsg"></span>
-        </form>
-      </div>
-      <div class="prank"><span class="eyebrow">TRENUTNO MESTO</span><b id="pRank">–</b></div>
-    </div>
-    <div class="pgrid" id="pgrid"></div>
-    <div class="section-title">Pogoci kroz sezonu</div>
-    <div class="chartbox cut" id="chart"></div>
-    <div class="section-title">Istorija prognoza</div>
-    <div class="hist" id="hist"></div>
-    <div id="authBox" class="authbox"></div>
+  <section class="screen" id="s-profil">
+    <div class="phead"><div class="avatar" id="pAv">?</div><div style="min-width:0"><h1 id="pName">Igrač</h1><div class="muted" id="pSub"></div></div></div>
+    <div class="stats" id="pStats"></div>
+    <div class="sec">Ime u igri</div>
+    <form class="inline" id="nickForm"><input class="inp" id="nickIn" maxlength="16" style="flex:1" aria-label="Ime u igri"><button class="btn ghost" type="submit">SAČUVAJ</button></form>
+    <p class="msg" id="nickMsg"></p>
+    <div class="sec">Moje prognoze</div>
+    <div class="list" id="hist"></div>
+    <div class="sec"></div>
+    <div class="inline"><button class="btn ghost" id="logout" type="button">ODJAVI SE</button><button class="btn" id="toRegister" type="button" hidden>NAPRAVI NALOG</button></div>
   </section>
 
-  <section class="screen" id="s-admin" aria-labelledby="h-admin">
-    <div class="screen-head">
-      <div>
-        <div class="eyebrow">Samo za urednike</div>
-        <h1 class="h1" id="h-admin">Admin <em>panel</em></h1>
-      </div>
-      <p class="sub">Unesi duele sa tačnim datumom i vremenom emisije, vodi rezultat uživo i označi pobednika. Promene odmah vide svi igrači.</p>
+  <section class="screen" id="s-admin">
+    <div class="pagehead"><h1>Admin</h1>
+      <div class="seg" id="adminSeg"><button data-t="dueli" aria-pressed="true">DUELI</button><button data-t="takmicari" aria-pressed="false">TAKMIČARI</button></div></div>
+    <div id="adminDueli">
+      <form class="apanel" id="duelForm">
+        <h3>Novi duel</h3>
+        <div class="grid2">
+          <label class="fl">Datum<input class="inp" type="date" id="fDate" required></label>
+          <label class="fl">Vreme početka<input class="inp" type="time" id="fTime" value="21:30" required></label>
+        </div>
+        <div class="grid2">
+          <label class="fl">Strana A<select id="fA"></select></label>
+          <label class="fl">Strana B<select id="fB"></select></label>
+        </div>
+        <div class="grid2">
+          <label class="fl">Vrsta<select id="fKind"><option>Timska igra</option><option>Eliminaciona borba</option><option>Borba za medalju</option><option>Pojedinačni duel</option><option>Finale</option></select></label>
+          <label class="fl">Napomena<input class="inp" id="fNote" maxlength="40" placeholder="npr. poligon"></label>
+        </div>
+        <button class="btn" type="submit">DODAJ DUEL</button>
+        <p class="msg" id="duelMsg"></p>
+      </form>
+      <div class="list" id="adminDuels"></div>
     </div>
-    <div class="admin-grid">
-      <div class="lcol">
-        <form class="apanel cut" id="duelForm">
-          <h3>Novi duel</h3>
-          <div class="frow">
-            <div class="field"><label for="fDate">Datum</label><input type="date" id="fDate" required></div>
-            <div class="field"><label for="fTime">Vreme početka</label><input type="time" id="fTime" value="21:30" required></div>
-          </div>
-          <div class="frow">
-            <div class="field"><label for="fKind">Vrsta</label><select id="fKind">
-              <option>Timska igra</option><option>Eliminaciona borba</option><option>Borba za medalju</option><option>Pojedinačni duel</option><option>Finale</option></select></div>
-            <div class="field"><label for="fEp">Epizoda</label><input type="number" id="fEp" min="1" max="200" placeholder="npr. 10"></div>
-          </div>
-          <div class="field"><label for="fA">Strana A</label><select id="fA"></select></div>
-          <div class="field"><label for="fB">Strana B</label><select id="fB"></select></div>
-          <div class="field"><label for="fNote">Napomena (poligon, igra)</label><input id="fNote" maxlength="60" placeholder="npr. poligon Kontejner"></div>
-          <button class="btn" type="submit">DODAJ DUEL</button>
-          <p class="msg" id="duelMsg"></p>
-        </form>
-        <form class="apanel cut" id="najavaForm">
-          <h3>Najava večeri</h3>
-          <div class="field"><label for="nText">Tekst najave na početnoj strani</label><textarea id="nText" maxlength="240"></textarea></div>
-          <div class="field"><label for="nDate">Za datum</label><input type="date" id="nDate"></div>
-          <button class="btn ghost" type="submit">SAČUVAJ NAJAVU</button>
-          <p class="msg" id="najavaMsg"></p>
-        </form>
-        <form class="apanel cut" id="athForm">
-          <h3>Novi takmičar</h3>
-          <div class="frow">
-            <div class="field"><label for="aIme">Ime</label><input id="aIme" required maxlength="20"></div>
-            <div class="field"><label for="aPrez">Prezime</label><input id="aPrez" maxlength="24"></div>
-          </div>
-          <div class="frow">
-            <div class="field"><label for="aTim">Tim</label><select id="aTim"><option value="crveni">Crveni</option><option value="plavi">Plavi</option></select></div>
-            <div class="field"><label for="aPol">Pol</label><select id="aPol"><option value="m">Muško</option><option value="z">Žensko</option></select></div>
-          </div>
-          <button class="btn ghost" type="submit">DODAJ TAKMIČARA</button>
-          <p class="msg" id="athMsg"></p>
-        </form>
-      </div>
-      <div class="lcol">
-        <div class="apanel cut"><h3>Dueli</h3><div class="adl" id="adminDuels"></div></div>
-        <div class="apanel cut"><h3>Takmičari i fotografije</h3><div class="atable" id="adminAth"></div></div>
-      </div>
+    <div id="adminTak" hidden>
+      <form class="apanel" id="athForm">
+        <h3>Novi takmičar</h3>
+        <div class="grid2">
+          <label class="fl">Ime<input class="inp" id="aIme" required maxlength="20"></label>
+          <label class="fl">Prezime<input class="inp" id="aPrez" maxlength="24"></label>
+        </div>
+        <div class="grid2">
+          <label class="fl">Tim<select id="aTim"><option value="crveni">Crveni</option><option value="plavi">Plavi</option></select></label>
+          <label class="fl">Pol<select id="aPol"><option value="m">Muško</option><option value="z">Žensko</option></select></label>
+        </div>
+        <button class="btn ghost" type="submit">DODAJ TAKMIČARA</button>
+      </form>
+      <p class="muted" style="margin:0 0 10px">Klikni „Dodaj sliku“ ispod takmičara. Slika se sama smanji pre otpremanja. Najbolje izgleda uspravna fotografija, lice u gornjem delu.</p>
+      <div class="agrid" id="adminAth"></div>
     </div>
   </section>
 </main>
 
-<nav class="tabbar" aria-label="Glavni meni" id="tabbar">
-  <button data-go="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20 12 4l8 16"/><path d="M8 13h8"/></svg>DUELI</button>
-  <button data-go="roster"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="6" r="3"/><path d="M6 21v-5a6 6 0 0 1 12 0v5"/></svg>TIMOVI</button>
-  <button data-go="global"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>RANG</button>
-  <button data-go="profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 3h10l4 7-9 11L3 10z"/></svg>PROFIL</button>
-  <button data-go="admin" hidden class="admin-only"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"/></svg>ADMIN</button>
+<nav class="tabbar" id="tabbar" aria-label="Glavni meni">
+  <button data-go="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 19 12 5l7 14M8.5 13h7"/></svg>Dueli</button>
+  <button data-go="roster"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="3.2"/><path d="M5.5 20v-3.5a6.5 6.5 0 0 1 13 0V20"/></svg>Takmičari</button>
+  <button data-go="rang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 20V11M12 20V5M19 20v-6"/></svg>Rang</button>
+  <button data-go="profil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="9" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>Profil</button>
+  <button data-go="admin" class="admin-only" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 4 6v6c0 4.5 3.4 8 8 9 4.6-1 8-4.5 8-9V6z"/></svg>Admin</button>
 </nav>
 
 <div class="viewer" id="viewer" hidden role="dialog" aria-modal="true" aria-labelledby="vName">
   <canvas id="vBg" aria-hidden="true"></canvas>
-  <canvas id="vFig" aria-label="Model takmičara. Prevuci da okreneš."></canvas>
-  <div class="v-ui v-top">
-    <div class="eyebrow" id="vTeam">TAKMIČAR</div>
-    <button class="v-close" id="vClose">✕ ZATVORI</button>
-  </div>
-  <div class="v-ui v-left">
-    <div class="v-name" id="vName"></div>
-    <div class="v-meta" id="vMeta"></div>
-    <div class="v-stats" id="vStats"></div>
-  </div>
-  <div class="v-ui v-right">
-    <div class="v-src">
-      <h4>IZVOR PRIKAZA</h4>
-      <div id="vSrc" style="font-family:var(--display);font-weight:800;font-size:18px;letter-spacing:.06em"></div>
-      <p id="vSrcNote"></p>
-    </div>
-  </div>
-  <div class="v-ui v-bottom">
-    <div class="dial">
-      <svg viewBox="0 0 46 46" aria-hidden="true"><circle cx="23" cy="23" r="19" fill="none" stroke="#343942" stroke-width="2"/><path id="dialArc" fill="none" stroke="#ff7a18" stroke-width="3" d=""/><circle id="dialDot" r="3.5" fill="#fff" cx="23" cy="4"/></svg>
-      <span id="dragLbl">PREVUCI DA OKRENEŠ</span><b id="deg">0°</b>
-    </div>
-  </div>
+  <canvas id="vFig" aria-label="Prevuci da okreneš"></canvas>
+  <div class="vhint" id="vHint">PREVUCI DA OKRENEŠ</div>
+  <button class="vclose" id="vClose">✕ Zatvori</button>
+  <div class="vinfo"><h2 id="vName"></h2><p id="vSub"></p></div>
 </div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+const SUPABASE_URL='https://ckuzdywtwaawdhhkifql.supabase.co';
+const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrdXpkeXd0d2Fhd2RoaGtpZnFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAzNTgyNjMsImV4cCI6MjEwNTkzNDI2M30.QUCK1mv6jgNlzw9ez5N20xrSO6IyLJb2E9j0EFCUMGA';
+const ADMIN_EMAIL='vamit5.team@gmail.com';
+
+const TEAMS={crveni:{name:'CRVENI',color:'#d8281d'},plavi:{name:'PLAVI',color:'#2f66ff'}};
+const TEAM_ATH={
+  crveni:{id:'crveni',name:'CRVENI',team:'crveni',height:1.04,build:1.12,skin:'#c58d68',hair:'#17110d',media:{portrait:null,frames:[]},isTeam:true},
+  plavi:{id:'plavi',name:'PLAVI',team:'plavi',height:1.04,build:1.12,skin:'#caa080',hair:'#0f0c0a',media:{portrait:null,frames:[]},isTeam:true},
+};
+const STATUSES=['Aktivan','Kapiten','Nominovan','Imunitet','Povređen','Eliminisan'];
+const S={sb:null,uid:null,email:'',anon:false,admin:false,ready:false,ATH:{},DUELS:[],PLAYERS:{},myPicks:{},nick:''};
+
+const $=s=>document.querySelector(s);
+const el=(t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e;};
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('on'),2200);}
+function haptic(p){try{navigator.vibrate&&navigator.vibrate(p);}catch(e){}}
+const store={get(k,d){try{const v=localStorage.getItem('xl_'+k);return v==null?d:v;}catch(e){return d;}},set(k,v){try{localStorage.setItem('xl_'+k,v);}catch(e){}}};
+const canvases=[];
+function reg(cv,fn){canvases.push({cv,fn});}
+function refreshAll(){for(let i=canvases.length-1;i>=0;i--){const c=canvases[i];if(!c.cv.isConnected){canvases.splice(i,1);continue;}if(c.cv.offsetParent!==null)c.fn();}}
+let rT;addEventListener('resize',()=>{clearTimeout(rT);rT=setTimeout(refreshAll,120);});
+const letters=s=>s.normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/Đ/g,'D').replace(/đ/g,'d').replace(/[^A-Za-z]/g,'');
+function hash(s){let h=7;for(const c of s)h=(h*31+c.charCodeAt(0))>>>0;return h;}
+
+/* vreme */
+const BG=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Belgrade',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false});
+function bgParts(t){const p=BG.formatToParts(new Date(t));const g=k=>p.find(x=>x.type===k).value;return {datum:`${g('year')}-${g('month')}-${g('day')}`,vreme:`${g('hour')==='24'?'00':g('hour')}:${g('minute')}`};}
+const todayBG=()=>bgParts(Date.now()).datum;
+function lastSunday(y,m){const d=new Date(Date.UTC(y,m+1,0));d.setUTCDate(d.getUTCDate()-d.getUTCDay());return d.getTime();}
+function offsetFor(ds){const [y,m,d]=ds.split('-').map(Number);const t=Date.UTC(y,m-1,d);return (t>=lastSunday(y,2)&&t<lastSunday(y,9))?'+02:00':'+01:00';}
+const startOf=d=>Date.parse(d.pocetak);
+const isLocked=d=>!!d.pobednik||!!d.uzivo||Date.now()>=startOf(d);
+function dayLabel(ds){const t=todayBG();if(ds===t)return 'Danas';const tm=bgParts(Date.now()+864e5).datum;if(ds===tm)return 'Sutra';const [y,m,d]=ds.split('-').map(Number);return new Intl.DateTimeFormat('sr-Latn-RS',{weekday:'short',day:'numeric',month:'numeric',timeZone:'UTC'}).format(new Date(Date.UTC(y,m-1,d)));}
+function shortDate(ds){const [,m,d]=ds.split('-').map(Number);return `${d}.${m}.`;}
+function countdown(ms){const m=Math.round(ms/60000);if(m<1)return 'počinje sada';if(m<60)return `za ${m} min`;const h=Math.floor(m/60),r=m%60;if(h<24)return r?`za ${h} h ${r} min`:`za ${h} h`;return null;}
+
+/* takmičari */
+const IMG={};
+function img(url){if(!IMG[url]){const i=new Image();i.src=url;i.onload=()=>refreshAll();IMG[url]=i;}return IMG[url];}
+function toAthlete(r){
+  const h=hash(r.id),f=r.pol==='z',nick=r.nadimak||'';
+  const skins=['#c58d68','#d6a07c','#caa080','#b98262','#e0b393','#d9a882','#bd8a66'];
+  return {id:r.id,raw:r,name:(nick||r.ime||'?').toUpperCase(),full:`${r.ime||''} ${r.prezime||''}`.trim(),team:r.tim==='plavi'?'plavi':'crveni',female:f,status:r.status||'Aktivan',
+    zanimanje:r.zanimanje||'',mesto:r.mesto||'',godine:r.godine||null,photo:r.portret||null,
+    height:f?.92+(h%5)*.012:1+(h%7)*.012,build:f?.82+(h%4)*.02:1+(h%6)*.025,skin:skins[h%skins.length],hair:['#17110d','#2a1b12','#0f0c0a','#3a2415'][h%4],
+    media:{portrait:r.portret?img(r.portret):null,frames:(r.snimci||[]).map(img)}};
+}
+const side=id=>TEAM_ATH[id]||S.ATH[id]||{id,name:'?',team:'crveni',height:1,build:1,skin:'#b98262',hair:'#111',media:{portrait:null,frames:[]}};
+const athList=()=>Object.values(S.ATH).sort((a,b)=>(a.status==='Eliminisan')-(b.status==='Eliminisan')||a.team.localeCompare(b.team)||a.name.localeCompare(b.name,'sr'));
+function photoBox(x,ang,extra=''){
+  const tag=x.isTeam?'':`<span class="team">${TEAMS[x.team].name}</span>`;
+  const inner=x.photo?`<img src="${esc(x.photo)}" alt="" loading="lazy">`:`<canvas data-fig="${esc(x.id)}" data-ang="${ang}"></canvas>`;
+  return `<div class="photo" style="--tc:${TEAMS[x.team].color}"${extra}>${inner}${tag}</div>`;
+}
+function hydrate(root){root.querySelectorAll('canvas[data-fig]').forEach(cv=>{const x=side(cv.dataset.fig),ang=+cv.dataset.ang||0;
+  reg(cv,()=>{const H=cv.clientHeight;drawFigure(cv,{...x,media:{portrait:null,frames:[]}},{angle:ang,zoom:1.12,baseY:H*1.1,fitH:H,cover:true});});});requestAnimationFrame(refreshAll);}
+
+/* bodovanje: 1 pogodak = 1 poen */
+const settled=()=>S.DUELS.filter(d=>d.pobednik);
+function scorePicks(picks){let c=0,w=0,streak=0,best=0;const hist=[];
+  for(const d of settled()){const p=picks&&picks[d.id];if(!p)continue;if(p===d.pobednik){c++;streak++;best=Math.max(best,streak);hist.push({d,p,r:'W'});}else{w++;streak=0;hist.push({d,p,r:'L'});}}
+  return {pts:c,correct:c,wrong:w,streak,best,hist};}
+function scoreDay(picks,day){let c=0,w=0;for(const d of settled()){if(d.datum!==day)continue;const p=picks&&picks[d.id];if(!p)continue;if(p===d.pobednik)c++;else w++;}return {c,w};}
+function standings(day){
+  return Object.entries(S.PLAYERS).map(([uid,p])=>{const t=day?scoreDay(p.picks,day):(s=>({c:s.correct,w:s.wrong}))(scorePicks(p.picks));return {uid,nick:(p.nick||'').trim(),c:t.c,w:t.w};})
+    .filter(x=>x.nick&&x.c+x.w>0).sort((a,b)=>b.c-a.c||a.w-b.w||a.nick.localeCompare(b.nick,'sr'));
+}
+function crowd(d){let a=0,b=0;for(const p of Object.values(S.PLAYERS)){const v=p.picks&&p.picks[d.id];if(v==='a')a++;else if(v==='b')b++;}return {a,b,t:a+b};}
+function record(id){let w=0,l=0;for(const d of settled()){if(d.a!==id&&d.b!==id)continue;((d.pobednik==='a')===(d.a===id))?w++:l++;}return {w,l};}
+
+/* ================= DUELI ================= */
+const PREV={};
+function heroHTML(d){
+  const A=side(d.a),B=side(d.b),mine=S.myPicks[d.id],locked=isLocked(d),c=crowd(d);
+  const cd=countdown(startOf(d)-Date.now());
+  let pill;
+  if(d.uzivo)pill='<span class="pill live"><i></i>UŽIVO</span>';
+  else if(!locked)pill=`<span class="pill soon">${cd?'Počinje '+cd:dayLabel(d.datum)+' u '+d.vreme}</span>`;
+  else pill='<span class="pill">Čeka se rezultat</span>';
+  const mid=d.uzivo?`<div class="mid"><div class="score"><span id="hsA">${d.rezA}</span><span class="c">:</span><span id="hsB">${d.rezB}</span></div>${d.cilj?`<div class="target">do ${d.cilj}</div>`:''}</div>`:`<div class="mid"><div class="vs" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="#ff7a1a"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg></div></div>`;
+  const pa=c.t?Math.round(c.a/c.t*100):50;
+  const sub=x=>x.isTeam?'Tim':(r=>`${TEAMS[x.team].name.charAt(0)+TEAMS[x.team].name.slice(1).toLowerCase()} · ${r.w}–${r.l}`)(record(x.id));
+  return `<article class="hero${d.uzivo?' live':''}" data-id="${d.id}"${mine?` data-pick="${mine}"`:''}>
+    <div class="hero-top">${pill}<span class="kind">${esc(d.vrsta)}${d.napomena?' · '+esc(d.napomena):''}</span></div>
+    <div class="faces">
+      <div class="face a">${photoBox(A,.5)}<div class="fname">${esc(A.name)}</div><div class="fsub">${esc(sub(A))}</div></div>
+      ${mid}
+      <div class="face b">${photoBox(B,-.5)}<div class="fname">${esc(B.name)}</div><div class="fsub">${esc(sub(B))}</div></div>
+    </div>
+    <div class="picks">
+      <button class="pick${mine==='a'?' sel':mine?' off':''}" data-s="a" ${mine||locked?'disabled':''}>${esc(A.name)}</button>
+      <button class="pick${mine==='b'?' sel':mine?' off':''}" data-s="b" ${mine||locked?'disabled':''}>${esc(B.name)}</button>
+    </div>
+    ${(mine||locked)&&c.t?`<div class="split"><div class="bar"><i style="width:${pa}%"></i><i style="width:${100-pa}%"></i></div><div class="lbl"><span>${pa}%</span><span>${c.t} ${c.t%10===1&&c.t%100!==11?'prognoza':'prognoza'}</span><span>${100-pa}%</span></div></div>`
+      :!mine&&!locked?'<div class="hint">Ko pobeđuje? Tačna prognoza = 1 poen.</div>':!mine?'<div class="hint">Prognoze su zatvorene.</div>':''}
+  </article>`;
+}
+function rowHTML(d){
+  const A=side(d.a),B=side(d.b),mine=S.myPicks[d.id],locked=isLocked(d);
+  return `<div class="row" data-id="${d.id}"><div class="when">${esc(dayLabel(d.datum))}<b>${esc(d.vreme)}</b></div>
+    <div class="pair">${esc(A.name)} – ${esc(B.name)}<small>${esc(d.vrsta)}</small></div>
+    <div class="mini">${['a','b'].map(s=>`<button data-s="${s}" class="${mine===s?'sel':mine?'off':''}" ${mine||locked?'disabled':''}>${esc((s==='a'?A:B).name)}</button>`).join('')}</div></div>`;
+}
+function resHTML(d){
+  const A=side(d.a),B=side(d.b),mine=S.myPicks[d.id];
+  const sc=(d.rezA||d.rezB)?`${d.rezA}:${d.rezB}`:(d.pobednik==='a'?'◀':'▶');
+  return `<div class="res"><span class="muted d">${shortDate(d.datum)}</span><span class="n ${d.pobednik==='a'?'':'l'}">${esc(A.name)}</span><span class="s">${sc}</span><span class="n b ${d.pobednik==='b'?'':'l'}">${esc(B.name)}</span><span class="m ${mine?(mine===d.pobednik?'W':'L'):''}">${mine?(mine===d.pobednik?'✓':'✕'):''}</span></div>`;
+}
+let showAllRes=false;
+function renderHome(){
+  const box=$('#home');if(!S.ready)return;
+  const open=S.DUELS.filter(d=>!d.pobednik).sort((a,b)=>(!!b.uzivo-!!a.uzivo)||startOf(a)-startOf(b));
+  const heroD=open.find(d=>d.uzivo)||open.find(d=>!isLocked(d))||open[0];
+  const rest=open.filter(d=>d!==heroD);
+  const res=settled().slice().reverse();
+  const today=todayBG(),mine=scoreDay(S.myPicks,today);
+  let h='';
+  if(heroD){
+    h+=`<div class="sec">${heroD.uzivo?'Uživo':isLocked(heroD)?'U toku':'Sledeći duel'}${S.uid&&(mine.c+mine.w)?`<small>Danas: ${mine.c} od ${mine.c+mine.w} pogođeno</small>`:''}</div>${heroHTML(heroD)}`;
+  }else h+=`<div class="sec">Sledeći duel</div><div class="empty">Novi dueli stižu uskoro. Emisija: pon–pet u 21:30.</div>`;
+  if(rest.length)h+=`<div class="sec">Zatim</div><div class="list">${rest.slice(0,8).map(rowHTML).join('')}</div>`;
+  if(res.length){const list=showAllRes?res:res.slice(0,5);h+=`<div class="sec">Rezultati</div><div class="list">${list.map(resHTML).join('')}</div>${res.length>5?`<button class="more" id="moreRes">${showAllRes?'Prikaži manje':'Prikaži sve rezultate'}</button>`:''}`;}
+  box.innerHTML=h;hydrate(box);
+  box.querySelectorAll('[data-id] [data-s]').forEach(b=>b.onclick=()=>makePick(b.closest('[data-id]').dataset.id,b.dataset.s));
+  const m=$('#moreRes');if(m)m.onclick=()=>{showAllRes=!showAllRes;renderHome();};
+  if(heroD&&heroD.uzivo){const p=PREV[heroD.id];if(p){if(p.a!==heroD.rezA)$('#hsA').classList.add('bump');if(p.b!==heroD.rezB)$('#hsB').classList.add('bump');}PREV[heroD.id]={a:heroD.rezA,b:heroD.rezB};}
+}
+async function makePick(id,s){
+  const d=S.DUELS.find(x=>x.id===id);if(!d||S.myPicks[id]||isLocked(d))return;
+  if(!S.uid){showLogin();return;}
+  S.myPicks={...S.myPicks,[id]:s};haptic([12,40,24]);renderHome();
+  const card=document.querySelector(`.hero[data-id="${id}"]`);if(card)card.classList.add('locking');
+  const {error}=await S.sb.from('picks').insert({player_id:S.uid,duel_id:id,izbor:s});
+  if(error){console.warn(error);const {[id]:_,...r}=S.myPicks;S.myPicks=r;renderAll();toast('Prognoza nije sačuvana. Pokušaj ponovo.');return;}
+  (S.PLAYERS[S.uid]||(S.PLAYERS[S.uid]={nick:S.nick,picks:{}})).picks[id]=s;
+  toast('Zaključano: '+side(s==='a'?d.a:d.b).name);renderChip();
+}
+
+/* ================= TAKMIČARI ================= */
+let teamF='svi';
+$('#teamSeg').onclick=e=>{const b=e.target.closest('button');if(!b)return;teamF=b.dataset.f;$('#teamSeg').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));renderRoster();};
+function renderRoster(){
+  const box=$('#roster');if(!S.ready)return;
+  const list=athList().filter(a=>teamF==='svi'||a.team===teamF);
+  box.innerHTML=list.map(a=>{const hot=['Kapiten','Imunitet'].includes(a.status),show=a.status!=='Aktivan';
+    return `<button class="acard${a.status==='Eliminisan'?' out':''}" data-a="${esc(a.id)}">${photoBox(a,.35)}${show?`<span class="st${hot?' hot':''}">${esc(a.status)}</span>`:''}<div class="info"><div class="nm">${esc(a.name)}</div><div class="sub">${esc(a.raw.nadimak?a.full:(a.raw.prezime||''))}</div></div></button>`;}).join('')||'<div class="empty">Nema takmičara.</div>';
+  hydrate(box);box.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>openViewer(S.ATH[b.dataset.a]));
+}
+
+/* 360° prikaz */
+const V={a:null,angle:.3,vel:0,zoom:1,tz:1,drag:false,lastX:0,lastT:0,raf:0};
+function openViewer(a){
+  V.a=a;V.angle=.3;V.vel=.05;V.tz=1;V.zoom=1.05;const r=record(a.id);
+  $('#vName').textContent=a.raw.nadimak?`${a.name}`:a.full.toUpperCase();
+  $('#vSub').textContent=[TEAMS[a.team].name.charAt(0)+TEAMS[a.team].name.slice(1).toLowerCase()+' tim',a.status!=='Aktivan'?a.status:'',a.zanimanje,a.mesto,a.godine?a.godine+' god.':'',(r.w+r.l)?`Duel ${r.w}–${r.l}`:''].filter(Boolean).join(' · ');
+  const n=a.media.frames.length;$('#vHint').textContent=n>1?'PREVUCI DA OKRENEŠ · 360°':a.media.portrait?'':'PREVUCI DA OKRENEŠ';
+  $('#viewer').hidden=false;document.body.style.overflow='hidden';cancelAnimationFrame(V.raf);V.raf=requestAnimationFrame(vLoop);
+}
+function closeViewer(){$('#viewer').hidden=true;document.body.style.overflow='';cancelAnimationFrame(V.raf);}
+function drawStadium(cv,ang){
+  const dpr=Math.min(2,devicePixelRatio||1),W=cv.clientWidth,H=cv.clientHeight;
+  if(cv.width!==Math.round(W*dpr)||cv.height!==Math.round(H*dpr)){cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);}
+  const c=cv.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);c.fillStyle='#040405';c.fillRect(0,0,W,H);
+  const par=Math.sin(ang),hz=H*.72,g=c.createRadialGradient(W/2-par*30,H*.35,0,W/2-par*30,H*.35,Math.max(W,H)*.7);
+  g.addColorStop(0,'rgba(255,110,40,.2)');g.addColorStop(1,'rgba(0,0,0,0)');c.fillStyle=g;c.fillRect(0,0,W,H);
+  c.strokeStyle='rgba(255,122,24,.1)';for(let i=-14;i<=14;i++){const x0=W/2+i*60-par*90;c.beginPath();c.moveTo(W/2+(x0-W/2)*.12,hz);c.lineTo(x0+(x0-W/2)*1.6,H);c.stroke();}
+}
+function vLoop(){
+  if(!V.drag){V.angle+=V.vel;V.vel*=.955;if(Math.abs(V.vel)<.0008)V.vel=0;}
+  V.zoom+=(V.tz*(V.drag?1.04:1)-V.zoom)*.12;const fig=$('#vFig');drawStadium($('#vBg'),V.angle);
+  const H=fig.clientHeight;drawFigure(fig,V.a,{angle:V.angle,zoom:V.zoom,baseY:H*.8,fitH:H*.72,floorGlow:true});
+  V.raf=requestAnimationFrame(vLoop);
+}
+(function(){const fig=$('#vFig');
+  fig.addEventListener('pointerdown',e=>{V.drag=true;V.lastX=e.clientX;V.lastT=performance.now();V.vel=0;fig.setPointerCapture(e.pointerId);});
+  fig.addEventListener('pointermove',e=>{if(!V.drag)return;const dx=e.clientX-V.lastX,now=performance.now(),dt=Math.max(1,now-V.lastT),da=dx*.011;V.angle+=da;V.vel=da*(16/dt);V.lastX=e.clientX;V.lastT=now;});
+  const end=()=>{V.drag=false;V.vel=Math.max(-.35,Math.min(.35,V.vel));};fig.addEventListener('pointerup',end);fig.addEventListener('pointercancel',end);
+  fig.addEventListener('wheel',e=>{e.preventDefault();V.tz=Math.max(1,Math.min(1.35,V.tz-e.deltaY*.001));},{passive:false});
+  $('#vClose').onclick=closeViewer;document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#viewer').hidden)closeViewer();});
+})();
+
+/* ================= RANG LISTA ================= */
+let rangMode='danas';
+$('#rangSeg').onclick=e=>{const b=e.target.closest('button');if(!b)return;rangMode=b.dataset.m;$('#rangSeg').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));renderBoard();};
+function renderBoard(){
+  if(!S.ready)return;const day=rangMode==='danas',list=standings(day?todayBG():null);
+  $('#board').innerHTML=list.length?list.map((p,i)=>`<div class="brow${i===0?' first':''}${p.uid===S.uid?' me':''}"><span class="rk">${i+1}</span><span class="un">${esc(p.nick)}</span><span class="pt">${p.c}<small>od ${p.c+p.w}</small></span></div>`).join('')
+    :`<div class="empty">${day?'Danas još nema rezultata.':'Još nema rezultata.'}</div>`;
+}
+
+/* ================= PROFIL ================= */
+function renderChip(){$('#chipPts').textContent=scorePicks(S.myPicks).pts;}
+function renderProfile(){
+  const me=scorePicks(S.myPicks),t=scoreDay(S.myPicks,todayBG()),rk=standings(null).findIndex(p=>p.uid===S.uid);
+  const nick=S.nick||'Igrač';$('#pName').textContent=nick;$('#pAv').textContent=nick[0].toUpperCase();
+  $('#pSub').textContent=S.anon?'Gost · prognoze su sačuvane samo na ovom uređaju':(S.email||'');
+  if(document.activeElement!==$('#nickIn'))$('#nickIn').value=S.nick||'';
+  const tot=me.correct+me.wrong;
+  $('#pStats').innerHTML=[[me.pts,'Poena ukupno'],[`${t.c}/${t.c+t.w}`,'Danas'],[tot?Math.round(me.correct/tot*100)+'%':'–','Pogodaka'],[rk>=0?'#'+(rk+1):'–','Mesto']].map(([v,k])=>`<div class="stat"><b>${v}</b><span>${k}</span></div>`).join('');
+  const rows=[...S.DUELS.filter(d=>!d.pobednik&&S.myPicks[d.id]).map(d=>({d,p:S.myPicks[d.id],r:'P'})),...me.hist.slice().reverse()].slice(0,20);
+  $('#hist').innerHTML=rows.length?rows.map(h=>{const A=side(h.d.a),B=side(h.d.b),pk=side(h.p==='a'?h.d.a:h.d.b);
+    return `<div class="res"><span class="muted d">${shortDate(h.d.datum)}</span><span class="n" style="grid-column:span 3">${esc(A.name)} – ${esc(B.name)}<br><span class="muted">Izbor: ${esc(pk.name)}</span></span><span class="m ${h.r}">${h.r==='P'?'…':h.r==='W'?'✓':'✕'}</span></div>`;}).join('')
+    :'<div class="empty">Još nemaš prognoza.</div>';
+  $('#toRegister').hidden=!S.anon;
+}
+$('#nickForm').onsubmit=async e=>{e.preventDefault();const v=$('#nickIn').value.trim().replace(/\s+/g,' '),m=$('#nickMsg');
+  if(v.length<2){m.className='msg err';m.textContent='Najmanje 2 znaka.';return;}
+  const r=await saveNick(v);if(r==='ok'){S.nick=v;m.className='msg ok';m.textContent='Sačuvano.';renderAll();}else{m.className='msg err';m.textContent=r==='taken'?'To ime je zauzeto.':'Nije sačuvano.';}};
+async function saveNick(nick){const {error}=await S.sb.from('players').upsert({id:S.uid,nick});if(error){console.warn(error);return error.code==='23505'?'taken':'fail';}(S.PLAYERS[S.uid]||(S.PLAYERS[S.uid]={picks:{}})).nick=nick;return 'ok';}
+$('#logout').onclick=async()=>{await S.sb.auth.signOut();store.set('guest','');location.reload();};
+$('#toRegister').onclick=async()=>{await S.sb.auth.signOut();store.set('guest','');location.hash='';location.reload();};
+
+/* ================= PRIJAVA ================= */
+let regMode=false;
+function setMode(r){regMode=r;$('#lNick').hidden=!r;$('#lNick').required=r;$('#lSubmit').textContent=r?'NAPRAVI NALOG':'PRIJAVI SE';$('#lSwitch').textContent=r?'Već imaš nalog? Prijavi se':'Nemaš nalog? Registruj se';$('#lPass').autocomplete=r?'new-password':'current-password';$('#lMsg').textContent='';}
+function showLogin(){$('#login').hidden=false;document.body.style.overflow='hidden';}
+$('#lSwitch').onclick=()=>setMode(!regMode);
+$('#authForm').onsubmit=async e=>{e.preventDefault();const m=$('#lMsg'),email=$('#lEmail').value.trim(),password=$('#lPass').value,btn=$('#lSubmit');
+  btn.disabled=true;m.className='msg';m.textContent='Sačekaj…';
+  try{
+    if(regMode){const nick=$('#lNick').value.trim();if(nick.length<2)throw {message:'nick'};
+      const {data,error}=await S.sb.auth.signUp({email,password,options:{data:{nick},emailRedirectTo:location.origin+location.pathname}});if(error)throw error;
+      if(!data.session){m.className='msg ok';m.textContent='Poslali smo ti email. Klikni link u njemu da potvrdiš nalog, pa se prijavi.';btn.disabled=false;setMode(false);return;}}
+    else{const {error}=await S.sb.auth.signInWithPassword({email,password});if(error)throw error;}
+    store.set('guest','');location.reload();
+  }catch(err){btn.disabled=false;m.className='msg err';const t=(err&&err.message)||'';
+    m.textContent=t==='nick'?'Upiši ime u igri (najmanje 2 znaka).':/Invalid login/i.test(t)?'Pogrešan email ili lozinka.':/not confirmed/i.test(t)?'Potvrdi nalog preko linka iz emaila.':/already registered/i.test(t)?'Taj email već ima nalog. Prijavi se.':/at least 6/i.test(t)?'Lozinka mora imati najmanje 6 znakova.':'Nije uspelo. Pokušaj ponovo.';}
+};
+$('#lGuest').onclick=async()=>{const m=$('#lMsg');m.className='msg';m.textContent='Sačekaj…';
+  const {error}=await S.sb.auth.signInAnonymously();if(error){m.className='msg err';m.textContent='Igra bez naloga trenutno nije dostupna. Napravi nalog.';return;}
+  store.set('guest','1');location.reload();};
+
+/* ================= ADMIN ================= */
+let adminTab='dueli';
+$('#adminSeg').onclick=e=>{const b=e.target.closest('button');if(!b)return;adminTab=b.dataset.t;$('#adminSeg').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));$('#adminDueli').hidden=adminTab!=='dueli';$('#adminTak').hidden=adminTab!=='takmicari';renderAdmin();};
+async function w(p,ok){const {error}=await p;if(error){console.warn(error);toast(/row-level|permission/i.test(error.message||'')?'Nemaš dozvolu.':'Čuvanje nije uspelo.');return false;}if(ok)toast(ok);return true;}
+function fillSelects(){
+  const opts=`<optgroup label="Timovi"><option value="crveni">Crveni tim</option><option value="plavi">Plavi tim</option></optgroup>`+['crveni','plavi'].map(t=>`<optgroup label="${t==='crveni'?'Crveni':'Plavi'}">${athList().filter(a=>a.team===t&&a.status!=='Eliminisan').map(a=>`<option value="${esc(a.id)}">${esc(a.full)}${a.raw.nadimak?' ('+esc(a.raw.nadimak)+')':''}</option>`).join('')}</optgroup>`).join('');
+  ['#fA','#fB'].forEach(s=>{const v=$(s).value;$(s).innerHTML=opts;if(v)$(s).value=v;});if(!$('#fB').dataset.i){$('#fB').value='plavi';$('#fB').dataset.i=1;}
+}
+$('#duelForm').onsubmit=async e=>{e.preventDefault();const m=$('#duelMsg'),datum=$('#fDate').value,vreme=$('#fTime').value||'21:30',a=$('#fA').value,b=$('#fB').value,vrsta=$('#fKind').value;
+  if(a===b){m.className='msg err';m.textContent='Izaberi dve različite strane.';return;}
+  const ok=await w(S.sb.from('duels').insert({a,b,pocetak:`${datum}T${vreme}:00${offsetFor(datum)}`,vrsta,napomena:$('#fNote').value.trim()||null,cilj:vrsta==='Timska igra'?10:0}),'Duel je dodat');
+  if(ok){m.className='msg ok';m.textContent=`${side(a).name} – ${side(b).name}, ${dayLabel(datum)} u ${vreme}`;$('#fNote').value='';await loadDuels();renderAll();}};
+$('#athForm').onsubmit=async e=>{e.preventDefault();const ime=$('#aIme').value.trim(),prez=$('#aPrez').value.trim();if(!ime)return;
+  const id=(letters(ime+'-'+prez).toLowerCase()||'t')+'-'+Date.now().toString(36).slice(-4);
+  if(await w(S.sb.from('athletes').insert({id,ime,prezime:prez||null,tim:$('#aTim').value,pol:$('#aPol').value,status:'Aktivan'}),'Takmičar je dodat')){$('#aIme').value='';$('#aPrez').value='';await loadAthletes();renderAll();}};
+function renderAdmin(){
+  if(!S.admin||!S.ready)return;fillSelects();if(!$('#fDate').value)$('#fDate').value=todayBG();
+  if(adminTab==='dueli'){
+    const list=S.DUELS.slice().sort((a,b)=>(!!a.pobednik-!!b.pobednik)||(a.pobednik?startOf(b)-startOf(a):startOf(a)-startOf(b))).slice(0,40);
+    $('#adminDuels').innerHTML=list.map(d=>{const A=side(d.a),B=side(d.b);
+      return `<div class="adr${d.uzivo?' live':''}" data-id="${d.id}"><div class="t">${esc(dayLabel(d.datum))} ${esc(d.vreme)} · ${esc(d.vrsta)}${d.napomena?' · '+esc(d.napomena):''}</div>
+        <div class="p">${esc(A.name)} – ${esc(B.name)}</div>
+        <div class="acts"><button data-act="win" data-s="a" class="${d.pobednik==='a'?'on':''}">Pobeda ${esc(A.name)}</button><button data-act="win" data-s="b" class="${d.pobednik==='b'?'on':''}">Pobeda ${esc(B.name)}</button>
+          ${d.pobednik?'<button data-act="clear">Poništi</button>':`<button data-act="live" class="${d.uzivo?'on':''}">${d.uzivo?'Uživo: uključeno':'Uživo'}</button>`}</div>
+        <div class="acts"><span class="sc">${d.rezA}:${d.rezB}</span><button data-act="pt" data-s="a">+1 ${esc(A.name)}</button><button data-act="pt" data-s="b">+1 ${esc(B.name)}</button><button data-act="undo">−1 poslednji</button><button data-act="del" class="danger">Obriši</button></div></div>`;}).join('')||'<div class="empty">Nema duela.</div>';
+    $('#adminDuels').querySelectorAll('[data-act]').forEach(b=>b.onclick=()=>adminAct(b));
+  }else{
+    const box=$('#adminAth');
+    box.innerHTML=athList().map(a=>`<div class="aath" data-a="${esc(a.id)}">${photoBox(a,.3)}<div class="body"><b>${esc(a.full)}</b>
+      <select data-f="tim" aria-label="Tim"><option value="crveni">Crveni</option><option value="plavi">Plavi</option></select>
+      <select data-f="status" aria-label="Status">${STATUSES.map(s=>`<option>${s}</option>`).join('')}</select>
+      <label class="upl">${a.photo?'Promeni sliku':'Dodaj sliku'}<input type="file" accept="image/*" data-k="p"></label>
+      <label class="upl ghost">360° snimci<input type="file" accept="image/*" multiple data-k="f"></label>
+      ${a.photo?'<button type="button" class="guest" data-rm="1" style="padding:2px">Ukloni sliku</button>':''}</div></div>`).join('');
+    hydrate(box);
+    box.querySelectorAll('.aath').forEach(c=>{const a=S.ATH[c.dataset.a];
+      c.querySelector('[data-f="tim"]').value=a.team;c.querySelector('[data-f="status"]').value=STATUSES.includes(a.status)?a.status:'Aktivan';
+      c.querySelectorAll('select').forEach(s=>s.onchange=async()=>{if(await w(S.sb.from('athletes').update({[s.dataset.f]:s.value}).eq('id',a.id),'Sačuvano')){await loadAthletes();renderAll();}});
+      c.querySelectorAll('input[type=file]').forEach(i=>i.onchange=()=>upload(a,i));
+      const rm=c.querySelector('[data-rm]');if(rm)rm.onclick=async()=>{if(await w(S.sb.from('athletes').update({portret:null,snimci:[]}).eq('id',a.id),'Slika je uklonjena')){await loadAthletes();renderAll();}};});
+  }
+}
+async function shrink(file,max=1200){
+  try{const bmp=await createImageBitmap(file);const s=Math.min(1,max/Math.max(bmp.width,bmp.height));const c=document.createElement('canvas');c.width=Math.round(bmp.width*s);c.height=Math.round(bmp.height*s);c.getContext('2d').drawImage(bmp,0,0,c.width,c.height);
+    return await new Promise(r=>c.toBlob(b=>r(b||file),'image/jpeg',.86));}catch(e){return file;}
+}
+async function upload(a,inp){
+  const files=[...inp.files].sort((x,y)=>x.name.localeCompare(y.name,undefined,{numeric:true}));inp.value='';if(!files.length)return;
+  toast('Otpremam…');const urls=[];
+  for(let i=0;i<files.length;i++){const blob=await shrink(files[i]);const path=`${a.id}/${Date.now()}-${i}.jpg`;
+    const {error}=await S.sb.storage.from('slike').upload(path,blob,{contentType:'image/jpeg',upsert:true});if(error){console.warn(error);toast('Otpremanje nije uspelo.');return;}
+    urls.push(S.sb.storage.from('slike').getPublicUrl(path).data.publicUrl);}
+  const upd=inp.dataset.k==='p'?{portret:urls[0]}:{snimci:urls,...(a.photo?{}:{portret:urls[0]})};
+  if(await w(S.sb.from('athletes').update(upd).eq('id',a.id),'Slika je sačuvana')){await loadAthletes();renderAll();}
+}
+async function adminAct(b){
+  const d=S.DUELS.find(x=>x.id===b.closest('[data-id]').dataset.id),act=b.dataset.act,q=v=>S.sb.from('duels').update(v).eq('id',d.id);
+  let ok=true;
+  if(act==='win')ok=await w(q({pobednik:b.dataset.s,uzivo:false}),'Pobednik je označen');
+  else if(act==='clear')ok=await w(q({pobednik:null}),'Poništeno');
+  else if(act==='live')ok=await w(q({uzivo:!d.uzivo}));
+  else if(act==='pt'){const k=b.dataset.s==='a'?'rez_a':'rez_b',c=b.dataset.s==='a'?d.rezA:d.rezB;ok=await w(q({[k]:c+1,tok:[...d.tok,b.dataset.s].slice(-30)}));}
+  else if(act==='undo'){const tok=d.tok.slice(),l=tok.pop();if(!l)return;const k=l==='a'?'rez_a':'rez_b',c=l==='a'?d.rezA:d.rezB;ok=await w(q({[k]:Math.max(0,c-1),tok}));}
+  else if(act==='del'){b.outerHTML='<button data-act="delok" class="danger">Potvrdi brisanje</button>';const n=document.querySelector(`.adr[data-id="${d.id}"] [data-act="delok"]`);n.onclick=()=>adminAct(n);return;}
+  else if(act==='delok')ok=await w(S.sb.from('duels').delete().eq('id',d.id),'Duel je obrisan');
+  if(ok){await loadDuels();renderAll();}
+}
+
+/* ================= PODACI ================= */
+async function fetchAll(t,cols){let out=[],f=0;for(;;){const {data,error}=await S.sb.from(t).select(cols).range(f,f+999);if(error)throw error;out=out.concat(data);if(data.length<1000)break;f+=1000;}return out;}
+async function loadAthletes(){const m={};(await fetchAll('athletes','*')).forEach(r=>{m[r.id]=toAthlete(r);});S.ATH=m;}
+async function loadDuels(){S.DUELS=(await fetchAll('duels','*')).map(r=>({...r,...bgParts(r.pocetak),rezA:r.rez_a||0,rezB:r.rez_b||0,tok:r.tok||[]})).sort((a,b)=>startOf(a)-startOf(b));}
+async function loadPlayers(){
+  const [pl,pk]=await Promise.all([fetchAll('players','id,nick'),fetchAll('picks','player_id,duel_id,izbor')]);
+  const m={};pl.forEach(p=>{m[p.id]={nick:p.nick,picks:{}};});pk.forEach(x=>{(m[x.player_id]||(m[x.player_id]={nick:'',picks:{}})).picks[x.duel_id]=x.izbor;});
+  S.PLAYERS=m;if(S.uid){const me=m[S.uid];S.myPicks={...(me?me.picks:{}),...S.myPicks};if(me&&me.nick)S.nick=me.nick;}
+}
+const LOAD={athletes:loadAthletes,duels:loadDuels,players:loadPlayers,picks:loadPlayers};
+const pend=new Set();let pT=0;
+function queue(t){pend.add(t);clearTimeout(pT);pT=setTimeout(async()=>{const f=new Set([...pend].map(x=>LOAD[x]).filter(Boolean));pend.clear();try{await Promise.all([...f].map(x=>x()));}catch(e){console.warn(e);}renderAll();},400);}
+async function ensurePlayer(meta){
+  const me=S.PLAYERS[S.uid];if(me&&me.nick){S.nick=me.nick;return;}
+  const want=(meta&&meta.nick)||'';
+  for(let i=0;i<6;i++){const nick=i===0&&want?want:`Igrač ${1000+Math.floor(Math.random()*9000)}`;if(await saveNick(nick)==='ok'){S.nick=nick;return;}}
+}
+
+/* ================= NAVIGACIJA ================= */
+const SCREENS=['home','roster','rang','profil','admin'];let current='home';
+function go(s,push){if(!SCREENS.includes(s)||(s==='admin'&&!S.admin))s='home';current=s;
+  SCREENS.forEach(x=>$('#s-'+x).classList.toggle('on',x===s));
+  document.querySelectorAll('[data-go]').forEach(b=>{if(b.classList.contains('chip'))return;b.toggleAttribute('aria-current',b.dataset.go===s);if(b.dataset.go===s)b.setAttribute('aria-current','page');});
+  if(push){try{history.replaceState(null,'','#'+s);}catch(e){}}scrollTo({top:0});renderAll();}
+document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.go,true)));
+let rq=0;function renderAll(){cancelAnimationFrame(rq);rq=requestAnimationFrame(()=>{renderChip();
+  if(current==='home')renderHome();else if(current==='roster')renderRoster();else if(current==='rang')renderBoard();else if(current==='profil')renderProfile();else if(current==='admin')renderAdmin();});}
+
+async function boot(){
+  go((location.hash||'#home').slice(1),false);
+  if(!window.supabase){$('#home').innerHTML='<div class="empty">Veza nije uspela. Osveži stranicu.</div>';return;}
+  S.sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+  const {data:{session}}=await S.sb.auth.getSession();
+  if(session){const u=session.user;S.uid=u.id;S.anon=!!u.is_anonymous;S.email=(u.email||'').toLowerCase();S.admin=!S.anon&&S.email===ADMIN_EMAIL;}
+  if(!session||(S.anon&&store.get('guest','')!=='1'))showLogin();
+  if(S.admin){document.querySelectorAll('.admin-only').forEach(b=>b.hidden=false);$('#tabbar').style.setProperty('--tabs',5);}
+  try{await Promise.all([loadAthletes(),loadDuels(),loadPlayers()]);}catch(e){console.warn(e);$('#home').innerHTML='<div class="empty">Podaci nisu učitani. Osveži stranicu.</div>';return;}
+  if(S.uid)await ensurePlayer(session.user.user_metadata);
+  S.ready=true;go(current,false);
+  S.sb.channel('exatlon').on('postgres_changes',{event:'*',schema:'public'},p=>queue(p.table)).subscribe();
+  if(document.fonts&&document.fonts.ready)document.fonts.ready.then(refreshAll);
+  setInterval(()=>{if(document.visibilityState!=='visible')return;queue('duels');queue('picks');},45000);
+}
+</script>
 <script>
 function rgb(h){h=h.replace('#','');return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
 const mixc=(c,t,k)=>c.map((v,i)=>Math.round(v+(t[i]-v)*k));
@@ -723,557 +802,6 @@ function drawImg(ctx,img,W,H,zoom,cover){
 }
 
 
-/* =========================================================
-   EXATLON LIGA — javna verzija (Supabase)
-   Upiši svoje podatke iz Supabase: Project Settings → API
-   ========================================================= */
-const SUPABASE_URL='https://ckuzdywtwaawdhhkifql.supabase.co';        // npr. https://abcdxyz.supabase.co
-const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrdXpkeXd0d2Fhd2RoaGtpZnFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAzNTgyNjMsImV4cCI6MjEwNTkzNDI2M30.QUCK1mv6jgNlzw9ez5N20xrSO6IyLJb2E9j0EFCUMGA'; // "anon public" ključ
-const ADMIN_EMAIL='vamit5.team@gmail.com';
-const TEAMS={crveni:{name:'CRVENI',color:'#d4261c'},plavi:{name:'PLAVI',color:'#2f63ff'}};
-const TEAM_ATH={
-  crveni:{id:'crveni',name:'CRVENI',last:'TIM',team:'crveni',height:1.04,build:1.12,skin:'#c58d68',hair:'#17110d',media:{portrait:null,frames:[]},isTeam:true},
-  plavi:{id:'plavi',name:'PLAVI',last:'TIM',team:'plavi',height:1.04,build:1.12,skin:'#caa080',hair:'#0f0c0a',media:{portrait:null,frames:[]},isTeam:true},
-};
-const STATUSES=['Aktivan','Kapiten','Nominovan','Imunitet','Povređen','Eliminisan'];
-const S={sb:null,email:null,uid:null,admin:false,ready:false,ATH:{},DUELS:[],PLAYERS:{},NAJAVA:null,myPicks:{},nick:''};
-
-const $=s=>document.querySelector(s);
-const el=(t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e;};
-const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('on'),2200);}
-function haptic(p){try{navigator.vibrate&&navigator.vibrate(p);}catch(e){}}
-const canvases=[];
-function reg(cv,fn){canvases.push({cv,fn});}
-function refreshAll(){for(let i=canvases.length-1;i>=0;i--){const c=canvases[i];if(!c.cv.isConnected){canvases.splice(i,1);continue;}if(c.cv.offsetParent!==null)c.fn();}}
-let rT; addEventListener('resize',()=>{clearTimeout(rT);rT=setTimeout(refreshAll,120);});
-
-/* ---------- vreme (Beograd) ---------- */
-function lastSunday(y,m){const d=new Date(Date.UTC(y,m+1,0));d.setUTCDate(d.getUTCDate()-d.getUTCDay());return d.getTime();}
-function offsetFor(ds){const [y,m,d]=ds.split('-').map(Number);const t=Date.UTC(y,m-1,d);return (t>=lastSunday(y,2)&&t<lastSunday(y,9))?'+02:00':'+01:00';}
-function startOf(d){if(d.pocetak)return Date.parse(d.pocetak);if(!d.datum)return Infinity;return new Date(`${d.datum}T${d.vreme||'21:30'}:00${offsetFor(d.datum)}`).getTime();}
-function todayBG(){const p=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Belgrade',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());const g=k=>p.find(x=>x.type===k).value;return `${g('year')}-${g('month')}-${g('day')}`;}
-function fmtDate(ds,long){if(!ds)return '';const [y,m,d]=ds.split('-').map(Number);return new Intl.DateTimeFormat('sr-Latn-RS',long?{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:'UTC'}:{day:'numeric',month:'numeric',timeZone:'UTC'}).format(new Date(Date.UTC(y,m-1,d)));}
-function dayName(ds){const [y,m,d]=ds.split('-').map(Number);return new Intl.DateTimeFormat('sr-Latn-RS',{weekday:'long',timeZone:'UTC'}).format(new Date(Date.UTC(y,m-1,d)));}
-const isLocked=d=>!!d.pobednik||!!d.uzivo||Date.now()>=startOf(d);
-
-/* ---------- takmičari ---------- */
-const letters=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/Đ/g,'D').replace(/[^A-Z]/g,'');
-function hash(s){let h=7;for(const c of s)h=(h*31+c.charCodeAt(0))>>>0;return h;}
-const IMG={};
-function img(id){if(!IMG[id]){const i=new Image();i.crossOrigin='anonymous';i.src=id;i.onload=()=>refreshAll();IMG[id]=i;}return IMG[id];}
-function toAthlete(id,d){
-  const h=hash(id),f=d.pol==='z';
-  const skins=['#c58d68','#d6a07c','#caa080','#b98262','#e0b393','#d9a882','#bd8a66'];
-  const nick=d.nadimak||'';
-  return {id,raw:d,name:(nick||d.ime||'?').toUpperCase(),last:(nick?`${d.ime||''} ${d.prezime||''}`:(d.prezime||'')).trim().toUpperCase(),
-    team:d.tim==='plavi'?'plavi':'crveni',female:f,status:d.status||'Aktivan',zanimanje:d.zanimanje||'',mesto:d.mesto||'',godine:d.godine||null,
-    height:f?.92+(h%5)*.012:1+(h%7)*.012,build:f?.82+(h%4)*.02:1+(h%6)*.025,skin:skins[h%skins.length],hair:['#17110d','#2a1b12','#0f0c0a','#3a2415'][h%4],
-    media:{portrait:d.portret?img(d.portret):null,frames:(d.snimci||[]).map(img)}};
-}
-const side=id=>TEAM_ATH[id]||S.ATH[id]||{id,name:'?',last:'',team:'crveni',height:1,build:1,skin:'#b98262',hair:'#111',media:{portrait:null,frames:[]}};
-const athList=()=>Object.values(S.ATH).sort((a,b)=>(a.status==='Eliminisan')-(b.status==='Eliminisan')||a.team.localeCompare(b.team)||a.name.localeCompare(b.name,'sr'));
-
-/* ---------- računanje ---------- */
-const settled=(before)=>S.DUELS.filter(d=>d.pobednik&&(!before||d.datum<before));
-function scorePicks(picks,before){
-  let pts=0,streak=0,best=0,correct=0,wrong=0;const hist=[];
-  for(const d of settled(before)){const p=picks&&picks[d.id];if(!p)continue;
-    if(p===d.pobednik){const g=1;pts+=g;streak++;correct++;best=Math.max(best,streak);hist.push({d,p,r:'W',g,cum:pts});}
-    else{streak=0;wrong++;hist.push({d,p,r:'L',g:0,cum:pts});}}
-  return {pts,streak,best,correct,wrong,hist};
-}
-function athleteRecord(id){
-  let w=0,l=0,streak=0;const form=[];
-  for(const d of settled()){if(d.a!==id&&d.b!==id)continue;const won=(d.pobednik==='a'&&d.a===id)||(d.pobednik==='b'&&d.b===id);
-    if(won){w++;streak++;}else{l++;streak=0;}form.push(won?'W':'L');}
-  return {w,l,streak,form:form.slice(-5)};
-}
-function crowd(d){let a=0,b=0;for(const p of Object.values(S.PLAYERS)){const v=p.picks&&p.picks[d.id];if(v==='a')a++;else if(v==='b')b++;}return {a,b,t:a+b};}
-function support(id){let yes=0,tot=0;for(const d of S.DUELS){if(d.a!==id&&d.b!==id)continue;const c=crowd(d);tot+=c.t;yes+=d.a===id?c.a:c.b;}return tot?Math.round(yes/tot*100):null;}
-function scoreDay(picks,day){let c=0,w=0;for(const d of settled()){if(d.datum!==day)continue;const p=picks&&picks[d.id];if(!p)continue;if(p===d.pobednik)c++;else w++;}return {c,w};}
-function standingsDay(day){
-  return Object.entries(S.PLAYERS).map(([uid,p])=>{const s=scorePicks(p.picks||{}),t=scoreDay(p.picks||{},day);return {uid,nick:(p.nick||'').trim(),...s,pts:t.c,dayWrong:t.w};})
-    .filter(x=>x.nick&&(x.pts+x.dayWrong>0))
-    .sort((a,b)=>b.pts-a.pts||a.dayWrong-b.dayWrong||a.nick.localeCompare(b.nick,'sr'));
-}
-function standings(before){
-  return Object.entries(S.PLAYERS).map(([uid,p])=>({uid,nick:(p.nick||'').trim(),...scorePicks(p.picks||{},before)}))
-    .filter(x=>x.nick&&(x.correct+x.wrong>0||!before))
-    .sort((a,b)=>b.pts-a.pts||b.correct-a.correct||a.nick.localeCompare(b.nick,'sr'));
-}
-const formHTML=f=>`<span class="form">${f.length?f.map(r=>`<i class="${r}">${r==='W'?'P':'I'}</i>`).join(''):'<span style="color:var(--faint);font-size:12px">–</span>'}</span>`;
-
-/* =========================================================
-   DUELI (početna)
-   ========================================================= */
-const CARDS=new Map();
-function duelSig(d){const A=side(d.a),B=side(d.b);return JSON.stringify([d.a,d.b,d.datum,d.vreme,d.vrsta,d.pobednik||'',!!d.uzivo,d.napomena||'',d.cilj||0,A.name,B.name,!!A.media.portrait,!!B.media.portrait,isLocked(d)]);}
-function teamline(x){if(x.isTeam)return `${x.name} TIM`;const r=athleteRecord(x.id);return `${TEAMS[x.team].name} · ${r.w}–${r.l}`;}
-function duelCard(d){
-  const A=side(d.a),B=side(d.b),live=!!d.uzivo;
-  const card=el('article','duel cut'+(live?' live':''));card.dataset.id=d.id;
-  const kind=esc(d.vrsta||'Duel')+(d.napomena?' · '+esc(d.napomena):'');
-  const meta=live?`<span class="livepill"><i></i>UŽIVO</span><span>${d.epizoda?d.epizoda+'. EPIZODA · ':''}${kind}</span>`
-    :`<span class="tag"><i></i>${kind}</span><span>${esc(dayName(d.datum))} ${fmtDate(d.datum)} · ${esc(d.vreme||'21:30')}</span>`;
-  const cilj=d.cilj||0;
-  const mid=live?`<div class="scoreboard"><div class="score" aria-live="polite"><span class="d sA">${d.rezA||0}</span><span class="c">:</span><span class="d sB">${d.rezB||0}</span></div><div class="target">${cilj?'IGRA SE DO '+cilj:'REZULTAT UŽIVO'}</div></div>`:`<div class="vs" aria-hidden="true">PROTIV</div>`;
-  card.innerHTML=`<div class="duel-meta">${meta}</div>
-    <div class="stage">
-      <div class="side a" style="--tc:${TEAMS[A.team].color}"><canvas aria-hidden="true"></canvas><div class="nameplate"><b>${esc(A.name)}</b><span class="teamline">${esc(teamline(A))}</span></div></div>
-      ${mid}
-      <div class="side b" style="--tc:${TEAMS[B.team].color}"><canvas aria-hidden="true"></canvas><div class="nameplate"><b>${esc(B.name)}</b><span class="teamline">${esc(teamline(B))}</span></div></div>
-    </div>
-    ${live?`<div class="livepanel">
-      <div class="prog a"><div class="row"><span>${esc(A.name)}</span><span class="pgA"></span></div><div class="track"><i class="barA" style="background:${TEAMS[A.team].color}"></i></div></div>
-      <div class="prog b"><div class="row"><span>${esc(B.name)}</span><span class="pgB"></span></div><div class="track"><i class="barB" style="background:${TEAMS[B.team].color}"></i></div></div>
-      <div class="momentum"><div class="prog"><div class="row"><span>ZAMAH</span><span class="momLbl"></span></div></div><div class="mom-track"><div class="mom-knob"></div></div></div>
-      <div class="feed"><span>POSLEDNJI POEN · <b class="lastPt">–</b></span><span class="yourPick"></span></div>
-    </div>`:''}
-    <div class="who">KO POBEĐUJE?</div>
-    <div class="picks">
-      <button class="pick a" data-side="a" aria-label="Izaberi pobednika: ${esc(A.name)}">${esc(A.name)}<small class="pa"></small></button>
-      <button class="pick b" data-side="b" aria-label="Izaberi pobednika: ${esc(B.name)}">${esc(B.name)}<small class="pb"></small></button>
-    </div>
-    <div class="split"><div class="bar"><i style="width:50%"></i><i style="width:50%"></i></div><div class="lbl"><span class="la"></span><span class="lockline">ZAKLJUČANO</span><span class="lb"></span></div></div>
-    <div class="stamp">PROGNOZA ZAKLJUČANA</div>`;
-  const [ca,cb]=card.querySelectorAll('.side canvas');
-  const draw=(cv,x,ang)=>()=>{const H=cv.clientHeight;drawFigure(cv,x,{angle:ang,zoom:1.62,baseY:H*1.52,fitH:H,cover:true});};
-  reg(ca,draw(ca,A,.55));reg(cb,draw(cb,B,-.55));
-  card.querySelectorAll('.pick').forEach(b=>b.addEventListener('click',()=>makePick(card,d.id,b.dataset.side)));
-  return card;
-}
-function updateCard(card,d,prev){
-  const A=side(d.a),B=side(d.b),c=crowd(d),mine=S.myPicks[d.id],locked=isLocked(d);
-  const pa=c.t?Math.round(c.a/c.t*100):null;
-  card.querySelector('.pa').textContent=pa==null?'':pa+'%';card.querySelector('.pb').textContent=pa==null?'':(100-pa)+'%';
-  const who=card.querySelector('.who');
-  card.querySelectorAll('.pick').forEach(b=>{b.disabled=!!mine||locked;b.classList.toggle('sel',b.dataset.side===mine);b.classList.toggle('off',!!mine&&b.dataset.side!==mine);});
-  if(mine){card.dataset.pick=mine;who.textContent='TVOJA PROGNOZA · '+(mine==='a'?A.name:B.name);}
-  else{delete card.dataset.pick;who.textContent=locked?'PROGNOZE SU ZATVORENE':'KO POBEĐUJE?';}
-  const split=card.querySelector('.split');split.style.display=(mine||(locked&&c.t))?'block':'none';
-  if(c.t){const bars=split.querySelectorAll('.bar i');bars[0].style.width=pa+'%';bars[1].style.width=(100-pa)+'%';}
-  split.querySelector('.la').textContent=c.t?`${pa}% ZA ${A.name}`:'PRVA PROGNOZA';
-  split.querySelector('.lb').textContent=c.t?`${100-pa}% ZA ${B.name}`:'';
-  split.querySelector('.lockline').textContent=c.t?`${c.t} ${c.t===1?'PROGNOZA':'PROGNOZA'}`:'ZAKLJUČANO';
-  if(d.uzivo){
-    const cilj=d.cilj||0,ra=d.rezA||0,rb=d.rezB||0,q=s=>card.querySelector(s);
-    q('.sA').textContent=ra;q('.sB').textContent=rb;
-    q('.pgA').textContent=cilj?`${ra}/${cilj}`:ra;q('.pgB').textContent=cilj?`${rb}/${cilj}`:rb;
-    const mx=cilj||Math.max(ra,rb,1);q('.barA').style.width=Math.min(100,ra/mx*100)+'%';q('.barB').style.width=Math.min(100,rb/mx*100)+'%';
-    const tok=(d.tok||[]).slice(-6);let m=0;tok.forEach((x,i)=>{m+=(x==='a'?1:-1)*(i+1);});m=tok.length?m/21:0;
-    q('.mom-knob').style.left=(50-m*42)+'%';
-    q('.momLbl').textContent=Math.abs(m)<.12?'IZJEDNAČENO':(m>0?A.name:B.name)+' ▲';
-    const last=(d.tok||[]).slice(-1)[0];q('.lastPt').textContent=last?(last==='a'?A.name:B.name):'–';
-    q('.yourPick').textContent=mine?'TVOJA PROGNOZA · '+(mine==='a'?A.name:B.name):'BEZ PROGNOZE';
-    if(prev){if(prev.rezA!==ra)bump(q('.sA'));if(prev.rezB!==rb)bump(q('.sB'));}
-  }
-}
-function bump(e){e.classList.remove('bump');void e.offsetWidth;e.classList.add('bump');}
-async function makePick(card,id,sideKey){
-  const d=S.DUELS.find(x=>x.id===id);if(!d||S.myPicks[id]||isLocked(d))return;
-  if(!S.sb||!S.uid){toast('PRIJAVA NIJE USPELA · OSVEŽI STRANICU');return;}
-  S.myPicks={...S.myPicks,[id]:sideKey};
-  haptic([12,40,24]);updateCard(card,d);
-  card.classList.remove('locking');void card.offsetWidth;card.classList.add('locking');setTimeout(()=>card.classList.remove('locking'),2300);
-  toast('ZAKLJUČANO · '+side(sideKey==='a'?d.a:d.b).name);renderTodayStatus();
-  const ok=await savePick(id,sideKey);
-  if(!ok){const {[id]:_,...rest}=S.myPicks;S.myPicks=rest;updateCard(card,d);toast('PROGNOZA NIJE SAČUVANA · POKUŠAJ PONOVO');}
-}
-async function savePick(id,izbor){
-  const {error}=await S.sb.from('picks').insert({player_id:S.uid,duel_id:id,izbor});
-  if(error){console.warn(error);return false;}
-  const p=S.PLAYERS[S.uid]||(S.PLAYERS[S.uid]={nick:S.nick,picks:{}});p.picks={...p.picks,[id]:izbor};
-  return true;
-}
-async function saveNick(nick){
-  const {error}=await S.sb.from('players').upsert({id:S.uid,nick});
-  if(error){console.warn(error);return error.code==='23505'?'taken':'fail';}
-  (S.PLAYERS[S.uid]||(S.PLAYERS[S.uid]={picks:{}})).nick=nick;return 'ok';
-}
-const PREV=new Map();
-function renderTodayStatus(){
-  const box=$('#todayStatus');if(!S.ready){box.hidden=true;return;}
-  const today=todayBG(),list=S.DUELS.filter(d=>d.datum===today);
-  if(!list.length){box.hidden=true;return;}
-  const open=list.filter(d=>!isLocked(d)),picked=list.filter(d=>S.myPicks[d.id]).length,won=list.filter(d=>d.pobednik&&S.myPicks[d.id]===d.pobednik).length,done=list.filter(d=>d.pobednik).length;
-  const left=open.filter(d=>!S.myPicks[d.id]).length;
-  box.hidden=false;box.className='todaystatus'+(left?' todo':'');
-  box.innerHTML=left?`<b>${left===1?'Imaš 1 duel bez prognoze':`Imaš ${left} duela bez prognoze`}</b><span>Izaberi pobednika pre početka emisije.</span>`
-    :`<b>Danas: prognozirao si ${picked} od ${list.length} duela</b><span>${done?`Pogođeno ${won} od ${done} završenih.`:'Rezultati stižu posle emisije.'}</span>`;
-}
-function renderHome(){renderTodayStatus();
-  const box=$('#home'),today=todayBG();
-  $('#todayLbl').textContent='EXATLON SRBIJA · '+fmtDate(today,true).toUpperCase();
-  if(!S.ready){return;}
-  const live=S.DUELS.filter(d=>d.uzivo&&!d.pobednik);
-  const upcoming=S.DUELS.filter(d=>!d.uzivo&&!d.pobednik).sort((a,b)=>startOf(a)-startOf(b));
-  const tonight=upcoming.filter(d=>d.datum===today),later=upcoming.filter(d=>d.datum!==today);
-  const results=settled().slice().reverse();
-  const frag=document.createDocumentFragment();
-  const nj=S.NAJAVA;
-  if(nj&&nj.tekst&&(!nj.datum||nj.datum>=today)){
-    const n=el('div','najava cut');n.innerHTML=`<div class="time">${esc(nj.vreme||'21:30')}</div><div><h3>${nj.datum===today?'Večeras':esc(dayName(nj.datum||today))+' '+fmtDate(nj.datum||today)} · Informer televizija</h3><p>${esc(nj.tekst)}</p></div>`;frag.appendChild(n);
-  }
-  const addGroup=(title,list)=>{if(!list.length)return;frag.appendChild(el('div','block-title',esc(title)));const g=el('div','duels');list.forEach(d=>g.appendChild(cardFor(d)));frag.appendChild(g);};
-  addGroup('Uživo',live);addGroup('Današnji dueli',tonight);addGroup('Sledeći dueli',later);
-  if(!live.length&&!tonight.length&&!later.length){
-    const e=el('div','empty cut');e.innerHTML=`<b>Parovi za sledeću borbu još nisu objavljeni</b>Nove epizode idu od ponedeljka do petka u 21:30 na Informer televiziji. Duel se ovde pojavljuje čim ga admin unese, a prognoze su otvorene do početka emisije.`;frag.appendChild(e);
-  }
-  frag.appendChild(el('div','block-title','Rezultati'));
-  if(results.length){const r=el('div','results');results.forEach(d=>r.appendChild(resultRow(d)));frag.appendChild(r);}
-  else frag.appendChild(el('div','empty cut','Još nema unetih rezultata.'));
-  box.replaceChildren(frag);
-  requestAnimationFrame(refreshAll);
-}
-function cardFor(d){
-  const sig=duelSig(d);let c=CARDS.get(d.id);
-  if(!c||c.sig!==sig){c={el:duelCard(d),sig};CARDS.set(d.id,c);updateCard(c.el,d);}
-  else updateCard(c.el,d,PREV.get(d.id));
-  PREV.set(d.id,{rezA:d.rezA||0,rezB:d.rezB||0});
-  return c.el;
-}
-function resultRow(d){
-  const A=side(d.a),B=side(d.b),mine=S.myPicks[d.id];
-  const r=el('div','rrow cut');r.style.setProperty('--cut','8px');
-  const sc=(d.rezA!=null&&d.rezB!=null&&(d.rezA||d.rezB))?`${d.rezA}:${d.rezB}`:(d.pobednik==='a'?'POB':'POB');
-  const scTxt=(d.rezA||d.rezB)?`${d.rezA||0}:${d.rezB||0}`:(d.pobednik==='a'?'◀':'▶');
-  r.innerHTML=`<span class="dt">${esc(dayName(d.datum)).slice(0,3)} ${fmtDate(d.datum)}${d.epizoda?' · '+d.epizoda+'. ep.':''}</span>
-    <span class="nm ${d.pobednik==='a'?'w':'l'}">${esc(A.name)}</span><span class="sc">${scTxt}</span><span class="nm b ${d.pobednik==='b'?'w':'l'}">${esc(B.name)}</span>
-    <span class="kind">${esc(d.vrsta||'')}${mine?`<span class="mine" style="color:${mine===d.pobednik?'var(--win)':'var(--loss)'}">${mine===d.pobednik?'POGODAK':'PROMAŠAJ'}</span>`:''}</span>`;
-  return r;
-}
-
-/* =========================================================
-   TAKMIČARI
-   ========================================================= */
-let teamF='svi';
-$('#teamFilter').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;teamF=b.dataset.f;document.querySelectorAll('#teamFilter button').forEach(x=>x.setAttribute('aria-pressed',x===b));renderRoster();});
-function renderRoster(){
-  const box=$('#roster');
-  if(!S.ready){box.innerHTML='<div class="state">Učitavam takmičare…</div>';return;}
-  const list=athList().filter(a=>teamF==='svi'||a.team===teamF);
-  const active=Object.values(S.ATH).filter(a=>a.status!=='Eliminisan').length;
-  $('#rosterLbl').textContent=`DRUGA SEZONA · ${active} U IGRI · ${Object.keys(S.ATH).length} UKUPNO`;
-  if(!list.length){box.innerHTML='<div class="empty cut">Nema unetih takmičara.</div>';return;}
-  box.replaceChildren(...list.map(a=>{
-    const r=athleteRecord(a.id),sp=support(a.id);
-    const c=el('button','acard cut'+(a.status==='Eliminisan'?' out':''));
-    c.style.setProperty('--tc',TEAMS[a.team].color);
-    c.setAttribute('aria-label',`Otvori ${a.name} ${a.last} u 360° prikazu`);
-    const hot=['Kapiten','Imunitet'].includes(a.status);
-    const job=[a.zanimanje,a.mesto,a.godine?a.godine+' god.':''].filter(Boolean).join(' · ');
-    c.innerHTML=`<canvas aria-hidden="true"></canvas><span class="status${hot?' hot':''}">${esc(a.status)}</span>
-      <div class="info"><div class="nm">${esc(a.name)}<small>${esc(a.last)}${a.last?' · ':''}${TEAMS[a.team].name}</small></div>
-      ${job?`<div class="job">${esc(job)}</div>`:''}
-      ${formHTML(r.form)}
-      <div class="statrow"><div><b>${r.w}</b><span>Pobede</span></div><div><b>${r.l}</b><span>Porazi</span></div><div><b>${r.streak}</b><span>Niz</span></div><div><b>${sp==null?'–':sp+'%'}</b><span>Podrška</span></div></div></div>`;
-    const cv=c.querySelector('canvas');
-    reg(cv,()=>{const H=cv.clientHeight;drawFigure(cv,a,{angle:.35,zoom:1.28,baseY:H*1.02,fitH:H,cover:true});});
-    c.addEventListener('click',()=>openViewer(a));
-    return c;
-  }));
-  requestAnimationFrame(refreshAll);
-}
-
-/* =========================================================
-   360° PRIKAZ
-   ========================================================= */
-const ModelProvider={available:a=>false,render:(canvas,a,state)=>false};
-const V={a:null,angle:.3,vel:0,zoom:1,tz:1,drag:false,lastX:0,lastT:0,raf:0};
-function openViewer(a){
-  V.a=a;V.angle=.3;V.vel=.06;V.tz=1;V.zoom=1.08;
-  const r=athleteRecord(a.id),sp=support(a.id),tot=r.w+r.l;
-  $('#vTeam').textContent=`${TEAMS[a.team].name} TIM`;
-  $('#vName').innerHTML=`${esc(a.name)}<small>${esc(a.last)}</small>`;
-  $('#vMeta').innerHTML=[a.status,a.zanimanje,a.mesto,a.godine?a.godine+' god.':''].filter(Boolean).map(x=>`<span>${esc(x)}</span>`).join('');
-  $('#vStats').innerHTML=`<div><b>${r.w}</b><span>Pobede</span></div><div><b>${r.l}</b><span>Porazi</span></div><div><b>${tot?Math.round(r.w/tot*100)+'%':'–'}</b><span>Uspešnost</span></div><div><b>${r.streak}</b><span>Niz pobeda</span></div>
-    <div class="wide"><span>Forma</span>${formHTML(r.form)}</div>
-    <div class="wide" style="display:grid"><span style="display:flex;justify-content:space-between">Podrška igrača<b style="font-size:16px">${sp==null?'–':sp+'%'}</b></span><div class="predbar"><i style="width:${sp||0}%"></i></div></div>`;
-  const n=a.media.frames.length;
-  $('#vSrc').textContent=n>1?`360° SNIMCI · ${n}`:a.media.portrait?'FOTOGRAFIJA':'3D MODEL';
-  $('#vSrcNote').textContent=n>1?'Snimci su poređani po redosledu otpremanja.':a.media.portrait?'Za okretanje od 360° admin dodaje niz snimaka.':'Privremeni model dok admin ne doda prave fotografije.';
-  $('#dragLbl').textContent=(a.media.portrait&&n<2)?'ZA 360° SU POTREBNI SNIMCI':'PREVUCI DA OKRENEŠ';
-  $('#viewer').hidden=false;document.body.style.overflow='hidden';$('#vClose').focus();
-  cancelAnimationFrame(V.raf);V.raf=requestAnimationFrame(vLoop);
-}
-function closeViewer(){$('#viewer').hidden=true;document.body.style.overflow='';cancelAnimationFrame(V.raf);refreshAll();}
-function drawStadium(cv,ang){
-  const dpr=Math.min(2,devicePixelRatio||1),W=cv.clientWidth,H=cv.clientHeight;
-  if(cv.width!==Math.round(W*dpr)||cv.height!==Math.round(H*dpr)){cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);}
-  const c=cv.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);c.fillStyle='#040405';c.fillRect(0,0,W,H);
-  const par=Math.sin(ang),hz=H*.72;
-  const g=c.createRadialGradient(W/2-par*30,H*.35,0,W/2-par*30,H*.35,Math.max(W,H)*.7);
-  g.addColorStop(0,'rgba(255,110,40,.20)');g.addColorStop(.5,'rgba(120,30,20,.08)');g.addColorStop(1,'rgba(0,0,0,0)');c.fillStyle=g;c.fillRect(0,0,W,H);
-  for(let i=0;i<6;i++){const bx=W*(.08+i*.168)-par*(40+i*6),grd=c.createLinearGradient(0,0,0,hz);
-    grd.addColorStop(0,`rgba(255,${i%2?235:190},${i%2?210:150},.13)`);grd.addColorStop(1,'rgba(255,255,255,0)');
-    c.fillStyle=grd;c.beginPath();c.moveTo(bx-6,0);c.lineTo(bx+6,0);c.lineTo(W/2+(bx-W/2)*.35+60,hz);c.lineTo(W/2+(bx-W/2)*.35-60,hz);c.fill();
-    c.fillStyle='rgba(255,245,230,.9)';c.fillRect(bx-7,0,14,3);}
-  c.strokeStyle='rgba(255,122,24,.10)';c.lineWidth=1;
-  for(let i=-14;i<=14;i++){const x0=W/2+i*60-par*90;c.beginPath();c.moveTo(W/2+(x0-W/2)*.12,hz);c.lineTo(x0+(x0-W/2)*1.6,H);c.stroke();}
-  for(let j=1;j<9;j++){const y=hz+(H-hz)*Math.pow(j/8,1.8);c.globalAlpha=j/9;c.beginPath();c.moveTo(0,y);c.lineTo(W,y);c.stroke();}
-  c.globalAlpha=1;
-}
-function vLoop(){
-  if(!V.drag){V.angle+=V.vel;V.vel*=.955;if(Math.abs(V.vel)<.0008)V.vel=0;}
-  V.zoom+=(V.tz*(V.drag?1.05:1)-V.zoom)*.12;
-  const fig=$('#vFig');drawStadium($('#vBg'),V.angle);
-  const H=fig.clientHeight,W=fig.clientWidth;
-  if(!ModelProvider.render(fig,V.a,V))drawFigure(fig,V.a,{angle:V.angle,zoom:V.zoom,baseY:H*(W<900?.62:.9),fitH:H*(W<900?.6:.86),floorGlow:true});
-  const deg=((Math.round(V.angle*180/Math.PI)%360)+360)%360;$('#deg').textContent=deg+'°';
-  const t=deg/180*Math.PI,x=23+19*Math.sin(t),y=23-19*Math.cos(t);
-  $('#dialDot').setAttribute('cx',x.toFixed(1));$('#dialDot').setAttribute('cy',y.toFixed(1));
-  $('#dialArc').setAttribute('d',deg<1?'':`M23 4 A19 19 0 ${deg>180?1:0} 1 ${x.toFixed(1)} ${y.toFixed(1)}`);
-  V.raf=requestAnimationFrame(vLoop);
-}
-(function(){
-  const fig=$('#vFig');fig.tabIndex=0;
-  fig.addEventListener('pointerdown',e=>{V.drag=true;V.lastX=e.clientX;V.lastT=performance.now();V.vel=0;fig.setPointerCapture(e.pointerId);fig.classList.add('drag');});
-  fig.addEventListener('pointermove',e=>{if(!V.drag)return;const dx=e.clientX-V.lastX,now=performance.now(),dt=Math.max(1,now-V.lastT),da=dx*.011;V.angle+=da;V.vel=da*(16/dt);V.lastX=e.clientX;V.lastT=now;});
-  const end=()=>{if(!V.drag)return;V.drag=false;fig.classList.remove('drag');V.vel=Math.max(-.35,Math.min(.35,V.vel));};
-  fig.addEventListener('pointerup',end);fig.addEventListener('pointercancel',end);
-  fig.addEventListener('wheel',e=>{e.preventDefault();V.tz=Math.max(1,Math.min(1.35,V.tz-e.deltaY*.001));},{passive:false});
-  fig.addEventListener('dblclick',()=>{V.tz=V.tz>1.1?1:1.3;});
-  fig.addEventListener('keydown',e=>{if(e.key==='ArrowLeft')V.vel=-.12;if(e.key==='ArrowRight')V.vel=.12;});
-  $('#vClose').addEventListener('click',closeViewer);
-  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#viewer').hidden)closeViewer();});
-})();
-
-/* =========================================================
-   TABELA
-   ========================================================= */
-const rowMap=new Map();
-let boardMode='danas';
-$('#boardMode').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;boardMode=b.dataset.m;document.querySelectorAll('#boardMode button').forEach(x=>x.setAttribute('aria-pressed',x===b));renderBoard();});
-function renderBoard(){
-  const board=$('#board'),today=todayBG(),day=boardMode==='danas';
-  $('#globalLbl').textContent=day?'Danas · '+fmtDate(today,true):'Cela sezona · broj pogođenih duela';
-  $('#mvHead').textContent=day?'PROMAŠAJI':'PROMENA';
-  const now=day?standingsDay(today):standings(),res=settled(),lastDate=res.length?res[res.length-1].datum:null;
-  const prev=(!day&&lastDate)?standings(lastDate):[];const prevRank=new Map(prev.map((p,i)=>[p.uid,i+1]));
-  const first=new Map();rowMap.forEach((r,k)=>{if(r.isConnected)first.set(k,r.getBoundingClientRect().top);});
-  board.querySelectorAll('.lrow,.empty').forEach(r=>r.remove());
-  if(!now.length){board.appendChild(el('div','empty cut',day?'<b>Danas još nema rezultata</b>Rang lista za danas se puni čim admin označi pobednika prvog današnjeg duela.':'<b>Rang lista je prazna</b>Igrači se pojavljuju ovde kada bude rešen prvi duel koji su prognozirali.'));return;}
-  now.forEach((p,i)=>{
-    const rank=i+1,pr=prevRank.get(p.uid);
-    let r=rowMap.get(p.uid);if(!r){r=el('div','lrow');rowMap.set(p.uid,r);}
-    r.className='lrow'+(rank===1?' first':'')+(p.uid===S.uid?' me':'');
-    const mv=day?`<span class="mv eq">${p.dayWrong}</span>`:pr==null?'<span class="mv new">NOVO</span>':pr>rank?`<span class="mv up">↑ ${pr-rank}</span>`:pr<rank?`<span class="mv dn">↓ ${rank-pr}</span>`:'<span class="mv eq">—</span>';
-    r.innerHTML=`<span class="rk">${String(rank).padStart(2,'0')}</span><span class="hex">${esc(p.nick[0].toUpperCase())}</span><span style="min-width:0"><span class="crown">${day?'NAJBOLJI DANAS':'VODEĆI U SEZONI'}</span><span class="un" style="display:block">${esc(p.nick)}</span></span><span class="pts">${p.pts.toLocaleString('sr-Latn-RS')}</span><span class="stk">${p.streak?'🔥 '+p.streak:'—'}</span>${formHTML(p.hist.slice(-5).map(h=>h.r))}${mv}`;
-    board.appendChild(r);
-  });
-  rowMap.forEach((r,k)=>{if(!first.has(k)||!r.isConnected)return;const dy=first.get(k)-r.getBoundingClientRect().top;if(Math.abs(dy)>2){r.animate([{transform:`translateY(${dy}px)`},{transform:'none'}],{duration:900,easing:'cubic-bezier(.2,.8,.2,1)'});r.classList.add('flash');setTimeout(()=>r.classList.remove('flash'),1000);}});
-}
-
-/* =========================================================
-   PROFIL
-   ========================================================= */
-function renderProfile(){
-  const me=scorePicks(S.myPicks),today=todayBG();
-  const nick=S.nick||'IGRAČ';
-  $('#h-profile').textContent=nick.toUpperCase();$('#pHex').textContent=nick[0].toUpperCase();
-  if(document.activeElement!==$('#nickIn'))$('#nickIn').value=S.nick||'';
-  const st=standings(),rk=st.findIndex(p=>p.uid===S.uid);$('#pRank').textContent=rk>=0?'#'+(rk+1):'–';
-  const tod=me.hist.filter(h=>h.d.datum===today),tw=tod.filter(h=>h.r==='W').length;
-  const tot=me.correct+me.wrong;
-  const stats=[['Pogođeno ukupno',me.correct],['Promašeno',me.wrong],['Procenat pogodaka',tot?Math.round(me.correct/tot*100)+'%':'–'],['Pogođeno danas',`${tw} od ${tod.length}`],['Trenutni niz',me.streak],['Najbolji niz',me.best]];
-  $('#pgrid').innerHTML=stats.map(([k,v])=>`<div><b>${v}</b><span>${k}</span></div>`).join('');
-  $('#chipPts').textContent=me.pts.toLocaleString('sr-Latn-RS');$('#chipHex').textContent=nick[0].toUpperCase();
-  // grafik
-  const H0=me.hist;
-  if(H0.length<2){$('#chart').innerHTML='<p class="msg" style="padding:10px 4px">Grafik se pojavljuje kada budu rešene bar dve tvoje prognoze.</p>';}
-  else{
-    const W=900,H=220,pl=56,pr=16,pt=16,pb=34,vals=[0,...H0.map(h=>h.cum)];
-    const hi=Math.max(4,Math.ceil(Math.max(...vals)/2)*2),lo=0;
-    const X=i=>pl+i*(W-pl-pr)/(vals.length-1),Y=v=>pt+(hi-v)/(hi-lo)*(H-pt-pb);
-    const line=vals.map((v,i)=>`${i?'L':'M'}${X(i).toFixed(1)} ${Y(v).toFixed(1)}`).join(' ');
-    const ticks=[lo,Math.round(hi/2),hi];
-    $('#chart').innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Pogoci kroz sezonu, ukupno ${me.pts}">
-      <defs><linearGradient id="ar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff5a1f" stop-opacity=".35"/><stop offset="1" stop-color="#ff5a1f" stop-opacity="0"/></linearGradient><linearGradient id="ln" x1="0" x2="1"><stop offset="0" stop-color="#ff2d1f"/><stop offset="1" stop-color="#ff7a18"/></linearGradient></defs>
-      ${ticks.map(t=>`<line x1="${pl}" x2="${W-pr}" y1="${Y(t)}" y2="${Y(t)}" stroke="#252930"/><text x="${pl-10}" y="${Y(t)+4}" fill="#7b818b" font-size="12" text-anchor="end" font-family="Barlow Condensed,sans-serif">${t}</text>`).join('')}
-      <path d="${line} L${X(vals.length-1)} ${H-pb} L${X(0)} ${H-pb}Z" fill="url(#ar)"/>
-      <path d="${line}" fill="none" stroke="url(#ln)" stroke-width="3" stroke-linejoin="round"/>
-      ${H0.map((h,i)=>`<rect x="${X(i+1)-6}" y="${H-pb+10}" width="12" height="8" fill="${h.r==='W'?'#3ddc84':'#ff4d4d'}"/>`).join('')}
-      <circle cx="${X(vals.length-1)}" cy="${Y(me.pts)}" r="6" fill="#fff" stroke="#ff7a18" stroke-width="3"/>
-      <text x="${X(vals.length-1)-10}" y="${Y(me.pts)-12}" fill="#eef0f3" font-size="14" font-weight="700" text-anchor="end" font-family="Barlow Condensed,sans-serif">${me.pts}</text></svg>`;
-  }
-  const rows=[];
-  S.DUELS.filter(d=>!d.pobednik&&S.myPicks[d.id]).forEach(d=>rows.push({d,p:S.myPicks[d.id],r:'P'}));
-  me.hist.slice().reverse().forEach(h=>rows.push(h));
-  $('#hist').innerHTML=rows.length?rows.map(h=>{const A=side(h.d.a),B=side(h.d.b),pk=side(h.p==='a'?h.d.a:h.d.b);
-    return `<div class="hrow cut" style="--cut:8px"><span class="res ${h.r}">${h.r==='P'?'ČEKA':h.r==='W'?'✓':'✕'}</span><span class="m">${esc(A.name)} – ${esc(B.name)}<small>${esc(dayName(h.d.datum))} ${fmtDate(h.d.datum)}</small></span><span class="pk" style="font-family:var(--num);font-size:13px;letter-spacing:.12em;color:var(--metal)">IZBOR · ${esc(pk.name)}</span><span class="p" style="color:${h.r==='W'?'var(--win)':h.r==='L'?'var(--faint)':'var(--orange)'}">${h.r==='P'?'ČEKA':h.r==='W'?'+1':'0'}</span></div>`;}).join('')
-    :'<div class="empty cut">Još nemaš prognoza. Izaberi pobednika na strani Dueli.</div>';
-}
-$('#nickForm').addEventListener('submit',async e=>{
-  e.preventDefault();const v=$('#nickIn').value.trim().replace(/\s+/g,' '),m=$('#nickMsg');
-  if(v.length<2){m.className='msg err';m.textContent='Ime mora imati bar 2 znaka.';return;}
-  if(!S.sb||!S.uid){m.className='msg err';m.textContent='Prijava nije uspela. Osveži stranicu.';return;}
-  const r=await saveNick(v);
-  if(r==='ok'){S.nick=v;m.className='msg ok';m.textContent='Sačuvano.';renderAll();}
-  else{m.className='msg err';m.textContent=r==='taken'?'To ime već koristi drugi igrač.':'Ime nije sačuvano. Pokušaj ponovo.';}
-});
-
-/* =========================================================
-   ADMIN
-   ========================================================= */
-async function w(fn,okMsg){try{const r=await fn();if(r&&r.error)throw r.error;if(okMsg)toast(okMsg);return true;}catch(e){console.warn(e);toast(e&&(e.code==='42501'||/row-level/.test(e.message||''))?'NEMAŠ DOZVOLU ZA IZMENE':'ČUVANJE NIJE USPELO');return false;}}
-function fillSelects(){
-  const opts=`<optgroup label="Timovi"><option value="crveni">Crveni tim</option><option value="plavi">Plavi tim</option></optgroup>`+
-    ['crveni','plavi'].map(t=>`<optgroup label="${t==='crveni'?'Crveni':'Plavi'}">${athList().filter(a=>a.team===t&&a.status!=='Eliminisan').map(a=>`<option value="${a.id}">${esc(a.raw.ime+' '+(a.raw.prezime||''))}${a.raw.nadimak?' ('+esc(a.raw.nadimak)+')':''}</option>`).join('')}</optgroup>`).join('');
-  ['#fA','#fB'].forEach(s=>{const v=$(s).value;$(s).innerHTML=opts;if(v)$(s).value=v;});
-  if(!$('#fB').dataset.init){$('#fB').value='plavi';$('#fB').dataset.init=1;}
-}
-$('#duelForm').addEventListener('submit',async e=>{
-  e.preventDefault();const m=$('#duelMsg');
-  const d={datum:$('#fDate').value,vreme:$('#fTime').value||'21:30',vrsta:$('#fKind').value,a:$('#fA').value,b:$('#fB').value,napomena:$('#fNote').value.trim(),cilj:$('#fKind').value==='Timska igra'?10:0};
-  const ep=parseInt($('#fEp').value,10);if(ep)d.epizoda=ep;
-  if(!d.datum){m.className='msg err';m.textContent='Izaberi datum duela.';return;}
-  if(d.a===d.b){m.className='msg err';m.textContent='Strana A i strana B moraju biti različite.';return;}
-  const row={a:d.a,b:d.b,pocetak:`${d.datum}T${d.vreme}:00${offsetFor(d.datum)}`,vrsta:d.vrsta,napomena:d.napomena||null,cilj:d.cilj,epizoda:d.epizoda||null};
-  if(await w(()=>S.sb.from('duels').insert(row),'DUEL JE DODAT')){m.className='msg ok';m.textContent=`Dodat: ${side(d.a).name} protiv ${side(d.b).name}, ${fmtDate(d.datum,true)} u ${d.vreme}.`;$('#fNote').value='';}
-});
-$('#najavaForm').addEventListener('submit',async e=>{e.preventDefault();await w(()=>S.sb.from('meta').upsert({key:'najava',value:{tekst:$('#nText').value.trim(),datum:$('#nDate').value||todayBG(),vreme:'21:30'}}),'NAJAVA JE SAČUVANA');});
-$('#athForm').addEventListener('submit',async e=>{
-  e.preventDefault();const ime=$('#aIme').value.trim(),prez=$('#aPrez').value.trim();
-  if(!ime)return;const id=letters((ime+prez).toUpperCase()).toLowerCase()+'-'+Date.now().toString(36).slice(-3);
-  if(await w(()=>S.sb.from('athletes').insert({id,ime,prezime:prez,tim:$('#aTim').value,pol:$('#aPol').value,status:'Aktivan'}),'TAKMIČAR JE DODAT')){$('#aIme').value='';$('#aPrez').value='';}
-});
-function renderAdmin(){
-  if(!S.admin)return;
-  fillSelects();
-  if(!$('#fDate').value)$('#fDate').value=todayBG();
-  if(S.NAJAVA&&document.activeElement!==$('#nText')){$('#nText').value=S.NAJAVA.tekst||'';$('#nDate').value=S.NAJAVA.datum||'';}
-  const list=S.DUELS.slice().sort((a,b)=>startOf(b)-startOf(a));
-  $('#adminDuels').replaceChildren(...(list.length?list.map(d=>{
-    const A=side(d.a),B=side(d.b),r=el('div','adrow'+(d.pobednik?' done':'')+(d.uzivo?' isLive':''));
-    r.innerHTML=`<div class="t"><span>${esc(dayName(d.datum))} ${fmtDate(d.datum)} · ${esc(d.vreme||'')}${d.epizoda?' · '+d.epizoda+'. epizoda':''}</span><span>${esc(d.vrsta||'')}${d.napomena?' · '+esc(d.napomena):''}</span></div>
-      <div class="p">${esc(A.name)} – ${esc(B.name)}${d.pobednik?` <span style="color:var(--win);font-size:15px">· POBEDNIK ${esc((d.pobednik==='a'?A:B).name)}</span>`:''}</div>
-      <div class="acts">
-        <button data-act="win" data-s="a" class="${d.pobednik==='a'?'on':''}">POBEDA · ${esc(A.name)}</button>
-        <button data-act="win" data-s="b" class="${d.pobednik==='b'?'on':''}">POBEDA · ${esc(B.name)}</button>
-        ${d.pobednik?'<button data-act="clear">PONIŠTI ISHOD</button>':`<button data-act="live" class="${d.uzivo?'on':''}">${d.uzivo?'ZAVRŠI PRENOS':'POKRENI UŽIVO'}</button>`}
-      </div>
-      <div class="acts"><span class="scorebox">${d.rezA||0} : ${d.rezB||0}</span>
-        <button data-act="pt" data-s="a">+1 ${esc(A.name)}</button><button data-act="pt" data-s="b">+1 ${esc(B.name)}</button>
-        <button data-act="undo">VRATI POEN</button><button data-act="del" class="danger">OBRIŠI</button></div>`;
-    r.addEventListener('click',e=>adminAct(e,d,r));return r;
-  }):[el('p','msg','Još nema unetih duela.')]));
-  $('#adminAth').replaceChildren(...athList().map(a=>{
-    const r=el('div','arow');
-    r.innerHTML=`<b>${esc(a.raw.ime+' '+(a.raw.prezime||''))}</b>
-      <select aria-label="Tim"><option value="crveni">Crveni</option><option value="plavi">Plavi</option></select>
-      <select aria-label="Status">${STATUSES.map(s=>`<option>${s}</option>`).join('')}</select>
-      <span class="acts" style="gap:6px">${S.admin?`<label>PORTRET<input type="file" accept="image/*" data-k="p"></label><label>360° SNIMCI<input type="file" accept="image/*" multiple data-k="f"></label>`:''}
-      <span class="ph">${a.raw.portret?'✓ FOTO':''}${(a.raw.snimci||[]).length?' ✓ '+a.raw.snimci.length+' SNIMAKA':''}</span></span>`;
-    const [st,ss]=r.querySelectorAll('select');st.value=a.team;ss.value=STATUSES.includes(a.status)?a.status:'Aktivan';
-    st.onchange=()=>w(()=>S.sb.from('athletes').update({tim:st.value}).eq('id',a.id),'TIM JE PROMENJEN');
-    ss.onchange=()=>w(()=>S.sb.from('athletes').update({status:ss.value}).eq('id',a.id),'STATUS JE PROMENJEN');
-    r.querySelectorAll('input[type=file]').forEach(inp=>inp.onchange=()=>uploadFor(a,inp));
-    return r;
-  }));
-}
-async function uploadFor(a,inp){
-  const files=[...inp.files].sort((x,y)=>x.name.localeCompare(y.name,undefined,{numeric:true}));inp.value='';
-  if(!files.length||!S.admin)return;toast('OTPREMAM '+files.length+(files.length===1?' SLIKU':' SLIKA'));
-  try{const ids=[];let i=0;
-    for(const f of files){const ext=(f.name.split('.').pop()||'jpg').toLowerCase();const path=`${a.id}/${Date.now()}-${i++}.${ext}`;
-      const {error}=await S.sb.storage.from('slike').upload(path,f,{upsert:true,contentType:f.type});if(error)throw error;
-      ids.push(S.sb.storage.from('slike').getPublicUrl(path).data.publicUrl);}
-    const upd=inp.dataset.k==='p'?{portret:ids[0]}:{snimci:ids,...(a.raw.portret?{}:{portret:ids[0]})};
-    const {error}=await S.sb.from('athletes').update(upd).eq('id',a.id);if(error)throw error;
-    toast('FOTOGRAFIJE SU SAČUVANE');}
-  catch(e){console.warn(e);toast('OTPREMANJE NIJE USPELO');}
-}
-async function adminAct(e,d,row){
-  const b=e.target.closest('button');if(!b)return;const act=b.dataset.act;
-  const ref={update:v=>S.sb.from('duels').update(v).eq('id',d.id),delete:()=>S.sb.from('duels').delete().eq('id',d.id)};
-  if(act==='win')await w(()=>ref.update({pobednik:b.dataset.s,uzivo:false}),'POBEDNIK JE OZNAČEN');
-  else if(act==='clear')await w(()=>ref.update({pobednik:null}),'ISHOD JE PONIŠTEN');
-  else if(act==='live')await w(()=>ref.update({uzivo:!d.uzivo}),d.uzivo?'PRENOS JE ZAVRŠEN':'DUEL JE UŽIVO');
-  else if(act==='pt'){const k=b.dataset.s==='a'?'rez_a':'rez_b',c=b.dataset.s==='a'?d.rezA:d.rezB;await w(()=>ref.update({[k]:(c||0)+1,tok:[...(d.tok||[]),b.dataset.s].slice(-30)}));}
-  else if(act==='undo'){const tok=(d.tok||[]).slice();const last=tok.pop();if(!last)return;const k=last==='a'?'rez_a':'rez_b',c=last==='a'?d.rezA:d.rezB;await w(()=>ref.update({[k]:Math.max(0,(c||0)-1),tok}));}
-  else if(act==='del'){const acts=b.parentElement;acts.innerHTML='<span class="confirm">Obrisati duel i sve prognoze za njega?</span><button class="danger" data-act="delok">OBRIŠI</button><button data-act="nodel">ODUSTANI</button>';}
-  else if(act==='delok')await w(()=>ref.delete(),'DUEL JE OBRISAN');
-  else if(act==='nodel')renderAdmin();
-}
-
-/* =========================================================
-   NAVIGACIJA I POKRETANJE
-   ========================================================= */
-const SCREENS=['home','roster','global','profile','admin'];
-let current='home';
-function go(s,push){
-  if(!SCREENS.includes(s)||(s==='admin'&&!S.admin))s='home';current=s;
-  SCREENS.forEach(x=>$('#s-'+x).classList.toggle('on',x===s));
-  document.querySelectorAll('[data-go]').forEach(b=>{if(b.classList.contains('chip'))return;if(b.dataset.go===s)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
-  if(push){try{history.replaceState(null,'','#'+s);}catch(e){}}
-  scrollTo({top:0});renderAll();
-}
-document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.go,true)));
-let rq=0;
-function renderAll(){cancelAnimationFrame(rq);rq=requestAnimationFrame(()=>{
-  renderProfile();
-  if(current==='home')renderHome();else if(current==='roster')renderRoster();else if(current==='global')renderBoard();
-  else if(current==='admin')renderAdmin();
-  requestAnimationFrame(refreshAll);
-});}
-
-(function embers(){
-  if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
-  const cv=$('#embers'),c=cv.getContext('2d');let W,H;const P=[];
-  const size=()=>{W=cv.width=innerWidth;H=cv.height=innerHeight;};size();addEventListener('resize',size);
-  for(let i=0;i<34;i++)P.push({x:Math.random(),y:Math.random(),v:.0006+Math.random()*.0012,r:.6+Math.random()*1.6,a:.15+Math.random()*.4,d:Math.random()*6});
-  (function f(t){c.clearRect(0,0,W,H);for(const p of P){p.y-=p.v;if(p.y<-.02){p.y=1.02;p.x=Math.random();}const x=(p.x+Math.sin(t/2400+p.d)*.01)*W,y=p.y*H;c.fillStyle=`rgba(255,${120+(p.d*20|0)},40,${p.a*(.4+.6*p.y)})`;c.beginPath();c.arc(x,y,p.r,0,7);c.fill();}requestAnimationFrame(f);})(0);
-})();
-
-const BG_FMT=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Belgrade',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false});
-function bgParts(iso){const p=BG_FMT.formatToParts(new Date(iso));const g=t=>p.find(x=>x.type===t).value;return {datum:`${g('year')}-${g('month')}-${g('day')}`,vreme:`${g('hour')==='24'?'00':g('hour')}:${g('minute')}`};}
-async function fetchAll(table,cols){let out=[],from=0;for(;;){const {data,error}=await S.sb.from(table).select(cols).range(from,from+999);if(error)throw error;out=out.concat(data);if(data.length<1000)break;from+=1000;}return out;}
-async function loadAthletes(){const rows=await fetchAll('athletes','*');const m={};rows.forEach(r=>{m[r.id]=toAthlete(r.id,r);});S.ATH=m;CARDS.clear();}
-async function loadDuels(){const rows=await fetchAll('duels','*');S.DUELS=rows.map(r=>({...r,...bgParts(r.pocetak),rezA:r.rez_a||0,rezB:r.rez_b||0,tok:r.tok||[]})).sort((a,b)=>startOf(a)-startOf(b));}
-async function loadPlayers(){
-  const [pl,pk]=await Promise.all([fetchAll('players','id,nick'),fetchAll('picks','player_id,duel_id,izbor')]);
-  const m={};pl.forEach(p=>{m[p.id]={nick:p.nick,picks:{}};});
-  pk.forEach(x=>{(m[x.player_id]||(m[x.player_id]={nick:'',picks:{}})).picks[x.duel_id]=x.izbor;});
-  S.PLAYERS=m;
-  if(S.uid){const me=m[S.uid];S.myPicks={...(me?me.picks:{}),...S.myPicks};if(me&&me.nick)S.nick=me.nick;}
-}
-async function loadMeta(){const {data}=await S.sb.from('meta').select('value').eq('key','najava').maybeSingle();S.NAJAVA=data?data.value:null;}
-const LOADERS={athletes:loadAthletes,duels:loadDuels,players:loadPlayers,picks:loadPlayers,meta:loadMeta};
-const pending=new Set();let pendT=0;
-function queueReload(t){pending.add(t);clearTimeout(pendT);pendT=setTimeout(async()=>{const fns=new Set([...pending].map(x=>LOADERS[x]));pending.clear();try{await Promise.all([...fns].map(f=>f()));}catch(e){console.warn(e);}renderAll();},400);}
-async function ensurePlayer(){
-  const mine=S.PLAYERS[S.uid];if(mine&&mine.nick){S.nick=mine.nick;return;}
-  const base=S.defaultName||'Igrač';
-  for(let i=0;i<5;i++){const nick=i===0&&S.defaultName?base:`Igrač ${1000+Math.floor(Math.random()*9000)}`;if(await saveNick(nick)==='ok'){S.nick=nick;return;}}
-}
-async function boot(){
-  go((location.hash||'#home').slice(1),false);
-  if(!window.supabase||SUPABASE_URL.startsWith('UPISI')){showNoData('Aplikacija još nije povezana sa bazom. Upiši Supabase adresu i ključ na vrhu skripte.');return;}
-  S.sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
-  let {data:{session}}=await S.sb.auth.getSession();
-  if(!session){const r=await S.sb.auth.signInAnonymously();if(r.error){console.warn(r.error);toast('PRIJAVA NIJE USPELA');}session=r.data&&r.data.session;}
-  if(session){S.uid=session.user.id;S.email=(session.user.email||'').toLowerCase();S.admin=S.email===ADMIN_EMAIL;
-    const md=session.user.user_metadata||{};S.defaultName='';}
-  if(S.admin){document.querySelectorAll('.admin-only').forEach(b=>b.hidden=false);$('#tabbar').style.setProperty('--tabs',5);}
-  renderAuth();
-  try{await Promise.all([loadAthletes(),loadDuels(),loadPlayers(),loadMeta()]);}catch(e){console.warn(e);showNoData('Podaci nisu učitani. Proveri vezu i osveži stranicu.');return;}
-  if(S.uid)await ensurePlayer();
-  S.ready=true;renderAll();
-  S.sb.channel('exatlon').on('postgres_changes',{event:'*',schema:'public'},p=>{if(LOADERS[p.table])queueReload(p.table);}).subscribe();
-  if(document.fonts&&document.fonts.ready)document.fonts.ready.then(refreshAll);
-  setInterval(()=>{if(current==='home')renderHome();},30000);
-}
-function renderAuth(){
-  const box=$('#authBox');if(!box)return;
-  box.innerHTML=S.admin?`<span class="msg ok">Prijavljen kao admin (${esc(S.email)}).</span> <button type="button" class="btn ghost" id="logout">ODJAVA</button>`
-    :`<details><summary>Prijava za admina</summary><form class="nick" id="adminLogin"><input type="email" id="adminMail" placeholder="EMAIL" aria-label="Email za prijavu" autocomplete="email" style="text-transform:none"><button class="btn ghost" type="submit">POŠALJI LINK</button><span class="msg" id="loginMsg"></span></form></details>`;
-  if(S.admin)$('#logout').onclick=async()=>{await S.sb.auth.signOut();location.reload();};
-  else $('#adminLogin').onsubmit=async e=>{e.preventDefault();const em=$('#adminMail').value.trim(),m=$('#loginMsg');
-    const {error}=await S.sb.auth.signInWithOtp({email:em,options:{emailRedirectTo:location.origin+location.pathname,shouldCreateUser:true}});
-    m.className='msg '+(error?'err':'ok');m.textContent=error?'Slanje nije uspelo. Pokušaj ponovo za minut.':'Link za prijavu je poslat na tvoj email.';};
-}
-function showNoData(t){const m=`<div class="empty cut"><b>Podaci nisu dostupni</b>${esc(t)}</div>`;$('#home').innerHTML=m;$('#roster').innerHTML=m;}
 boot();
 </script>
 </body>
