@@ -491,8 +491,10 @@ function scorePicks(picks){let c=0,w=0,streak=0,best=0;const hist=[];
   return {pts:c,correct:c,wrong:w,streak,best,hist};}
 function scoreDay(picks,day){let c=0,w=0;for(const d of settled()){if(d.datum!==day)continue;const p=picks&&picks[d.id];if(!p)continue;if(p===d.pobednik)c++;else w++;}return {c,w};}
 function standings(day){
-  return Object.entries(S.PLAYERS).map(([uid,p])=>{const t=day?scoreDay(p.picks,day):(s=>({c:s.correct,w:s.wrong}))(scorePicks(p.picks));return {uid,nick:(p.nick||'').trim(),c:t.c,w:t.w};})
-    .filter(x=>x.nick&&x.c+x.w>0).sort((a,b)=>b.c-a.c||a.w-b.w||a.nick.localeCompare(b.nick,'sr'));
+  const inDay=id=>{const d=S.DUELS.find(x=>x.id===id);return d&&d.datum===day;};
+  return Object.entries(S.PLAYERS).map(([uid,p])=>{const t=day?scoreDay(p.picks,day):(s=>({c:s.correct,w:s.wrong}))(scorePicks(p.picks));
+      const n=Object.keys(p.picks||{}).filter(id=>day?inDay(id):S.DUELS.some(x=>x.id===id)).length;return {uid,nick:(p.nick||'').trim(),c:t.c,w:t.w,n};})
+    .filter(x=>x.nick&&x.n>0).sort((a,b)=>b.c-a.c||a.w-b.w||a.nick.localeCompare(b.nick,'sr'));
 }
 function crowd(d){let a=0,b=0;for(const p of Object.values(S.PLAYERS)){const v=p.picks&&p.picks[d.id];if(v==='a')a++;else if(v==='b')b++;}return {a,b,t:a+b};}
 function record(id){let w=0,l=0;for(const d of settled()){if(d.a!==id&&d.b!==id)continue;((d.pobednik==='a')===(d.a===id))?w++:l++;}return {w,l};}
@@ -613,8 +615,8 @@ let rangMode='danas';
 $('#rangSeg').onclick=e=>{const b=e.target.closest('button');if(!b)return;rangMode=b.dataset.m;$('#rangSeg').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));renderBoard();};
 function renderBoard(){
   if(!S.ready)return;const day=rangMode==='danas',list=standings(day?todayBG():null);
-  $('#board').innerHTML=list.length?list.map((p,i)=>`<div class="brow${i===0?' first':''}${p.uid===S.uid?' me':''}"><span class="rk">${i+1}</span><span class="un">${esc(p.nick)}</span><span class="pt">${p.c}<small>od ${p.c+p.w}</small></span></div>`).join('')
-    :`<div class="empty">${day?'Danas još nema rezultata.':'Još nema rezultata.'}</div>`;
+  $('#board').innerHTML=list.length?list.map((p,i)=>`<div class="brow${i===0?' first':''}${p.uid===S.uid?' me':''}"><span class="rk">${i+1}</span><span class="un">${esc(p.nick)}</span><span class="pt">${p.c}<small>${p.c+p.w?'od '+(p.c+p.w):'čeka rezultat'}</small></span></div>`).join('')
+    :`<div class="empty">${day?'Danas još niko nije dao prognozu.':'Još niko nije dao prognozu.'}</div>`;
 }
 
 /* ================= PROFIL ================= */
@@ -797,7 +799,7 @@ async function adminAct(b){
   else if(act==='live')ok=await w(q({uzivo:!d.uzivo}));
   else if(act==='pt'){const k=b.dataset.s==='a'?'rez_a':'rez_b',c=b.dataset.s==='a'?d.rezA:d.rezB;ok=await w(q({[k]:c+1,tok:[...d.tok,b.dataset.s].slice(-30)}));}
   else if(act==='undo'){const tok=d.tok.slice(),l=tok.pop();if(!l)return;const k=l==='a'?'rez_a':'rez_b',c=l==='a'?d.rezA:d.rezB;ok=await w(q({[k]:Math.max(0,c-1),tok}));}
-  else if(act==='del'){b.outerHTML='<button data-act="delok" class="danger">Potvrdi brisanje</button>';const n=document.querySelector(`.adr[data-id="${d.id}"] [data-act="delok"]`);n.onclick=()=>adminAct(n);return;}
+  else if(act==='del'){b.outerHTML='<button data-act="delok" class="danger">Obriši duel i sve prognoze za njega</button>';const n=document.querySelector(`.adr[data-id="${d.id}"] [data-act="delok"]`);n.onclick=()=>adminAct(n);return;}
   else if(act==='delok')ok=await w(S.sb.from('duels').delete().eq('id',d.id),'Duel je obrisan');
   if(ok){await loadDuels();renderAll();}
 }
@@ -809,7 +811,7 @@ async function loadDuels(){S.DUELS=(await fetchAll('duels','*')).map(r=>({...r,.
 async function loadPlayers(){
   const [pl,pk]=await Promise.all([fetchAll('players','id,nick'),fetchAll('picks','player_id,duel_id,izbor')]);
   const m={};pl.forEach(p=>{m[p.id]={nick:p.nick,picks:{}};});pk.forEach(x=>{(m[x.player_id]||(m[x.player_id]={nick:'',picks:{}})).picks[x.duel_id]=x.izbor;});
-  S.PLAYERS=m;if(S.uid){const me=m[S.uid];S.myPicks={...(me?me.picks:{}),...S.myPicks};if(me&&me.nick)S.nick=me.nick;}
+  S.PLAYERS=m;if(S.uid){const me=m[S.uid];S.myPicks={...(me?me.picks:{})};if(me&&me.nick)S.nick=me.nick;}
 }
 const LOAD={athletes:loadAthletes,duels:loadDuels,players:loadPlayers,picks:loadPlayers};
 const pend=new Set();let pT=0;
