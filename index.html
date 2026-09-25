@@ -237,9 +237,13 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
 .cropper{position:fixed;inset:0;z-index:80;display:grid;place-items:center;padding:16px;background:rgba(0,0,0,.8)}
 .cbox{width:100%;max-width:720px;display:grid;gap:12px;padding:16px;border-radius:16px;background:var(--panel);border:1px solid var(--line2)}
 .cbox h3{margin:0;font-family:var(--display);font-weight:800;font-size:22px}
-.cstage{position:relative;max-height:60vh;overflow:hidden;border-radius:10px;touch-action:none;user-select:none;background:#000}
-.cstage img{display:block;width:100%;height:auto;max-height:60vh;object-fit:contain;pointer-events:none}
+.cstage{position:relative;width:fit-content;max-width:100%;margin:0 auto;overflow:hidden;border-radius:10px;touch-action:none;user-select:none;background:#000}
+.cstage img{display:block;width:auto;height:auto;max-width:100%;max-height:58vh;pointer-events:none}
 .cframe{position:absolute;top:0;left:0;border:3px solid var(--orange);box-shadow:0 0 0 9999px rgba(0,0,0,.6);border-radius:8px;cursor:grab}
+.photo .mosaic{position:absolute;inset:0;display:grid;gap:2px;background:var(--tc)}
+.photo .mosaic.m2{grid-template-columns:1fr 1fr}
+.photo .mosaic.m4{grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr}
+.photo .mosaic img{position:static;width:100%;height:100%;object-fit:cover;object-position:50% 15%;min-height:0}
 /* tab bar */
 .tabbar{display:none}
 .toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom,0px));z-index:70;transform:translate(-50%,16px);opacity:0;pointer-events:none;padding:11px 20px;border-radius:999px;background:var(--text);color:#0b0c0f;font-weight:700;font-size:14px;transition:all .3s;white-space:nowrap;max-width:92vw;overflow:hidden;text-overflow:ellipsis}
@@ -410,8 +414,9 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
 <div class="cropper" id="cropper" hidden role="dialog" aria-modal="true" aria-labelledby="cropT">
   <div class="cbox">
     <h3 id="cropT">Namesti sliku</h3>
-    <p class="muted" style="margin:0">Prevuci okvir preko lica takmičara.</p>
+    <p class="muted" style="margin:0">Prevuci okvir preko takmičara. Klizačem ga smanji ili povećaj.</p>
     <div class="cstage" id="cStage"><img id="cImg" alt=""><div class="cframe" id="cFrame"></div></div>
+    <label class="inline muted" style="gap:10px">Veličina<input type="range" id="cZoom" min="15" max="100" value="100" style="flex:1;accent-color:#ff7a1a"></label>
     <div class="inline" style="justify-content:flex-end"><button class="btn ghost small" id="cCancel" type="button">Odustani</button><button class="btn small" id="cSave" type="button">Sačuvaj sliku</button></div>
   </div>
 </div>
@@ -471,7 +476,9 @@ const side=id=>TEAM_ATH[id]||S.ATH[id]||{id,name:'?',team:'crveni',height:1,buil
 const athList=()=>Object.values(S.ATH).sort((a,b)=>(a.status==='Eliminisan')-(b.status==='Eliminisan')||a.team.localeCompare(b.team)||a.name.localeCompare(b.name,'sr'));
 function photoBox(x,ang,extra=''){
   const tag=x.isTeam?'':`<span class="team">${TEAMS[x.team].name}</span>`;
-  const inner=x.photo?`<img src="${esc(x.photo)}" alt="" loading="lazy">`:`<canvas data-fig="${esc(x.id)}" data-ang="${ang}"></canvas>`;
+  let inner=x.photo?`<img src="${esc(x.photo)}" alt="" loading="lazy">`:`<canvas data-fig="${esc(x.id)}" data-ang="${ang}"></canvas>`;
+  if(x.isTeam){const m=Object.values(S.ATH).filter(a=>a.team===x.team&&a.status!=='Eliminisan'&&a.photo).sort((a,b)=>(b.status==='Kapiten')-(a.status==='Kapiten')||a.name.localeCompare(b.name,'sr')).slice(0,4);
+    if(m.length){const n=m.length>=4?4:m.length>=2?2:1;inner=`<div class="mosaic m${n}">${m.slice(0,n).map(a=>`<img src="${esc(a.photo)}" alt="" loading="lazy">`).join('')}</div><span class="team">${x.name} TIM</span>`;}}
   return `<div class="photo" style="--tc:${TEAMS[x.team].color}"${extra}>${inner}${tag}</div>`;
 }
 function hydrate(root){root.querySelectorAll('canvas[data-fig]').forEach(cv=>{const x=side(cv.dataset.fig),ang=+cv.dataset.ang||0;
@@ -744,16 +751,26 @@ function cropPortrait(file){return new Promise(async res=>{
   let bmp;try{bmp=await createImageBitmap(file);}catch(e){res(null);return;}
   const url=URL.createObjectURL(file),im=$('#cImg'),fr=$('#cFrame'),st=$('#cStage');
   im.src=url;$('#cropper').hidden=false;await new Promise(r=>{if(im.complete&&im.naturalWidth)r();else im.onload=r;});
-  const R=3/4,iw=bmp.width,ih=bmp.height;let cw,ch;if(iw/ih>R){ch=ih;cw=ih*R;}else{cw=iw;ch=iw/R;}
-  let cx=(iw-cw)/2,cy=Math.max(0,(ih-ch)*.2);
+  const R=3/4,iw=bmp.width,ih=bmp.height;let mw,mh;if(iw/ih>R){mh=ih;mw=ih*R;}else{mw=iw;mh=iw/R;}
+  // pronađi deo slike bez crnih ivica (npr. snimak ekrana)
+  let box={x:0,y:0,w:iw,h:ih};
+  try{const sw=160,sh=Math.round(ih*sw/iw),t=document.createElement('canvas');t.width=sw;t.height=sh;const g=t.getContext('2d');g.drawImage(bmp,0,0,sw,sh);const d=g.getImageData(0,0,sw,sh).data;
+    const lum=i=>.3*d[i]+.59*d[i+1]+.11*d[i+2];let best=[0,0],cur=-1;
+    for(let y=0;y<=sh;y++){let on=0;if(y<sh){for(let x=0;x<sw;x++)if(lum((y*sw+x)*4)>45)on++;}
+      if(y<sh&&on/sw>.5){if(cur<0)cur=y;}else if(cur>=0){if(y-cur>best[1]-best[0])best=[cur,y];cur=-1;}}
+    if(best[1]-best[0]>sh*.08){const k=ih/sh;box={x:0,y:best[0]*k,w:iw,h:(best[1]-best[0])*k};}}catch(e){}
+  let z=Math.min(1,Math.max(.15,box.h/mh));let cw=mw*z,ch=mh*z;
+  let cx=Math.min(iw-cw,Math.max(0,box.x+box.w*.33-cw/2)),cy=Math.min(ih-ch,Math.max(0,box.y+(box.h-ch)/2));
+  const zi=$('#cZoom');zi.value=Math.round(z*100);
+  zi.oninput=()=>{const ox=cx+cw/2,oy=cy+ch/2;z=zi.value/100;cw=mw*z;ch=mh*z;cx=Math.min(iw-cw,Math.max(0,ox-cw/2));cy=Math.min(ih-ch,Math.max(0,oy-ch/2));place();};
   const place=()=>{const k=im.clientWidth/iw;fr.style.width=cw*k+'px';fr.style.height=ch*k+'px';fr.style.left=cx*k+'px';fr.style.top=cy*k+'px';};place();
   let drag=null;
-  st.onpointerdown=e=>{drag={x:e.clientX,y:e.clientY,cx,cy};st.setPointerCapture(e.pointerId);};
+  st.onpointerdown=e=>{if(e.target===zi)return;drag={x:e.clientX,y:e.clientY,cx,cy};st.setPointerCapture(e.pointerId);};
   st.onpointermove=e=>{if(!drag)return;const k=im.clientWidth/iw;cx=Math.min(iw-cw,Math.max(0,drag.cx+(e.clientX-drag.x)/k));cy=Math.min(ih-ch,Math.max(0,drag.cy+(e.clientY-drag.y)/k));place();};
   st.onpointerup=st.onpointercancel=()=>{drag=null;};
   const done=v=>{$('#cropper').hidden=true;URL.revokeObjectURL(url);res(v);};
   $('#cCancel').onclick=()=>done(null);
-  $('#cSave').onclick=()=>{const W=Math.min(900,Math.round(cw)),H=Math.round(W/R),c=document.createElement('canvas');c.width=W;c.height=H;
+  $('#cSave').onclick=()=>{const W=Math.max(300,Math.min(900,Math.round(cw))),H=Math.round(W/R),c=document.createElement('canvas');c.width=W;c.height=H;
     c.getContext('2d').drawImage(bmp,cx,cy,cw,ch,0,0,W,H);c.toBlob(bl=>done(bl),'image/jpeg',.86);};
 });}
 async function upload(a,inp){
