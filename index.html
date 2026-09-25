@@ -217,7 +217,16 @@ main{max-width:980px;margin:0 auto;padding-inline:16px;padding-block:18px 110px}
 .qslot{min-height:44px;display:grid;place-items:center;padding:6px 10px;border-radius:10px;border:1px dashed var(--line2);color:var(--dim);font-family:var(--display);font-weight:800;font-size:18px;text-align:center}
 .qslot.set{border-style:solid;color:#fff;background:var(--panel2);border-color:var(--orange)}
 .qvs{color:var(--faint);font-weight:800}
-.qgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:6px}
+.qgrid{display:grid;gap:14px}
+.tgroup h4{margin:0 0 6px;display:flex;align-items:center;gap:8px;font-family:var(--display);font-weight:800;font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--metal)}
+.tgroup h4::before{content:"";width:12px;height:12px;border-radius:3px;background:var(--orange)}
+.tgroup.crveni h4{color:#ff6b61}.tgroup.crveni h4::before{background:var(--tred)}
+.tgroup.plavi h4{color:#7b9dff}.tgroup.plavi h4::before{background:var(--tblue)}
+.tgroup.crveni{padding:10px;border-radius:12px;background:rgba(216,40,29,.08)}
+.tgroup.plavi{padding:10px;border-radius:12px;background:rgba(47,102,255,.08)}
+.tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:6px}
+.agroups{display:grid;gap:14px}
+.agroups .tgrid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
 .qt{position:relative;border-radius:10px;overflow:hidden;background:var(--panel2);border:2px solid transparent;text-align:center}
 .qt .photo{max-width:none;border-radius:0;aspect-ratio:1}
 .qt .photo .team{display:none}
@@ -285,7 +294,7 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
   .row .mini{grid-column:1/-1}
   .row .mini button{flex:1;max-width:none}
 }
-@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+@media (prefers-reduced-motion:reduce){*:not(.winbanner),*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 </style>
 </head>
 <body>
@@ -395,7 +404,7 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
         <button class="btn ghost" type="submit">DODAJ TAKMIČARA</button>
       </form>
       <p class="muted" style="margin:0 0 10px">Klikni „Dodaj sliku“ ispod takmičara. Slika se sama smanji pre otpremanja. Najbolje izgleda uspravna fotografija, lice u gornjem delu.</p>
-      <div class="agrid" id="adminAth"></div>
+      <div class="agroups" id="adminAth"></div>
     </div>
   </section>
 </main>
@@ -686,9 +695,11 @@ $('#athForm').onsubmit=async e=>{e.preventDefault();const ime=$('#aIme').value.t
 /* brzi duel */
 const Q={a:null,b:null,min:3,kind:'auto'};
 function qRender(){
-  const tiles=[TEAM_ATH.crveni,TEAM_ATH.plavi,...athList().filter(a=>a.status!=='Eliminisan')];
+  const tile=x=>`<button type="button" class="qt${Q.a===x.id?' a':Q.b===x.id?' b':''}" data-q="${esc(x.id)}" style="--tc:${TEAMS[x.team].color}">${Q.a===x.id?'<i class="n">1</i>':Q.b===x.id?'<i class="n">2</i>':''}${photoBox(x,.3)}<span>${esc(x.isTeam?x.name+' TIM':x.name)}</span></button>`;
+  const act=athList().filter(a=>a.status!=='Eliminisan');
   const g=$('#qGrid');
-  g.innerHTML=tiles.map(x=>`<button type="button" class="qt${Q.a===x.id?' a':Q.b===x.id?' b':''}" data-q="${esc(x.id)}" style="--tc:${TEAMS[x.team].color}">${Q.a===x.id?'<i class="n">1</i>':Q.b===x.id?'<i class="n">2</i>':''}${photoBox(x,.3)}<span>${esc(x.isTeam?x.name+' TIM':x.name)}</span></button>`).join('');
+  g.innerHTML=`<div class="tgroup"><h4>Timska igra</h4><div class="tgrid">${tile(TEAM_ATH.crveni)}${tile(TEAM_ATH.plavi)}</div></div>`+
+    ['crveni','plavi'].map(t=>`<div class="tgroup ${t}"><h4>${t==='crveni'?'Crveni':'Plavi'}</h4><div class="tgrid">${act.filter(a=>a.team===t).map(tile).join('')||'<span class="muted">Nema takmičara</span>'}</div></div>`).join('');
   hydrate(g);
   g.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{const id=b.dataset.q;
     if(Q.a===id)Q.a=null;else if(Q.b===id)Q.b=null;else if(!Q.a)Q.a=id;else if(!Q.b)Q.b=id;else{Q.a=Q.b;Q.b=id;}qRender();});
@@ -731,13 +742,15 @@ function renderAdmin(){
     $('#adminDuels').querySelectorAll('[data-act]').forEach(b=>b.onclick=()=>adminAct(b));
   }else{
     const box=$('#adminAth');
-    box.innerHTML=athList().map(a=>`<div class="aath" data-a="${esc(a.id)}">${photoBox(a,.3)}<div class="body"><b>${esc(a.full)}</b>
+    const card=a=>`<div class="aath" data-a="${esc(a.id)}">${photoBox(a,.3)}<div class="body"><b>${esc(a.full)}</b>
       <select data-f="tim" aria-label="Tim"><option value="crveni">Crveni</option><option value="plavi">Plavi</option></select>
       <select data-f="status" aria-label="Status">${STATUSES.map(s=>`<option>${s}</option>`).join('')}</select>
       <label class="upl">${a.photo?'Promeni sliku':'Dodaj sliku'}<input type="file" accept="image/*" data-k="p"></label>
       <label class="upl ghost">360° snimci<input type="file" accept="image/*" multiple data-k="f"></label>
       ${a.photo?'<button type="button" class="guest" data-rm="1" style="padding:2px">Ukloni sliku</button>':''}
-      <button type="button" class="guest" data-del="1" style="padding:2px;color:var(--loss)">Obriši takmičara</button></div></div>`).join('');
+      <button type="button" class="guest" data-del="1" style="padding:2px;color:var(--loss)">Obriši takmičara</button></div></div>`;
+    const L=athList();
+    box.innerHTML=['crveni','plavi'].map(t=>`<div class="tgroup ${t}"><h4>${t==='crveni'?'Crveni':'Plavi'} · ${L.filter(a=>a.team===t).length}</h4><div class="tgrid">${L.filter(a=>a.team===t).map(card).join('')}</div></div>`).join('');
     hydrate(box);
     box.querySelectorAll('.aath').forEach(c=>{const a=S.ATH[c.dataset.a];
       c.querySelector('[data-f="tim"]').value=a.team;c.querySelector('[data-f="status"]').value=STATUSES.includes(a.status)?a.status:'Aktivan';
@@ -813,11 +826,11 @@ async function adminAct(b){
 
 /* ================= KONFETE ZA POGODAK ================= */
 function confetti(){
-  if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  const lite=matchMedia('(prefers-reduced-motion: reduce)').matches;
   const cv=$('#confetti'),c=cv.getContext('2d'),dpr=Math.min(2,devicePixelRatio||1),W=innerWidth,H=innerHeight;
   cv.width=W*dpr;cv.height=H*dpr;c.setTransform(dpr,0,0,dpr,0,0);
   const cols=['#ff3b2b','#ff7a1a','#ffc23a','#ffffff','#2f66ff','#34d37f'];
-  const P=[];for(let i=0;i<180;i++){const left=i%2===0;P.push({x:left?-10:W+10,y:H*.65+Math.random()*H*.2,vx:(left?1:-1)*(4+Math.random()*7),vy:-(9+Math.random()*9),r:Math.random()*6.28,vr:(Math.random()-.5)*.3,w:6+Math.random()*6,h:8+Math.random()*8,c:cols[i%cols.length]});}
+  const P=[];for(let i=0;i<(lite?70:180);i++){const left=i%2===0;P.push({x:left?-10:W+10,y:H*.65+Math.random()*H*.2,vx:(left?1:-1)*(4+Math.random()*7),vy:-(9+Math.random()*9),r:Math.random()*6.28,vr:(Math.random()-.5)*.3,w:6+Math.random()*6,h:8+Math.random()*8,c:cols[i%cols.length]});}
   for(let i=0;i<60;i++)P.push({x:Math.random()*W,y:-20-Math.random()*H*.4,vx:(Math.random()-.5)*2,vy:2+Math.random()*3,r:Math.random()*6.28,vr:(Math.random()-.5)*.3,w:6+Math.random()*6,h:8+Math.random()*8,c:cols[i%cols.length]});
   const t0=performance.now();
   (function f(t){const e=t-t0;c.clearRect(0,0,W,H);
@@ -864,7 +877,7 @@ function go(s,push){if(!SCREENS.includes(s)||(s==='admin'&&!S.admin))s='home';cu
   document.querySelectorAll('[data-go]').forEach(b=>{if(b.classList.contains('chip'))return;b.toggleAttribute('aria-current',b.dataset.go===s);if(b.dataset.go===s)b.setAttribute('aria-current','page');});
   if(push){try{history.replaceState(null,'','#'+s);}catch(e){}}scrollTo({top:0});renderAll();}
 document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.go,true)));
-let rq=0;function renderAll(){cancelAnimationFrame(rq);rq=requestAnimationFrame(()=>{renderChip();
+let rq=0;function renderAll(){cancelAnimationFrame(rq);rq=requestAnimationFrame(()=>{renderChip();if(S.ready)checkWins();
   if(current==='home')renderHome();else if(current==='roster')renderRoster();else if(current==='rang')renderBoard();else if(current==='profil')renderProfile();else if(current==='admin')renderAdmin();});}
 
 async function boot(){
@@ -884,7 +897,7 @@ async function boot(){
   S.sb.channel('exatlon').on('postgres_changes',{event:'*',schema:'public'},p=>queue(p.table)).subscribe();
   if(document.fonts&&document.fonts.ready)document.fonts.ready.then(refreshAll);
   setInterval(()=>{if(current==='admin')renderNow();},20000);
-  setInterval(()=>{if(document.visibilityState!=='visible')return;queue('duels');queue('picks');},45000);
+  setInterval(()=>{if(document.visibilityState!=='visible')return;queue('duels');queue('picks');},12000);
 }
 </script>
 <script>
