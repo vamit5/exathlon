@@ -287,6 +287,19 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
 .tag.ok{background:rgba(52,211,127,.15);color:var(--win)}
 .tag.wait{background:rgba(255,176,32,.15);color:#ffcf5a}
 .dayh{font-family:var(--display);font-weight:800;font-size:16px;letter-spacing:.06em;color:var(--metal);margin:10px 0 2px}
+.prow{display:grid;gap:10px;padding:14px;border-radius:12px;background:var(--panel);border:1px solid var(--line)}
+.prow.owed{border-color:rgba(255,176,32,.6)}
+.prow .hd{display:flex;align-items:center;gap:10px}
+.prow .hd b{font-family:var(--display);font-weight:800;font-size:19px}
+.prow .hd small{display:block;font-size:12px;color:var(--dim)}
+.owe{margin-left:auto;text-align:right;font-family:var(--display);font-weight:800;font-size:20px;color:#ffcf5a;white-space:nowrap}
+.owe small{display:block;font-family:var(--body);font-weight:600;font-size:11px;color:var(--dim)}
+.bank{display:grid;gap:6px}
+.bf{display:grid;grid-template-columns:96px minmax(0,1fr) auto;gap:8px;align-items:center;padding:7px 8px 7px 10px;border-radius:8px;background:var(--bg)}
+.bf span{font-size:11px;font-weight:600;color:var(--dim)}
+.bf code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:14px;color:var(--text);overflow-wrap:anywhere;user-select:all}
+.cp{padding:6px 10px;border-radius:6px;background:var(--panel2);border:1px solid var(--line2);font-size:12px;font-weight:700}
+.cp.ok{background:var(--win);color:#000;border-color:transparent}
 .rules{margin:-6px 0 14px;padding:12px 14px;border-radius:var(--r);background:var(--panel);border:1px solid var(--line);font-size:13px;color:var(--dim);line-height:1.5}
 .rules b{color:var(--metal)}
 .rules ol{margin:6px 0 0;padding-left:20px}
@@ -412,7 +425,7 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
 
   <section class="screen" id="s-admin">
     <div class="pagehead"><h1>Admin</h1>
-      <div class="seg" id="adminSeg"><button data-t="dueli" aria-pressed="true">DUELI</button><button data-t="takmicari" aria-pressed="false">TAKMIČARI</button><button data-t="nagrade" aria-pressed="false">NAGRADE</button></div></div>
+      <div class="seg" id="adminSeg"><button data-t="dueli" aria-pressed="true">DUELI</button><button data-t="takmicari" aria-pressed="false">TAKMIČARI</button><button data-t="nagrade" aria-pressed="false">NAGRADE</button><button data-t="igraci" aria-pressed="false">IGRAČI</button></div></div>
     <div id="adminDueli">
       <div id="nowDuel"></div>
       <div class="apanel">
@@ -442,6 +455,11 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
       </form></details>
       <div class="sec">Svi dueli</div>
       <div class="list" id="adminDuels"></div>
+    </div>
+    <div id="adminIgr" hidden>
+      <input class="inp" id="igrQ" placeholder="Pretraži igrače" aria-label="Pretraži igrače" style="width:100%;margin-bottom:10px">
+      <div class="muted" id="igrSum" style="margin-bottom:10px"></div>
+      <div class="list" id="igrList"></div>
     </div>
     <div id="adminNag" hidden>
       <form class="apanel" id="prizeForm">
@@ -797,7 +815,7 @@ $('#lGuest').onclick=async()=>{const m=$('#lMsg');m.className='msg';m.textConten
 
 /* ================= ADMIN ================= */
 let adminTab='dueli';
-$('#adminSeg').onclick=e=>{const b=e.target.closest('button');if(!b)return;adminTab=b.dataset.t;$('#adminSeg').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));$('#adminDueli').hidden=adminTab!=='dueli';$('#adminTak').hidden=adminTab!=='takmicari';$('#adminNag').hidden=adminTab!=='nagrade';renderAdmin();};
+$('#adminSeg').onclick=e=>{const b=e.target.closest('button');if(!b)return;adminTab=b.dataset.t;$('#adminSeg').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));$('#adminDueli').hidden=adminTab!=='dueli';$('#adminTak').hidden=adminTab!=='takmicari';$('#adminNag').hidden=adminTab!=='nagrade';$('#adminIgr').hidden=adminTab!=='igraci';renderAdmin();};
 async function w(p,ok){const {error}=await p;if(error){console.warn(error);toast(/row-level|permission/i.test(error.message||'')?'Nemaš dozvolu.':'Čuvanje nije uspelo.');return false;}if(ok)toast(ok);return true;}
 function fillSelects(){
   const opts=`<optgroup label="Timovi"><option value="crveni">Crveni tim</option><option value="plavi">Plavi tim</option></optgroup>`+['crveni','plavi'].map(t=>`<optgroup label="${t==='crveni'?'Crveni':'Plavi'}">${athList().filter(a=>a.team===t&&a.status!=='Eliminisan').map(a=>`<option value="${esc(a.id)}">${esc(a.full)}${a.raw.nadimak?' ('+esc(a.raw.nadimak)+')':''}</option>`).join('')}</optgroup>`).join('');
@@ -853,16 +871,34 @@ function renderNagrade(){
   const g=winnersByDay(),today=todayBG();
   $('#adminWinners').innerHTML=g.length?g.map(x=>`<div class="dayh">${esc(dayLabel(x.day))}${x.day===today?' · dan još traje':''}</div>`+x.list.map(p=>{
       const pay=S.PAYALL[p.uid],paid=S.ISPLATE_ALL[p.uid+'|'+x.day];
-      const bank=pay?[pay.ime_prezime,pay.racun,pay.banka,pay.napomena].filter(Boolean).map(esc).join(' · '):'<span style="color:var(--loss)">Nema podataka za isplatu</span>';
-      return `<div class="win"><span class="mk">${['🥇','🥈','🥉'][p.rank-1]}</span><div class="who"><b>${esc(p.nick)} · ${money(paid?paid.iznos:p.iznos)}</b><small>${bank}</small></div>
-        ${paid?`<button class="tag ok" data-unpay="${p.uid}|${x.day}">Isplaćeno ✓</button>`:x.day===today?'<span class="tag wait">Čeka kraj dana</span>':`<button class="btn small" data-pay="${p.uid}|${x.day}|${p.rank}|${p.iznos}">Označi kao plaćeno</button>`}</div>`;}).join('')).join('')
+      const bank='';
+      return `<div class="win"><span class="mk">${['🥇','🥈','🥉'][p.rank-1]}</span><div class="who"><b>${esc(p.nick)} · ${money(paid?paid.iznos:p.iznos)}</b></div>
+        ${paid?`<button class="tag ok" data-unpay="${p.uid}|${x.day}">Isplaćeno ✓</button>`:x.day===today?'<span class="tag wait">Čeka kraj dana</span>':`<button class="btn small" data-pay="${p.uid}|${x.day}|${p.rank}|${p.iznos}">Označi kao plaćeno</button>`}${paid?'':`<div style="grid-column:1/-1">${bankHTML(pay)}</div>`}</div>`;}).join('')).join('')
     :'<div class="empty">Još nema dobitnika.</div>';
+  $('#adminWinners').querySelectorAll('[data-cp]').forEach(b=>b.onclick=()=>copyTxt(b,b.dataset.cp));
   $('#adminWinners').querySelectorAll('[data-pay]').forEach(b=>b.onclick=async()=>{const [uid,datum,mesto,iznos]=b.dataset.pay.split('|');
     if(await w(S.sb.from('isplate').upsert({player_id:uid,datum,mesto:+mesto,iznos:+iznos,placeno_at:new Date().toISOString()}),'Označeno kao plaćeno')){await loadIsplate();renderNagrade();}});
   $('#adminWinners').querySelectorAll('[data-unpay]').forEach(b=>b.onclick=async()=>{if(!b.dataset.sure){b.dataset.sure=1;b.textContent='Poništi isplatu?';return;}const [uid,datum]=b.dataset.unpay.split('|');
     if(await w(S.sb.from('isplate').delete().eq('player_id',uid).eq('datum',datum),'Isplata je poništena')){await loadIsplate();renderNagrade();}});
 }
+async function copyTxt(b,t){try{await navigator.clipboard.writeText(t);}catch(e){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy');}catch(_){}a.remove();}
+  b.classList.add('ok');b.textContent='Kopirano';setTimeout(()=>{b.classList.remove('ok');b.textContent='Kopiraj';},1400);}
+function bankHTML(pay){if(!pay||!(pay.ime_prezime||pay.racun||pay.napomena))return '<div class="muted" style="color:var(--loss)">Nije uneo podatke za isplatu.</div>';
+  return `<div class="bank">${[['Ime i prezime',pay.ime_prezime],['Račun / IBAN',pay.racun],['Banka',pay.banka],['Napomena',pay.napomena]].filter(x=>x[1]).map(([k,v])=>`<div class="bf"><span>${k}</span><code>${esc(v)}</code><button type="button" class="cp" data-cp="${esc(v)}">Kopiraj</button></div>`).join('')}</div>`;}
+function renderIgraci(){
+  const q=($('#igrQ').value||'').trim().toLowerCase(),today=todayBG(),owed={},won={};
+  for(const g of winnersByDay())for(const x of g.list){won[x.uid]=(won[x.uid]||0)+1;if(g.day!==today&&!S.ISPLATE_ALL[x.uid+'|'+g.day])owed[x.uid]=(owed[x.uid]||0)+x.iznos;}
+  const all=Object.entries(S.PLAYERS).filter(([,p])=>p.nick).map(([uid,p])=>({uid,...p,pts:scorePicks(p.picks).pts,owe:owed[uid]||0,won:won[uid]||0,pay:S.PAYALL[uid]}));
+  const list=all.filter(x=>!q||x.nick.toLowerCase().includes(q)||((x.pay&&(x.pay.ime_prezime||''))+'').toLowerCase().includes(q))
+    .sort((a,b)=>b.owe-a.owe||b.pts-a.pts||a.nick.localeCompare(b.nick,'sr'));
+  const tot=all.reduce((t,x)=>t+x.owe,0);
+  $('#igrSum').innerHTML=`${all.length} igrača · ${all.filter(x=>x.pay&&x.pay.racun).length} sa podacima za isplatu${tot?` · <b style="color:#ffcf5a">za isplatu ukupno ${money(tot)}</b>`:''}`;
+  $('#igrList').innerHTML=list.map(x=>`<div class="prow${x.owe?' owed':''}"><div class="hd">${avHTML(x)}<div style="min-width:0"><b>${esc(x.nick)}</b><small>${x.pts} poena · ${x.won} ${x.won===1?'nagrada':'nagrada'}</small></div>${x.owe?`<div class="owe">${money(x.owe)}<small>za isplatu</small></div>`:''}</div>${bankHTML(x.pay)}</div>`).join('')||'<div class="empty">Nema igrača.</div>';
+  $('#igrList').querySelectorAll('[data-cp]').forEach(b=>b.onclick=()=>copyTxt(b,b.dataset.cp));
+}
+$('#igrQ').oninput=()=>renderIgraci();
 function renderAdmin(){
+  if(S.admin&&S.ready&&adminTab==='igraci'){renderIgraci();return;}
   if(S.admin&&S.ready&&adminTab==='nagrade'){renderNagrade();return;}
   if(!S.admin||!S.ready)return;fillSelects();if(!$('#fDate').value)$('#fDate').value=todayBG();
   if(adminTab==='dueli'){
@@ -882,7 +918,7 @@ function renderAdmin(){
       <select data-f="status" aria-label="Status">${STATUSES.map(s=>`<option>${s}</option>`).join('')}</select>
       <label class="upl">${a.photo?'Promeni sliku':'Dodaj sliku'}<input type="file" accept="image/*" data-k="p"></label>
       <label class="upl ghost">360° snimci<input type="file" accept="image/*" multiple data-k="f"></label>
-      ${a.photo?'<button type="button" class="guest" data-rm="1" style="padding:2px">Ukloni sliku</button>':''}
+      ${a.photo?'<button type="button" class="upl ghost" data-recrop="1" style="width:100%">Iseci postojeću sliku</button><button type="button" class="guest" data-rm="1" style="padding:2px">Ukloni sliku</button>':''}
       <button type="button" class="guest" data-del="1" style="padding:2px;color:var(--loss)">Obriši takmičara</button></div></div>`;
     const L=athList();
     box.innerHTML=['crveni','plavi'].map(t=>`<div class="tgroup ${t}"><h4>${t==='crveni'?'Crveni':'Plavi'} · ${L.filter(a=>a.team===t).length}</h4><div class="tgrid">${L.filter(a=>a.team===t).map(card).join('')}</div></div>`).join('');
@@ -896,6 +932,13 @@ function renderAdmin(){
         const {data,error}=await S.sb.from('athletes').delete().eq('id',a.id).select('id');
         if(error||!data||!data.length){toast(error?'Brisanje nije uspelo: '+error.message:'Nemaš admin dozvolu.');return;}
         toast('Takmičar je obrisan');await loadAthletes();renderAll();};
+      const rc=c.querySelector('[data-recrop]');if(rc)rc.onclick=async()=>{rc.disabled=true;rc.textContent='Učitavam…';
+        try{const r=await fetch(a.photo,{cache:'no-store'});if(!r.ok)throw 0;const bl=await r.blob();const f=new File([bl],'postojeca.jpg',{type:bl.type||'image/jpeg'});
+          const out=await cropPortrait(f);rc.disabled=false;rc.textContent='Iseci postojeću sliku';if(!out)return;
+          toast('Otpremam…');const path=`${a.id}/${Date.now()}-c.jpg`;const up=await S.sb.storage.from('slike').upload(path,out,{contentType:'image/jpeg'});if(up.error)throw up.error;
+          const url=S.sb.storage.from('slike').getPublicUrl(path).data.publicUrl;const {data,error}=await S.sb.from('athletes').update({portret:url}).eq('id',a.id).select('id');
+          if(error||!data||!data.length)throw error||{message:'Nemaš admin dozvolu.'};toast('Slika je sačuvana');await loadAthletes();renderAll();}
+        catch(e){console.warn(e);rc.disabled=false;rc.textContent='Iseci postojeću sliku';toast('Nije uspelo: '+((e&&e.message)||'slika nije učitana'));}};
       const rm=c.querySelector('[data-rm]');if(rm)rm.onclick=async()=>{if(await w(S.sb.from('athletes').update({portret:null,snimci:[]}).eq('id',a.id),'Slika je uklonjena')){await loadAthletes();renderAll();}};});
   }
 }
