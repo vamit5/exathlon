@@ -234,6 +234,12 @@ main{max-width:980px;margin:0 auto;padding-inline:16px;padding-block:18px 110px}
 details.apanel summary{cursor:pointer;list-style:none}
 details.apanel summary::-webkit-details-marker{display:none}
 details.apanel summary h3::after{content:" ▾";color:var(--dim)}
+.cropper{position:fixed;inset:0;z-index:80;display:grid;place-items:center;padding:16px;background:rgba(0,0,0,.8)}
+.cbox{width:100%;max-width:720px;display:grid;gap:12px;padding:16px;border-radius:16px;background:var(--panel);border:1px solid var(--line2)}
+.cbox h3{margin:0;font-family:var(--display);font-weight:800;font-size:22px}
+.cstage{position:relative;max-height:60vh;overflow:hidden;border-radius:10px;touch-action:none;user-select:none;background:#000}
+.cstage img{display:block;width:100%;height:auto;max-height:60vh;object-fit:contain;pointer-events:none}
+.cframe{position:absolute;top:0;left:0;border:3px solid var(--orange);box-shadow:0 0 0 9999px rgba(0,0,0,.6);border-radius:8px;cursor:grab}
 /* tab bar */
 .tabbar{display:none}
 .toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom,0px));z-index:70;transform:translate(-50%,16px);opacity:0;pointer-events:none;padding:11px 20px;border-radius:999px;background:var(--text);color:#0b0c0f;font-weight:700;font-size:14px;transition:all .3s;white-space:nowrap;max-width:92vw;overflow:hidden;text-overflow:ellipsis}
@@ -401,6 +407,14 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
   <div class="vinfo"><h2 id="vName"></h2><p id="vSub"></p></div>
 </div>
 
+<div class="cropper" id="cropper" hidden role="dialog" aria-modal="true" aria-labelledby="cropT">
+  <div class="cbox">
+    <h3 id="cropT">Namesti sliku</h3>
+    <p class="muted" style="margin:0">Prevuci okvir preko lica takmičara.</p>
+    <div class="cstage" id="cStage"><img id="cImg" alt=""><div class="cframe" id="cFrame"></div></div>
+    <div class="inline" style="justify-content:flex-end"><button class="btn ghost small" id="cCancel" type="button">Odustani</button><button class="btn small" id="cSave" type="button">Sačuvaj sliku</button></div>
+  </div>
+</div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
@@ -719,14 +733,37 @@ async function shrink(file,max=1200){
   try{const bmp=await createImageBitmap(file);const s=Math.min(1,max/Math.max(bmp.width,bmp.height));const c=document.createElement('canvas');c.width=Math.round(bmp.width*s);c.height=Math.round(bmp.height*s);c.getContext('2d').drawImage(bmp,0,0,c.width,c.height);
     return await new Promise(r=>c.toBlob(b=>r(b||file),'image/jpeg',.86));}catch(e){return file;}
 }
+/* sečenje slike na uspravni format 3:4 */
+function cropPortrait(file){return new Promise(async res=>{
+  let bmp;try{bmp=await createImageBitmap(file);}catch(e){res(null);return;}
+  const url=URL.createObjectURL(file),im=$('#cImg'),fr=$('#cFrame'),st=$('#cStage');
+  im.src=url;$('#cropper').hidden=false;await new Promise(r=>{if(im.complete&&im.naturalWidth)r();else im.onload=r;});
+  const R=3/4,iw=bmp.width,ih=bmp.height;let cw,ch;if(iw/ih>R){ch=ih;cw=ih*R;}else{cw=iw;ch=iw/R;}
+  let cx=(iw-cw)/2,cy=Math.max(0,(ih-ch)*.2);
+  const place=()=>{const k=im.clientWidth/iw;fr.style.width=cw*k+'px';fr.style.height=ch*k+'px';fr.style.left=cx*k+'px';fr.style.top=cy*k+'px';};place();
+  let drag=null;
+  st.onpointerdown=e=>{drag={x:e.clientX,y:e.clientY,cx,cy};st.setPointerCapture(e.pointerId);};
+  st.onpointermove=e=>{if(!drag)return;const k=im.clientWidth/iw;cx=Math.min(iw-cw,Math.max(0,drag.cx+(e.clientX-drag.x)/k));cy=Math.min(ih-ch,Math.max(0,drag.cy+(e.clientY-drag.y)/k));place();};
+  st.onpointerup=st.onpointercancel=()=>{drag=null;};
+  const done=v=>{$('#cropper').hidden=true;URL.revokeObjectURL(url);res(v);};
+  $('#cCancel').onclick=()=>done(null);
+  $('#cSave').onclick=()=>{const W=Math.min(900,Math.round(cw)),H=Math.round(W/R),c=document.createElement('canvas');c.width=W;c.height=H;
+    c.getContext('2d').drawImage(bmp,cx,cy,cw,ch,0,0,W,H);c.toBlob(bl=>done(bl),'image/jpeg',.86);};
+});}
 async function upload(a,inp){
   const files=[...inp.files].sort((x,y)=>x.name.localeCompare(y.name,undefined,{numeric:true}));inp.value='';if(!files.length)return;
+  const blobs=[];
+  if(inp.dataset.k==='p'){const bl=await cropPortrait(files[0]);if(!bl)return;blobs.push(bl);}
+  else for(const f of files)blobs.push(await shrink(f));
   toast('Otpremam…');const urls=[];
-  for(let i=0;i<files.length;i++){const blob=await shrink(files[i]);const path=`${a.id}/${Date.now()}-${i}.jpg`;
-    const {error}=await S.sb.storage.from('slike').upload(path,blob,{contentType:'image/jpeg',upsert:true});if(error){console.warn(error);toast('Otpremanje nije uspelo.');return;}
+  for(let i=0;i<blobs.length;i++){const path=`${a.id}/${Date.now()}-${i}.jpg`;
+    const {error}=await S.sb.storage.from('slike').upload(path,blobs[i],{contentType:'image/jpeg'});
+    if(error){console.warn(error);toast('Slika nije sačuvana: '+(error.message||'greška'));return;}
     urls.push(S.sb.storage.from('slike').getPublicUrl(path).data.publicUrl);}
   const upd=inp.dataset.k==='p'?{portret:urls[0]}:{snimci:urls,...(a.photo?{}:{portret:urls[0]})};
-  if(await w(S.sb.from('athletes').update(upd).eq('id',a.id),'Slika je sačuvana')){await loadAthletes();renderAll();}
+  const {data,error}=await S.sb.from('athletes').update(upd).eq('id',a.id).select('id');
+  if(error||!data||!data.length){console.warn(error);toast(error?'Slika nije upisana: '+(error.message||'greška'):'Nemaš admin dozvolu. Prijavi se kao '+ADMIN_EMAIL+'.');return;}
+  toast('Slika je sačuvana');await loadAthletes();renderAll();
 }
 async function adminAct(b){
   const d=S.DUELS.find(x=>x.id===b.closest('[data-id]').dataset.id),act=b.dataset.act,q=v=>S.sb.from('duels').update(v).eq('id',d.id);
