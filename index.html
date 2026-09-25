@@ -4,7 +4,19 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#07080a">
-<title>Exatlon Liga</title>
+<title>EXATHLEAGUE</title>
+<meta name="application-name" content="EXATHLEAGUE">
+<meta name="apple-mobile-web-app-title" content="EXATHLEAGUE">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="description" content="Pogodi pobednika Exatlon duela i skupljaj poene.">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta property="og:title" content="EXATHLEAGUE">
+<meta property="og:image" content="logo.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap">
@@ -31,6 +43,12 @@ input,select{font:inherit;color:var(--text)}
 
 /* header */
 .top{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:18px;padding:calc(10px + env(safe-area-inset-top,0px)) 20px 10px;background:rgba(7,8,10,.88);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:8px;text-decoration:none;min-width:0}
+.brand img{display:block}
+.brand .wm{height:22px;width:auto}
+.iconbtn{width:40px;height:40px;flex:none;display:grid;place-items:center;border-radius:50%;background:var(--panel2);border:1px solid var(--line2);color:var(--metal)}
+.iconbtn:hover{color:var(--text)}
+.biglogo{width:min(260px,70vw);height:auto;margin:0 auto;display:block;border-radius:20px}
 .logo{font-family:var(--display);font-weight:800;font-size:24px;letter-spacing:.04em;line-height:1;white-space:nowrap}
 .logo b{color:var(--orange)}
 .nav{display:flex;gap:2px}
@@ -212,9 +230,12 @@ main{max-width:980px;margin:0 auto;padding-inline:16px;padding-block:18px 110px}
 
 @media (max-width:760px){
   .nav{display:none}
-  .top{padding-inline:16px}
-  .tabbar{display:grid;grid-template-columns:repeat(var(--tabs,4),1fr);position:fixed;left:0;right:0;bottom:0;z-index:30;padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px));background:rgba(10,11,13,.95);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--line)}
-  .tabbar button{display:grid;justify-items:center;gap:2px;padding:6px 0;font-size:11px;font-weight:700;letter-spacing:.04em;color:var(--dim)}
+  .top{padding-inline:12px;gap:10px}
+  .brand .wm{height:17px}
+  .brand img:first-child{width:30px;height:30px}
+  .chip{padding:6px 10px;font-size:15px}
+  .tabbar{display:flex;justify-content:center;position:fixed;left:0;right:0;bottom:0;z-index:30;padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px));background:rgba(10,11,13,.95);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--line)}
+  .tabbar button{flex:1 1 0;max-width:120px;display:grid;justify-items:center;gap:2px;padding:6px 0;font-size:11px;font-weight:700;letter-spacing:.04em;color:var(--dim)}
   .tabbar svg{width:22px;height:22px}
   .tabbar button[aria-current="page"]{color:var(--text)}
   .tabbar button[aria-current="page"] svg{color:var(--orange)}
@@ -235,7 +256,7 @@ main{max-width:980px;margin:0 auto;padding-inline:16px;padding-block:18px 110px}
 
 <div class="login" id="login" hidden>
   <div class="lbox">
-    <div class="logo">EXATLON <b>LIGA</b></div>
+    <img src="logo.jpg" alt="EXATHLEAGUE" class="biglogo" width="720" height="720">
     <div class="tag">Pogodi pobednika. Skupljaj poene.</div>
     <form class="lcard" id="authForm">
       <input class="inp" id="lNick" placeholder="Ime u igri" maxlength="16" autocomplete="nickname" hidden>
@@ -250,7 +271,7 @@ main{max-width:980px;margin:0 auto;padding-inline:16px;padding-block:18px 110px}
 </div>
 
 <header class="top">
-  <div class="logo">EXATLON <b>LIGA</b></div>
+  <a class="brand" href="#home" data-go="home" aria-label="EXATHLEAGUE početna"><img src="mark.png" alt="" width="34" height="34"><img src="wordmark.png" alt="EXATHLEAGUE" class="wm" height="22"></a>
   <nav class="nav" aria-label="Glavni meni">
     <button data-go="home">DUELI</button>
     <button data-go="roster">TAKMIČARI</button>
@@ -259,6 +280,7 @@ main{max-width:980px;margin:0 auto;padding-inline:16px;padding-block:18px 110px}
     <button data-go="admin" class="admin-only" hidden>ADMIN</button>
   </nav>
   <button class="chip" data-go="profil" aria-label="Moji poeni"><i>●</i><span id="chipPts">0</span> poena</button>
+  <button class="iconbtn" id="topAuth" type="button" aria-label="Odjavi se" title="Odjavi se"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l5-5-5-5M15 12H4"/></svg></button>
 </header>
 
 <main>
@@ -688,7 +710,10 @@ async function boot(){
   const {data:{session}}=await S.sb.auth.getSession();
   if(session){const u=session.user;S.uid=u.id;S.anon=!!u.is_anonymous;S.email=(u.email||'').toLowerCase();S.admin=!S.anon&&S.email===ADMIN_EMAIL;}
   if(!session||(S.anon&&store.get('guest','')!=='1'))showLogin();
-  if(S.admin){document.querySelectorAll('.admin-only').forEach(b=>b.hidden=false);$('#tabbar').style.setProperty('--tabs',5);}
+  const ta=$('#topAuth');
+  if(!session||S.anon){ta.setAttribute('aria-label','Prijavi se');ta.title='Prijavi se';ta.innerHTML='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h3M14 17l5-5-5-5M19 12H8"/></svg>';ta.onclick=async()=>{if(session)await S.sb.auth.signOut();store.set('guest','');location.hash='';location.reload();};}
+  else ta.onclick=async()=>{await S.sb.auth.signOut();store.set('guest','');location.hash='';location.reload();};
+  if(S.admin){document.querySelectorAll('.admin-only').forEach(b=>b.hidden=false);}
   try{await Promise.all([loadAthletes(),loadDuels(),loadPlayers()]);}catch(e){console.warn(e);$('#home').innerHTML='<div class="empty">Podaci nisu učitani. Osveži stranicu.</div>';return;}
   if(S.uid)await ensurePlayer(session.user.user_metadata);
   S.ready=true;go(current,false);
@@ -803,6 +828,7 @@ function drawImg(ctx,img,W,H,zoom,cover){
 
 
 boot();
+if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 </script>
 </body>
 </html>
