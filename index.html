@@ -140,7 +140,21 @@ main{max-width:980px;margin:0 auto;padding-inline:16px;padding-block:18px 110px}
 .more{display:block;margin:10px auto 0;padding:8px 16px;border-radius:999px;background:var(--panel2);color:var(--metal);font-size:13px;font-weight:600}
 
 /* roster */
-.roster{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.roster{display:grid;gap:22px}
+.car{padding:14px 0 16px;border-radius:16px;min-width:0;overflow:hidden}
+.car.crveni{background:linear-gradient(180deg,rgba(216,40,29,.16),transparent 80%)}
+.car.plavi{background:linear-gradient(180deg,rgba(47,102,255,.16),transparent 80%)}
+.carh{display:flex;align-items:center;justify-content:space-between;padding:0 14px 10px}
+.carh h2{margin:0;display:flex;align-items:baseline;gap:10px;font-family:var(--display);font-weight:800;font-size:26px;letter-spacing:.04em;text-transform:uppercase}
+.car.crveni h2{color:#ff6b61}.car.plavi h2{color:#7b9dff}
+.carh h2 small{font-family:var(--body);font-weight:600;font-size:13px;letter-spacing:0;text-transform:none;color:var(--dim)}
+.carnav{display:flex;gap:6px}
+.carnav button{width:36px;height:36px;border-radius:50%;background:var(--panel2);border:1px solid var(--line2);font-size:22px;line-height:1;color:var(--text)}
+.track{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding:2px 14px 8px;scroll-padding:0 14px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.track::-webkit-scrollbar{display:none}
+.track .acard{flex:0 0 clamp(140px,40vw,190px);scroll-snap-align:start}
+.car.crveni .acard{border-color:rgba(216,40,29,.35)}.car.plavi .acard{border-color:rgba(47,102,255,.35)}
+@media (max-width:760px){.carnav{display:none}}
 .acard{position:relative;text-align:left;border-radius:12px;overflow:hidden;background:var(--panel);border:1px solid var(--line)}
 .acard .photo{max-width:none;border-radius:0}
 .acard .info{padding:10px 12px 12px}
@@ -300,6 +314,9 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
 .bf code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:14px;color:var(--text);overflow-wrap:anywhere;user-select:all}
 .cp{padding:6px 10px;border-radius:6px;background:var(--panel2);border:1px solid var(--line2);font-size:12px;font-weight:700}
 .cp.ok{background:var(--win);color:#000;border-color:transparent}
+.payinfo{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;margin:-6px 0 14px;padding:10px 14px;border-radius:var(--r);background:var(--panel);border:1px solid rgba(255,176,32,.35);font-size:14px;color:var(--metal);line-height:1.45}
+.payinfo b{color:#ffcf5a}
+.payinfo .link{padding:0;font-size:14px;text-align:left}
 .rules{margin:-6px 0 14px;padding:12px 14px;border-radius:var(--r);background:var(--panel);border:1px solid var(--line);font-size:13px;color:var(--dim);line-height:1.5}
 .rules b{color:var(--metal)}
 .rules ol{margin:6px 0 0;padding-left:20px}
@@ -386,7 +403,7 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
 
   <section class="screen" id="s-roster">
     <div class="pagehead"><h1>Takmičari</h1>
-      <div class="seg" id="teamSeg"><button data-f="svi" aria-pressed="true">SVI</button><button data-f="crveni" aria-pressed="false">CRVENI</button><button data-f="plavi" aria-pressed="false">PLAVI</button></div></div>
+      <div class="seg" id="teamSeg" hidden><button data-f="svi" aria-pressed="true">SVI</button></div></div>
     <div class="roster" id="roster"></div>
   </section>
 
@@ -687,9 +704,13 @@ let teamF='svi';
 $('#teamSeg').onclick=e=>{const b=e.target.closest('button');if(!b)return;teamF=b.dataset.f;$('#teamSeg').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));renderRoster();};
 function renderRoster(){
   const box=$('#roster');if(!S.ready)return;
-  const list=athList().filter(a=>teamF==='svi'||a.team===teamF);
-  box.innerHTML=list.map(a=>{const hot=['Kapiten','Imunitet'].includes(a.status),show=a.status!=='Aktivan';
-    return `<button class="acard${a.status==='Eliminisan'?' out':''}" data-a="${esc(a.id)}">${photoBox(a,.35)}${show?`<span class="st${hot?' hot':''}">${esc(a.status)}</span>`:''}<div class="info"><div class="nm">${esc(a.name)}</div><div class="sub">${esc(a.raw.nadimak?a.full:(a.raw.prezime||''))}</div></div></button>`;}).join('')||'<div class="empty">Nema takmičara.</div>';
+  const card=a=>{const hot=['Kapiten','Imunitet'].includes(a.status),show=a.status!=='Aktivan';
+    return `<button class="acard${a.status==='Eliminisan'?' out':''}" data-a="${esc(a.id)}">${photoBox(a,.35)}${show?`<span class="st${hot?' hot':''}">${esc(a.status)}</span>`:''}<div class="info"><div class="nm">${esc(a.name)}</div><div class="sub">${esc(a.raw.nadimak?a.full:(a.raw.prezime||''))}</div></div></button>`;};
+  const L=athList(),order=(a,b)=>(a.status==='Eliminisan')-(b.status==='Eliminisan')||(b.status==='Kapiten')-(a.status==='Kapiten')||a.name.localeCompare(b.name,'sr');
+  box.innerHTML=['crveni','plavi'].map(t=>{const g=L.filter(a=>a.team===t).sort(order),act=g.filter(a=>a.status!=='Eliminisan').length;
+    return `<section class="car ${t}"><div class="carh"><h2>${t==='crveni'?'Crveni':'Plavi'}<small>${act} u igri</small></h2><div class="carnav"><button type="button" data-dir="-1" aria-label="Nazad">‹</button><button type="button" data-dir="1" aria-label="Napred">›</button></div></div>
+      <div class="track" tabindex="0" aria-label="${t==='crveni'?'Crveni':'Plavi'} tim">${g.map(card).join('')||'<div class="empty">Nema takmičara.</div>'}</div></section>`;}).join('');
+  box.querySelectorAll('.car').forEach(c=>{const tr=c.querySelector('.track');c.querySelectorAll('[data-dir]').forEach(b=>b.onclick=()=>tr.scrollBy({left:+b.dataset.dir*tr.clientWidth*.85,behavior:'smooth'}));});
   hydrate(box);box.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>openViewer(S.ATH[b.dataset.a]));
 }
 
@@ -730,7 +751,8 @@ let rangMode='danas';
 $('#rangSeg').onclick=e=>{const b=e.target.closest('button');if(!b)return;rangMode=b.dataset.m;$('#rangSeg').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));renderBoard();};
 function renderBoard(){
   if(!S.ready)return;const day=rangMode==='danas',list=standings(day?todayBG():null);
-  $('#prizeRang').innerHTML=day?prizeHTML():'';
+  $('#prizeRang').innerHTML=prizeHTML()+`<div class="payinfo">💳 <span>Po završetku emisije, svakog dana u <b>23:30h</b>, isplaćujemo nagrade za prva 3 mesta na račune koje ste ostavili.</span> <button type="button" class="link" id="toPay">Upiši svoj račun</button></div>`;
+  const tp=$('#toPay');if(tp)tp.onclick=()=>{go('profil',true);setTimeout(()=>{const f=$('#payForm');if(f)f.scrollIntoView({behavior:'smooth',block:'center'});},150);};
   const pz=prizes(),medal=r=>day&&r<=3&&pz[r-1]?`<span class="medal">${['🥇','🥈','🥉'][r-1]}</span>`:'';
   $('#board').innerHTML=list.length?list.map(p=>{const tot=p.c+p.w;
     return `<div class="brow${p.rank===1?' first':''}${p.uid===S.uid?' me':''}"><span class="rk">${p.rank}</span>${avHTML(p)}
