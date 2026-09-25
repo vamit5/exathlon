@@ -244,6 +244,11 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
 .photo .mosaic.m2{grid-template-columns:1fr 1fr}
 .photo .mosaic.m4{grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr}
 .photo .mosaic img{position:static;width:100%;height:100%;object-fit:cover;object-position:50% 15%;min-height:0}
+#confetti{position:fixed;inset:0;width:100%;height:100%;z-index:90;pointer-events:none}
+.winbanner{position:fixed;left:50%;top:38%;z-index:91;transform:translate(-50%,-50%);display:grid;justify-items:center;gap:4px;padding:18px 28px;border-radius:18px;background:var(--hot);color:#fff;box-shadow:0 20px 60px rgba(255,80,30,.5);text-align:center;animation:winIn 3.2s cubic-bezier(.2,1.3,.4,1) forwards;pointer-events:none;max-width:90vw}
+.winbanner b{font-family:var(--display);font-weight:800;font-size:40px;line-height:1;letter-spacing:.04em}
+.winbanner span{font-weight:700;font-size:15px}
+@keyframes winIn{0%{opacity:0;transform:translate(-50%,-50%) scale(.5)}12%{opacity:1;transform:translate(-50%,-50%) scale(1)}85%{opacity:1}100%{opacity:0;transform:translate(-50%,-60%) scale(1)}}
 /* tab bar */
 .tabbar{display:none}
 .toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom,0px));z-index:70;transform:translate(-50%,16px);opacity:0;pointer-events:none;padding:11px 20px;border-radius:999px;background:var(--text);color:#0b0c0f;font-weight:700;font-size:14px;transition:all .3s;white-space:nowrap;max-width:92vw;overflow:hidden;text-overflow:ellipsis}
@@ -420,6 +425,8 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
     <div class="inline" style="justify-content:flex-end"><button class="btn ghost small" id="cCancel" type="button">Odustani</button><button class="btn small" id="cSave" type="button">Sačuvaj sliku</button></div>
   </div>
 </div>
+<canvas id="confetti" aria-hidden="true"></canvas>
+<div class="winbanner" id="winBanner" hidden role="status" aria-live="polite"><b>POGODAK!</b><span id="winText"></span></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
@@ -804,6 +811,34 @@ async function adminAct(b){
   if(ok){await loadDuels();renderAll();}
 }
 
+/* ================= KONFETE ZA POGODAK ================= */
+function confetti(){
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  const cv=$('#confetti'),c=cv.getContext('2d'),dpr=Math.min(2,devicePixelRatio||1),W=innerWidth,H=innerHeight;
+  cv.width=W*dpr;cv.height=H*dpr;c.setTransform(dpr,0,0,dpr,0,0);
+  const cols=['#ff3b2b','#ff7a1a','#ffc23a','#ffffff','#2f66ff','#34d37f'];
+  const P=[];for(let i=0;i<180;i++){const left=i%2===0;P.push({x:left?-10:W+10,y:H*.65+Math.random()*H*.2,vx:(left?1:-1)*(4+Math.random()*7),vy:-(9+Math.random()*9),r:Math.random()*6.28,vr:(Math.random()-.5)*.3,w:6+Math.random()*6,h:8+Math.random()*8,c:cols[i%cols.length]});}
+  for(let i=0;i<60;i++)P.push({x:Math.random()*W,y:-20-Math.random()*H*.4,vx:(Math.random()-.5)*2,vy:2+Math.random()*3,r:Math.random()*6.28,vr:(Math.random()-.5)*.3,w:6+Math.random()*6,h:8+Math.random()*8,c:cols[i%cols.length]});
+  const t0=performance.now();
+  (function f(t){const e=t-t0;c.clearRect(0,0,W,H);
+    for(const p of P){p.vy+=.28;p.vx*=.99;p.x+=p.vx;p.y+=p.vy;p.r+=p.vr;c.save();c.translate(p.x,p.y);c.rotate(p.r);c.globalAlpha=Math.max(0,1-Math.max(0,e-2600)/900);c.fillStyle=p.c;c.fillRect(-p.w/2,-p.h/4,p.w,p.h/2*(0.4+Math.abs(Math.sin(p.r*2))));c.restore();}
+    if(e<3500)requestAnimationFrame(f);else c.clearRect(0,0,W,H);})(t0);
+}
+function celebrate(list){
+  const d=list[list.length-1],w=side(d.pobednik==='a'?d.a:d.b).name;
+  $('#winText').textContent=list.length>1?`+${list.length} poena · ${list.length} pogođena duela`:`+1 poen · pobedio je ${w}`;
+  const b=$('#winBanner');b.hidden=true;void b.offsetWidth;b.hidden=false;clearTimeout(b._t);b._t=setTimeout(()=>b.hidden=true,3300);
+  confetti();haptic([30,60,30,60,80]);
+}
+function checkWins(){
+  if(!S.uid)return;
+  const key='slavljeno_'+S.uid,seen=new Set((store.get(key,'')||'').split(',').filter(Boolean)),first=store.get(key,null)===null;
+  const wins=settled().filter(d=>S.myPicks[d.id]&&S.myPicks[d.id]===d.pobednik);
+  const fresh=wins.filter(d=>!seen.has(d.id));
+  wins.forEach(d=>seen.add(d.id));store.set(key,[...seen].slice(-300).join(','));
+  if(fresh.length&&!first)celebrate(fresh);
+}
+
 /* ================= PODACI ================= */
 async function fetchAll(t,cols){let out=[],f=0;for(;;){const {data,error}=await S.sb.from(t).select(cols).range(f,f+999);if(error)throw error;out=out.concat(data);if(data.length<1000)break;f+=1000;}return out;}
 async function loadAthletes(){const m={};(await fetchAll('athletes','*')).forEach(r=>{m[r.id]=toAthlete(r);});S.ATH=m;}
@@ -815,7 +850,7 @@ async function loadPlayers(){
 }
 const LOAD={athletes:loadAthletes,duels:loadDuels,players:loadPlayers,picks:loadPlayers};
 const pend=new Set();let pT=0;
-function queue(t){pend.add(t);clearTimeout(pT);pT=setTimeout(async()=>{const f=new Set([...pend].map(x=>LOAD[x]).filter(Boolean));pend.clear();try{await Promise.all([...f].map(x=>x()));}catch(e){console.warn(e);}renderAll();},400);}
+function queue(t){pend.add(t);clearTimeout(pT);pT=setTimeout(async()=>{const f=new Set([...pend].map(x=>LOAD[x]).filter(Boolean));pend.clear();try{await Promise.all([...f].map(x=>x()));}catch(e){console.warn(e);}renderAll();checkWins();},400);}
 async function ensurePlayer(meta){
   const me=S.PLAYERS[S.uid];if(me&&me.nick){S.nick=me.nick;return;}
   const want=(meta&&meta.nick)||'';
@@ -845,7 +880,7 @@ async function boot(){
   if(S.admin){document.querySelectorAll('.admin-only').forEach(b=>b.hidden=false);}
   try{await Promise.all([loadAthletes(),loadDuels(),loadPlayers()]);}catch(e){console.warn(e);$('#home').innerHTML='<div class="empty">Podaci nisu učitani. Osveži stranicu.</div>';return;}
   if(S.uid)await ensurePlayer(session.user.user_metadata);
-  S.ready=true;go(current,false);
+  S.ready=true;go(current,false);checkWins();
   S.sb.channel('exatlon').on('postgres_changes',{event:'*',schema:'public'},p=>queue(p.table)).subscribe();
   if(document.fonts&&document.fonts.ready)document.fonts.ready.then(refreshAll);
   setInterval(()=>{if(current==='admin')renderNow();},20000);
