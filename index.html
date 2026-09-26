@@ -688,8 +688,11 @@ function renderHome(){
   let h=prizeHTML();
   if(heroD){
     h+=`<div class="sec">${heroD.uzivo?'Uživo':isLocked(heroD)?'U toku':'Sledeći duel'}${S.uid&&(mine.c+mine.w)?`<small>Danas: ${mine.c} od ${mine.c+mine.w} pogođeno</small>`:''}</div>${heroHTML(heroD)}`;
-  }else{const t=bgParts(Date.now()).vreme,live=t>='21:30'&&t<'23:30',msg=live?'Novi duel za par sekundi, reaguj brzo!':'Novi duel stiže u 21:30h';
-    h+=`<div class="sec">Sledeći duel</div><article class="hero anon"><div class="hero-top"><span class="pill${live?' soon':''}">${live?'Uživo večeras':'Danas u 21:30'}</span><span class="kind">Exatlon Srbija</span></div>
+  }else{const t=bgParts(Date.now()).vreme,wd=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].indexOf(new Intl.DateTimeFormat('en-US',{timeZone:'Europe/Belgrade',weekday:'short'}).format(new Date())),
+      radni=wd>=1&&wd<=5,live=radni&&t>='21:30'&&t<'23:30',
+      kada=radni&&t<'21:30'?'danas':(wd>=1&&wd<=4)?'sutra':'u ponedeljak',
+      msg=live?'Novi duel za par sekundi, reaguj brzo!':`Novi duel stiže ${kada} u 21:30h`;
+    h+=`<div class="sec">Sledeći duel</div><article class="hero anon"><div class="hero-top"><span class="pill${live?' soon':''}">${live?'Uživo večeras':kada.charAt(0).toUpperCase()+kada.slice(1)+' u 21:30'}</span><span class="kind">Exatlon Srbija</span></div>
       <div class="faces"><div class="face a">${photoBox(ANON,.5)}<div class="fname">???</div></div><div class="mid"><div class="vs" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="#ff7a1a"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg></div></div><div class="face b">${photoBox(ANON,-.5)}<div class="fname">???</div></div></div>
       <div class="empty${live?' hotmsg':''}" style="margin:14px 16px 16px">${msg}</div></article>`;}
   if(rest.length)h+=`<div class="sec">Zatim</div><div class="list">${rest.slice(0,8).map(rowHTML).join('')}</div>`;
