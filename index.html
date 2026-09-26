@@ -328,8 +328,8 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
   background:radial-gradient(ellipse 60% 45% at 50% 50%,rgba(255,100,30,.10),transparent 70%),rgba(7,8,10,.94);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);transition:opacity .28s ease,visibility 0s linear .28s}
 .splash.on{opacity:1;visibility:visible;pointer-events:auto;transition:opacity .18s ease}
 .splash img{width:min(320px,76vw);height:auto;filter:drop-shadow(0 0 18px rgba(255,120,40,.55))}
-.splash.on img{animation:flick .9s ease-out both}
-@keyframes flick{0%{opacity:0;transform:scale(.94)}18%{opacity:.9}24%{opacity:.25}32%{opacity:1}40%{opacity:.45}50%{opacity:1;transform:scale(1)}62%{opacity:.8}70%,100%{opacity:1;transform:scale(1)}}
+.splash.on img{animation:flick 1.6s ease-in-out both}
+@keyframes flick{0%{opacity:0;transform:scale(.96)}25%{opacity:1;transform:scale(1)}42%{opacity:.45}60%{opacity:1}75%{opacity:.7}90%,100%{opacity:1;transform:scale(1)}}
 @media (prefers-reduced-motion:reduce){.splash.on img{animation:none}}
 /* tab bar */
 .tabbar{display:none}
@@ -1093,7 +1093,7 @@ function splashEnd(){const el=$('#splash'),left=Math.max(0,splUntil-Date.now());
 
 /* ================= NAVIGACIJA ================= */
 const SCREENS=['home','roster','rang','profil','admin'];let current='home';
-function go(s,push){if(!SCREENS.includes(s)||(s==='admin'&&!S.admin))s='home';if(push&&S.ready)splash(650);current=s;
+function go(s,push){if(!SCREENS.includes(s)||(s==='admin'&&!S.admin))s='home';if(push&&S.ready)splash(1100);current=s;
   SCREENS.forEach(x=>$('#s-'+x).classList.toggle('on',x===s));
   document.querySelectorAll('[data-go]').forEach(b=>{if(b.classList.contains('chip'))return;b.toggleAttribute('aria-current',b.dataset.go===s);if(b.dataset.go===s)b.setAttribute('aria-current','page');});
   if(push){try{history.replaceState(null,'','#'+s);}catch(e){}}scrollTo({top:0});renderAll();}
@@ -1102,7 +1102,7 @@ let rq=0;function renderAll(){cancelAnimationFrame(rq);rq=requestAnimationFrame(
   if(current==='home')renderHome();else if(current==='roster')renderRoster();else if(current==='rang')renderBoard();else if(current==='profil')renderProfile();else if(current==='admin')renderAdmin();});}
 
 async function boot(){
-  splUntil=Date.now()+900;
+  splUntil=Date.now()+1600;
   go((location.hash||'#home').slice(1),false);
   if(!window.supabase){splashEnd();$('#home').innerHTML='<div class="empty">Veza nije uspela. Osveži stranicu.</div>';return;}
   S.sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
