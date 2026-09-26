@@ -50,7 +50,7 @@ input,select{font:inherit;color:var(--text)}
 .brand .wm{height:22px;width:auto;max-width:100%;min-width:0;object-fit:contain;object-position:left center}
 .iconbtn{width:40px;height:40px;flex:none;display:grid;place-items:center;border-radius:50%;background:var(--panel2);border:1px solid var(--line2);color:var(--metal)}
 .iconbtn:hover{color:var(--text)}
-.biglogo{width:min(260px,70vw);height:auto;margin:0 auto;display:block;border-radius:20px}
+.biglogo{width:min(280px,72vw);height:auto;margin:0 auto 6px;display:block;filter:drop-shadow(0 0 22px rgba(255,110,30,.4))}
 .logo{font-family:var(--display);font-weight:800;font-size:24px;letter-spacing:.04em;line-height:1;white-space:nowrap}
 .logo b{color:var(--orange)}
 .nav{display:flex;gap:2px}
@@ -324,6 +324,13 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
 .empty.hotmsg{background:linear-gradient(100deg,rgba(255,59,43,.2),var(--panel) 70%);border:1px solid rgba(255,122,26,.5);color:var(--text);font-family:var(--display);font-weight:800;font-size:22px;letter-spacing:.02em}
 .hero.anon .photo{--tc:#3a3e46!important}
 .hero.anon .fname{color:var(--faint)}
+.splash{position:fixed;inset:0;z-index:100;display:grid;place-items:center;pointer-events:none;opacity:0;visibility:hidden;
+  background:radial-gradient(ellipse 60% 45% at 50% 50%,rgba(255,100,30,.10),transparent 70%),rgba(7,8,10,.94);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);transition:opacity .28s ease,visibility 0s linear .28s}
+.splash.on{opacity:1;visibility:visible;pointer-events:auto;transition:opacity .18s ease}
+.splash img{width:min(300px,68vw);height:auto;filter:drop-shadow(0 0 22px rgba(255,110,30,.45))}
+.splash.on img{animation:flick .9s ease-out both}
+@keyframes flick{0%{opacity:0;transform:scale(.94)}18%{opacity:.9}24%{opacity:.25}32%{opacity:1}40%{opacity:.45}50%{opacity:1;transform:scale(1)}62%{opacity:.8}70%,100%{opacity:1;transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){.splash.on img{animation:none}}
 /* tab bar */
 .tabbar{display:none}
 .toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom,0px));z-index:70;transform:translate(-50%,16px);opacity:0;pointer-events:none;padding:11px 20px;border-radius:999px;background:var(--text);color:#0b0c0f;font-weight:700;font-size:14px;transition:all .3s;white-space:nowrap;max-width:92vw;overflow:hidden;text-overflow:ellipsis}
@@ -362,14 +369,15 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
 }
 @media (max-width:420px){.chip .lbl{display:none}.chip{padding:6px 11px}.iconbtn{width:36px;height:36px}.top{gap:8px}}
 
-@media (prefers-reduced-motion:reduce){*:not(.winbanner),*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+@media (prefers-reduced-motion:reduce){*:not(.winbanner):not(.splash img),*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 </style>
 </head>
 <body>
+<div class="splash on" id="splash" aria-hidden="true"><img src="logo-t.png" alt="" width="657" height="384"></div>
 
 <div class="login" id="login" hidden>
   <div class="lbox">
-    <img src="logo.jpg" alt="EXATHLEAGUE" class="biglogo" width="720" height="720">
+    <img src="logo-t.png" alt="EXATHLEAGUE" class="biglogo" width="657" height="384">
     <div class="tag">Pogodi pobednika. Skupljaj poene.</div>
     <form class="lcard" id="authForm">
       <input class="inp" id="lNick" placeholder="Ime u igri" maxlength="16" autocomplete="nickname" hidden>
@@ -1078,9 +1086,14 @@ async function ensurePlayer(meta){
   for(let i=0;i<6;i++){const nick=i===0&&want?want:`Igrač ${1000+Math.floor(Math.random()*9000)}`;if(await saveNick(nick)==='ok'){S.nick=nick;return;}}
 }
 
+/* ================= LOGO PRI UČITAVANJU ================= */
+let splT=0,splUntil=0;
+function splash(ms){const el=$('#splash');clearTimeout(splT);el.classList.remove('on');void el.offsetWidth;el.classList.add('on');splUntil=Date.now()+ms;splT=setTimeout(()=>el.classList.remove('on'),ms);}
+function splashEnd(){const el=$('#splash'),left=Math.max(0,splUntil-Date.now());clearTimeout(splT);splT=setTimeout(()=>el.classList.remove('on'),left);}
+
 /* ================= NAVIGACIJA ================= */
 const SCREENS=['home','roster','rang','profil','admin'];let current='home';
-function go(s,push){if(!SCREENS.includes(s)||(s==='admin'&&!S.admin))s='home';current=s;
+function go(s,push){if(!SCREENS.includes(s)||(s==='admin'&&!S.admin))s='home';if(push&&S.ready)splash(650);current=s;
   SCREENS.forEach(x=>$('#s-'+x).classList.toggle('on',x===s));
   document.querySelectorAll('[data-go]').forEach(b=>{if(b.classList.contains('chip'))return;b.toggleAttribute('aria-current',b.dataset.go===s);if(b.dataset.go===s)b.setAttribute('aria-current','page');});
   if(push){try{history.replaceState(null,'','#'+s);}catch(e){}}scrollTo({top:0});renderAll();}
@@ -1089,19 +1102,20 @@ let rq=0;function renderAll(){cancelAnimationFrame(rq);rq=requestAnimationFrame(
   if(current==='home')renderHome();else if(current==='roster')renderRoster();else if(current==='rang')renderBoard();else if(current==='profil')renderProfile();else if(current==='admin')renderAdmin();});}
 
 async function boot(){
+  splUntil=Date.now()+900;
   go((location.hash||'#home').slice(1),false);
-  if(!window.supabase){$('#home').innerHTML='<div class="empty">Veza nije uspela. Osveži stranicu.</div>';return;}
+  if(!window.supabase){splashEnd();$('#home').innerHTML='<div class="empty">Veza nije uspela. Osveži stranicu.</div>';return;}
   S.sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
   const {data:{session}}=await S.sb.auth.getSession();
   if(session){const u=session.user;S.uid=u.id;S.anon=!!u.is_anonymous;S.email=(u.email||'').toLowerCase();S.admin=!S.anon&&S.email===ADMIN_EMAIL;}
-  if(!session||(S.anon&&store.get('guest','')!=='1'))showLogin();
+  if(!session||(S.anon&&store.get('guest','')!=='1')){showLogin();splashEnd();}
   const ta=$('#topAuth');
   if(!session||S.anon){ta.setAttribute('aria-label','Prijavi se');ta.title='Prijavi se';ta.innerHTML='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h3M14 17l5-5-5-5M19 12H8"/></svg>';ta.onclick=async()=>{if(session)await S.sb.auth.signOut();store.set('guest','');location.hash='';location.reload();};}
   else ta.onclick=async()=>{await S.sb.auth.signOut();store.set('guest','');location.hash='';location.reload();};
   if(S.admin){document.querySelectorAll('.admin-only').forEach(b=>b.hidden=false);}
-  try{await Promise.all([loadAthletes(),loadDuels(),loadPlayers(),loadMeta(),loadIsplate(),loadPay()]);}catch(e){console.warn(e);$('#home').innerHTML='<div class="empty">Podaci nisu učitani. Osveži stranicu.</div>';return;}
+  try{await Promise.all([loadAthletes(),loadDuels(),loadPlayers(),loadMeta(),loadIsplate(),loadPay()]);}catch(e){console.warn(e);splashEnd();$('#home').innerHTML='<div class="empty">Podaci nisu učitani. Osveži stranicu.</div>';return;}
   if(S.uid)await ensurePlayer(session.user.user_metadata);
-  S.ready=true;lastSig=dataSig();go(current,false);checkWins();
+  S.ready=true;lastSig=dataSig();go(current,false);checkWins();splashEnd();
   S.sb.channel('exatlon').on('postgres_changes',{event:'*',schema:'public'},p=>queue(p.table)).subscribe();
   if(document.fonts&&document.fonts.ready)document.fonts.ready.then(refreshAll);
   setInterval(()=>{if(current==='admin')renderNow();},20000);
