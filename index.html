@@ -781,6 +781,22 @@ function resHTML(d){
   return `<div class="res"><span class="muted d">${shortDate(d.datum)}</span><span class="n ${d.pobednik==='a'?'':'l'}">${esc(A.name)}</span><span class="s">${sc}</span><span class="n b ${d.pobednik==='b'?'':'l'}">${esc(B.name)}</span><span class="m ${mine?(mine===d.pobednik?'W':'L'):''}">${mine?(mine===d.pobednik?'✓':'✕'):''}</span></div>`;
 }
 let showAllRes=false;
+/* uživo osvežavanje: baza (postgres_changes) + direktan signal od admina (broadcast) */
+const BGW=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Belgrade',weekday:'short',hour:'2-digit',minute:'2-digit',hour12:false});
+function showTime(){const p=BGW.formatToParts(new Date()),g=k=>(p.find(x=>x.type===k)||{}).value,hm=(+g('hour')%24)*60+(+g('minute'));
+  return ['Mon','Tue','Wed','Thu','Fri'].includes(g('weekday'))&&hm>=20*60+45&&hm<=23*60+59;}
+let liveCh=null,sigCh=null,liveT=0;
+function startLive(){try{
+  if(liveCh)S.sb.removeChannel(liveCh);if(sigCh)S.sb.removeChannel(sigCh);
+  const retry=st=>{if(['CHANNEL_ERROR','TIMED_OUT','CLOSED'].includes(st)){clearTimeout(liveT);liveT=setTimeout(startLive,2000);}};
+  liveCh=S.sb.channel('exatlon').on('postgres_changes',{event:'*',schema:'public'},p=>queue(p.table));liveCh.subscribe(retry);
+  sigCh=S.sb.channel('exa-signal',{config:{broadcast:{self:false}}}).on('broadcast',{event:'refresh'},()=>{queue('duels');queue('picks');});sigCh.subscribe(retry);
+}catch(e){console.warn(e);}}
+function ping(){try{sigCh&&sigCh.send({type:'broadcast',event:'refresh',payload:{t:Date.now()}});}catch(e){}}
+function wake(){if(!S.ready)return;queue('duels');queue('picks');
+  const st=liveCh&&liveCh.state;if(st&&st!=='joined'&&st!=='joining'){clearTimeout(liveT);startLive();}}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')wake();});
+addEventListener('focus',wake);addEventListener('online',wake);addEventListener('pageshow',wake);
 /* ko je trenutno online (Supabase Realtime Presence) */
 const tkm=n=>(n%10===1&&n%100!==11)?'takmičar':'takmičara';
 function onlHTML(){if(!S.online)return '';return `<div class="onl"><i></i>Trenutno online: <b id="onlN">${S.online}</b> <span id="onlW">${tkm(S.online)}</span></div>`;}
@@ -1031,7 +1047,7 @@ function fillSelects(){
 $('#duelForm').onsubmit=async e=>{e.preventDefault();const m=$('#duelMsg'),datum=$('#fDate').value,vreme=$('#fTime').value||'21:30',a=$('#fA').value,b=$('#fB').value,vrsta=$('#fKind').value;
   if(a===b){m.className='msg err';m.textContent='Izaberi dve različite strane.';return;}
   const ok=await w(S.sb.from('duels').insert({a,b,pocetak:`${datum}T${vreme}:00${offsetFor(datum)}`,vrsta,napomena:$('#fNote').value.trim()||null,cilj:vrsta==='Timska igra'?10:0}),'Duel je dodat');
-  if(ok){m.className='msg ok';m.textContent=`${side(a).name} – ${side(b).name}, ${dayLabel(datum)} u ${vreme}`;$('#fNote').value='';await loadDuels();renderAll();}};
+  if(ok){m.className='msg ok';m.textContent=`${side(a).name} – ${side(b).name}, ${dayLabel(datum)} u ${vreme}`;$('#fNote').value='';await loadDuels();renderAll();ping();}};
 $('#athForm').onsubmit=async e=>{e.preventDefault();const ime=$('#aIme').value.trim(),prez=$('#aPrez').value.trim();if(!ime)return;
   const id=(letters(ime+'-'+prez).toLowerCase()||'t')+'-'+Date.now().toString(36).slice(-4);
   if(await w(S.sb.from('athletes').insert({id,ime,prezime:prez||null,tim:$('#aTim').value,pol:$('#aPol').value,status:'Aktivan'}),'Takmičar je dodat')){$('#aIme').value='';$('#aPrez').value='';await loadAthletes();renderAll();}};
@@ -1059,7 +1075,7 @@ $('#qGo').onclick=async()=>{
   $('#qGo').disabled=true;
   const row={a:Q.a,b:Q.b,pocetak:new Date(Date.now()+6*3600e3).toISOString(),vrsta,cilj:team?10:0,rucno:true};let ins=await S.sb.from('duels').insert(row);if(ins.error&&/rucno/.test(ins.error.message||'')){delete row.rucno;ins=await S.sb.from('duels').insert(row);}
   const ok=await w(Promise.resolve(ins),'Duel je objavljen · glasanje je otvoreno');
-  if(ok){Q.a=Q.b=null;await loadDuels();renderAll();scrollTo({top:0,behavior:'smooth'});}else $('#qGo').disabled=false;
+  if(ok){Q.a=Q.b=null;await loadDuels();renderAll();ping();scrollTo({top:0,behavior:'smooth'});}else $('#qGo').disabled=false;
 };
 function renderNow(){
   const box=$('#nowDuel');const open=S.DUELS.filter(d=>!d.pobednik).sort((a,b)=>(!!b.uzivo-!!a.uzivo)||startOf(a)-startOf(b));
@@ -1226,7 +1242,7 @@ async function adminAct(b){
   else if(act==='undo'){const tok=d.tok.slice(),l=tok.pop();if(!l)return;const k=l==='a'?'rez_a':'rez_b',c=l==='a'?d.rezA:d.rezB;ok=await w(q({[k]:Math.max(0,c-1),tok}));}
   else if(act==='del'){b.outerHTML='<button data-act="delok" class="danger">Obriši duel i sve prognoze za njega</button>';const n=document.querySelector(`.adr[data-id="${d.id}"] [data-act="delok"]`);n.onclick=()=>adminAct(n);return;}
   else if(act==='delok')ok=await w(S.sb.from('duels').delete().eq('id',d.id),'Duel je obrisan');
-  if(ok){await loadDuels();renderAll();}
+  if(ok){await loadDuels();renderAll();ping();}
 }
 
 /* ================= KONFETE ZA POGODAK ================= */
@@ -1366,7 +1382,7 @@ const pend=new Set();let pT=0;
 const dataSig=()=>JSON.stringify([S.DUELS.map(d=>[d.id,d.pobednik,d.uzivo,d.rezA,d.rezB,d.pocetak,d.a,d.b]),Object.entries(S.PLAYERS).map(([k,p])=>[k,p.nick,p.avatar,Object.keys(p.picks).length]),Object.values(S.ATH).map(a=>[a.id,a.team,a.status,a.photo]),S.NAGRADE,Object.keys(S.ISPLATE_ALL||{}).length]);
 let lastSig='';
 function queue(t){pend.add(t);clearTimeout(pT);pT=setTimeout(async()=>{const f=new Set([...pend].map(x=>LOAD[x]).filter(Boolean));pend.clear();try{await Promise.all([...f].map(x=>x()));}catch(e){console.warn(e);}
-  const sg=dataSig();if(sg===lastSig)return;lastSig=sg;renderAll();checkWins();},400);}
+  const sg=dataSig();if(sg===lastSig)return;lastSig=sg;renderAll();checkWins();},120);}
 async function ensurePlayer(meta){
   const me=S.PLAYERS[S.uid];if(me&&me.nick){S.nick=me.nick;return;}
   const want=(meta&&meta.nick)||'';
@@ -1404,10 +1420,13 @@ async function boot(){
   if(S.uid)await ensurePlayer(session.user.user_metadata);
   if(S.uid&&!S.anon)await loadPod();
   S.ready=true;lastSig=dataSig();go(current,false);checkWins();splashEnd();setTimeout(checkElitaPop,1800);
-  S.sb.channel('exatlon').on('postgres_changes',{event:'*',schema:'public'},p=>queue(p.table)).subscribe();startPresence();
+  startLive();startPresence();
   if(document.fonts&&document.fonts.ready)document.fonts.ready.then(refreshAll);
   setInterval(()=>{if(current==='admin')renderNow();},20000);
-  setInterval(()=>{if(document.visibilityState!=='visible')return;queue('duels');queue('picks');queue('isplate');queue('elita');},12000);
+  // rezervno osvežavanje: za vreme emisije svake 3 s, inače na 12 s
+  let pollN=0;setInterval(()=>{if(document.visibilityState!=='visible')return;pollN++;
+    const hot=showTime();if(hot||pollN%4===0){queue('duels');}
+    if(pollN%4===0){queue('picks');queue('isplate');queue('elita');}},3000);
   setInterval(()=>{if(current==='home'&&document.visibilityState==='visible'&&!document.querySelector('.hero.locking'))renderHome();},60000);
 }
 </script>
