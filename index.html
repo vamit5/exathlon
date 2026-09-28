@@ -1018,7 +1018,8 @@ function renderIgraci(){
   const tot=all.reduce((t,x)=>t+x.owe,0);
   const mails=Object.values(S.USERS||{}).filter(u=>u.email).map(u=>u.email);S.MAILS=mails;
   $('#igrSum').innerHTML=`${all.length} igrača · ${S.usersOk?mails.length+' sa emailom':'<span style="color:var(--loss)">emailovi nisu učitani (pokreni admin-emailovi.sql)</span>'} · ${all.filter(x=>x.pay&&x.pay.racun).length} sa podacima za isplatu${tot?` · <b style="color:#ffcf5a">za isplatu ukupno ${money(tot)}</b>`:''}`;
-  $('#igrList').innerHTML=list.map(x=>`<div class="prow${x.owe?' owed':''}"><div class="hd">${avHTML(x)}<div style="min-width:0"><b>${esc(x.nick)}</b><small>${x.pts} poena · ${x.won} ${x.won===1?'nagrada':'nagrada'}${x.u?' · od '+shortDate(bgParts(x.u.registrovan).datum):''}</small></div>${x.owe?`<div class="owe">${money(x.owe)}<small>za isplatu</small></div>`:''}</div>${x.u&&x.u.email?`<div class="bf"><span>Email</span><code>${esc(x.u.email)}</code><button type="button" class="cp" data-cp="${esc(x.u.email)}">Kopiraj</button></div>`:x.u&&x.u.gost?'<div class="muted">Gost (bez emaila)</div>':''}${accHTML(x.uid)}${bankHTML(x.pay)}${x.uid!==S.uid?`<button type="button" class="delu" data-del="${x.uid}" data-nick="${esc(x.nick)}">🗑 Obriši korisnika</button>`:''}</div>`).join('')||'<div class="empty">Nema igrača.</div>';
+  const safe=f=>x=>{try{return f(x);}catch(e){console.warn(e);return `<div class="prow"><b>${esc(x.nick||'?')}</b></div>`;}};
+  $('#igrList').innerHTML=list.map(safe(x=>`<div class="prow${x.owe?' owed':''}"><div class="hd">${avHTML(x)}<div style="min-width:0"><b>${esc(x.nick)}</b><small>${x.pts} poena · ${x.won} ${x.won===1?'nagrada':'nagrada'}${x.u?' · od '+shortDate(bgParts(x.u.registrovan).datum):''}</small></div>${x.owe?`<div class="owe">${money(x.owe)}<small>za isplatu</small></div>`:''}</div>${x.u&&x.u.email?`<div class="bf"><span>Email</span><code>${esc(x.u.email)}</code><button type="button" class="cp" data-cp="${esc(x.u.email)}">Kopiraj</button></div>`:x.u&&x.u.gost?'<div class="muted">Gost (bez emaila)</div>':''}${accHTML(x.uid)}${bankHTML(x.pay)}${x.uid!==S.uid?`<button type="button" class="delu" data-del="${x.uid}" data-nick="${esc(x.nick)}">🗑 Obriši korisnika</button>`:''}</div>`)).join('')||'<div class="empty">Nema igrača.</div>';
   $('#igrList').querySelectorAll('[data-cp]').forEach(b=>b.onclick=()=>copyTxt(b,b.dataset.cp));
   wireAcc($('#igrList'));
   $('#igrList').querySelectorAll('[data-del]').forEach(b=>b.onclick=async()=>{
@@ -1219,7 +1220,7 @@ $('#eliPopX').onclick=()=>{$('#eliPop').hidden=true;};
 
 /* admin: elita */
 async function eliSet(uid,row,ok){if(await w(S.sb.from('elita').upsert({player_id:uid,...row,updated_at:new Date().toISOString()}),ok)){await loadElita();renderAdmin();}}
-function accHTML(uid){const r=S.ELALL.find(x=>x.player_id===uid),has=hasElite(r),n=esc(LNAME.elita);
+function accHTML(uid){const r=S.ELALL.find(x=>x.player_id===uid),has=!!r&&hasElite(r),n=esc(LNAME.elita);
   const st=has?`<b style="color:var(--win)">ima pristup · ${vaziTxt(r)}</b>`:r&&r.status==='zahtev'?'<b style="color:#ffcf5a">traži pristup</b>':'<span class="muted">nema pristup</span>';
   const bt=has?`${r.vazi_do?`<button class="btn ghost small" data-a="stalno" data-u="${uid}">Učini stalnim</button>`:''}<button class="btn ghost small" data-a="ukloni" data-u="${uid}">Ukloni pristup</button>`
     :`<button class="btn gold small" data-a="stalno" data-u="${uid}">Dozvoli</button><button class="btn ghost small" data-a="24" data-u="${uid}">Dozvoli 24h</button>${r&&r.status==='zahtev'?`<button class="btn ghost small" data-a="odbij" data-u="${uid}">Odbij</button>`:''}`;
