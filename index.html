@@ -487,6 +487,7 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
     <div id="adminIgr" hidden>
       <input class="inp" id="igrQ" placeholder="Pretraži igrače" aria-label="Pretraži igrače" style="width:100%;margin-bottom:10px">
       <div class="muted" id="igrSum" style="margin-bottom:10px"></div>
+      <div class="inline" style="margin-bottom:12px"><button class="btn ghost small" id="cpAll" type="button">Kopiraj sve emailove</button><span class="muted" id="cpAllMsg"></span></div>
       <div class="list" id="igrList"></div>
     </div>
     <div id="adminNag" hidden>
@@ -927,15 +928,17 @@ function bankHTML(pay){if(!pay||!(pay.ime_prezime||pay.racun||pay.napomena))retu
 function renderIgraci(){
   const q=($('#igrQ').value||'').trim().toLowerCase(),today=todayBG(),owed={},won={};
   for(const g of winnersByDay())for(const x of g.list){won[x.uid]=(won[x.uid]||0)+1;if(g.day!==today&&!S.ISPLATE_ALL[x.uid+'|'+g.day])owed[x.uid]=(owed[x.uid]||0)+x.iznos;}
-  const all=Object.entries(S.PLAYERS).filter(([,p])=>p.nick).map(([uid,p])=>({uid,...p,pts:scorePicks(p.picks).pts,owe:owed[uid]||0,won:won[uid]||0,pay:S.PAYALL[uid]}));
-  const list=all.filter(x=>!q||x.nick.toLowerCase().includes(q)||((x.pay&&(x.pay.ime_prezime||''))+'').toLowerCase().includes(q))
+  const all=Object.entries(S.PLAYERS).filter(([,p])=>p.nick).map(([uid,p])=>({uid,...p,pts:scorePicks(p.picks).pts,owe:owed[uid]||0,won:won[uid]||0,pay:S.PAYALL[uid],u:(S.USERS||{})[uid]}));
+  const list=all.filter(x=>!q||x.nick.toLowerCase().includes(q)||((x.u&&x.u.email)||'').toLowerCase().includes(q)||((x.pay&&(x.pay.ime_prezime||''))+'').toLowerCase().includes(q))
     .sort((a,b)=>b.owe-a.owe||b.pts-a.pts||a.nick.localeCompare(b.nick,'sr'));
   const tot=all.reduce((t,x)=>t+x.owe,0);
-  $('#igrSum').innerHTML=`${all.length} igrača · ${all.filter(x=>x.pay&&x.pay.racun).length} sa podacima za isplatu${tot?` · <b style="color:#ffcf5a">za isplatu ukupno ${money(tot)}</b>`:''}`;
-  $('#igrList').innerHTML=list.map(x=>`<div class="prow${x.owe?' owed':''}"><div class="hd">${avHTML(x)}<div style="min-width:0"><b>${esc(x.nick)}</b><small>${x.pts} poena · ${x.won} ${x.won===1?'nagrada':'nagrada'}</small></div>${x.owe?`<div class="owe">${money(x.owe)}<small>za isplatu</small></div>`:''}</div>${bankHTML(x.pay)}</div>`).join('')||'<div class="empty">Nema igrača.</div>';
+  const mails=Object.values(S.USERS||{}).filter(u=>u.email).map(u=>u.email);S.MAILS=mails;
+  $('#igrSum').innerHTML=`${all.length} igrača · ${S.usersOk?mails.length+' sa emailom':'<span style="color:var(--loss)">emailovi nisu učitani (pokreni admin-emailovi.sql)</span>'} · ${all.filter(x=>x.pay&&x.pay.racun).length} sa podacima za isplatu${tot?` · <b style="color:#ffcf5a">za isplatu ukupno ${money(tot)}</b>`:''}`;
+  $('#igrList').innerHTML=list.map(x=>`<div class="prow${x.owe?' owed':''}"><div class="hd">${avHTML(x)}<div style="min-width:0"><b>${esc(x.nick)}</b><small>${x.pts} poena · ${x.won} ${x.won===1?'nagrada':'nagrada'}${x.u?' · od '+shortDate(bgParts(x.u.registrovan).datum):''}</small></div>${x.owe?`<div class="owe">${money(x.owe)}<small>za isplatu</small></div>`:''}</div>${x.u&&x.u.email?`<div class="bf"><span>Email</span><code>${esc(x.u.email)}</code><button type="button" class="cp" data-cp="${esc(x.u.email)}">Kopiraj</button></div>`:x.u&&x.u.gost?'<div class="muted">Gost (bez emaila)</div>':''}${bankHTML(x.pay)}</div>`).join('')||'<div class="empty">Nema igrača.</div>';
   $('#igrList').querySelectorAll('[data-cp]').forEach(b=>b.onclick=()=>copyTxt(b,b.dataset.cp));
 }
 $('#igrQ').oninput=()=>renderIgraci();
+$('#cpAll').onclick=e=>{const m=S.MAILS||[];if(!m.length){$('#cpAllMsg').textContent='Nema emailova.';return;}copyTxt(e.target,m.join(', '));$('#cpAllMsg').textContent=m.length+' emailova kopirano';setTimeout(()=>{e.target.textContent='Kopiraj sve emailove';},1500);};
 function renderAdmin(){
   if(S.admin&&S.ready&&adminTab==='igraci'){renderIgraci();return;}
   if(S.admin&&S.ready&&adminTab==='nagrade'){renderNagrade();return;}
@@ -1082,6 +1085,7 @@ async function loadPlayers(){
 }
 async function loadMeta(){try{const {data}=await S.sb.from('meta').select('key,value').eq('key','nagrade').maybeSingle();if(data)S.NAGRADE=data.value;}catch(e){}}
 async function loadIsplate(){S.ISPLATE={};S.ISPLATE_ALL={};if(!S.uid||S.anon)return;try{const {data}=await S.sb.from('isplate').select('*');(data||[]).forEach(r=>{S.ISPLATE_ALL[r.player_id+'|'+r.datum]=r;if(r.player_id===S.uid)S.ISPLATE[r.datum]=r;});}catch(e){}}
+async function loadUsers(){S.USERS={};if(!S.admin)return;try{const {data,error}=await S.sb.rpc('admin_korisnici');if(error)throw error;(data||[]).forEach(r=>{S.USERS[r.id]=r;});S.usersOk=true;}catch(e){S.usersOk=false;console.warn(e);}}
 async function loadPay(){S.PAYALL={};if(!S.uid||S.anon)return;try{const {data}=await S.sb.from('payout_info').select('*');(data||[]).forEach(r=>{S.PAYALL[r.player_id]=r;if(r.player_id===S.uid)S.PAY=r;});}catch(e){}}
 const LOAD={athletes:loadAthletes,duels:loadDuels,players:loadPlayers,picks:loadPlayers,meta:loadMeta,isplate:loadIsplate,payout_info:loadPay};
 const pend=new Set();let pT=0;
@@ -1122,7 +1126,7 @@ async function boot(){
   if(!session||S.anon){ta.setAttribute('aria-label','Prijavi se');ta.title='Prijavi se';ta.innerHTML='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h3M14 17l5-5-5-5M19 12H8"/></svg>';ta.onclick=async()=>{if(session)await S.sb.auth.signOut();store.set('guest','');location.hash='';location.reload();};}
   else ta.onclick=async()=>{await S.sb.auth.signOut();store.set('guest','');location.hash='';location.reload();};
   if(S.admin){document.querySelectorAll('.admin-only').forEach(b=>b.hidden=false);}
-  try{await Promise.all([loadAthletes(),loadDuels(),loadPlayers(),loadMeta(),loadIsplate(),loadPay()]);}catch(e){console.warn(e);splashEnd();$('#home').innerHTML='<div class="empty">Podaci nisu učitani. Osveži stranicu.</div>';return;}
+  try{await Promise.all([loadAthletes(),loadDuels(),loadPlayers(),loadMeta(),loadIsplate(),loadPay(),loadUsers()]);}catch(e){console.warn(e);splashEnd();$('#home').innerHTML='<div class="empty">Podaci nisu učitani. Osveži stranicu.</div>';return;}
   if(S.uid)await ensurePlayer(session.user.user_metadata);
   S.ready=true;lastSig=dataSig();go(current,false);checkWins();splashEnd();
   S.sb.channel('exatlon').on('postgres_changes',{event:'*',schema:'public'},p=>queue(p.table)).subscribe();
