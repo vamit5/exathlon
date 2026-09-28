@@ -356,6 +356,8 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
 .stLeft b{font-family:var(--display);font-weight:800;font-size:30px;font-variant-numeric:tabular-nums;line-height:1}.stLeft b.low{color:var(--loss)}.stLeft .cdbar{max-width:none}
 .stBig{font-family:var(--display);font-weight:800;font-size:40px;line-height:1;color:#ffcf5a}
 .stMed{display:flex;gap:14px;margin-top:10px;font-weight:700}
+.onl{display:flex;align-items:center;justify-content:center;gap:8px;margin:0 0 10px;font-size:14px;color:var(--metal)}
+.onl i{width:9px;height:9px;border-radius:50%;background:var(--win);box-shadow:0 0 10px var(--win);animation:cdp 1.6s infinite}.onl b{color:#fff;font-size:16px}
 .rule1{display:flex;align-items:center;justify-content:center;gap:10px;margin:0 0 14px;padding:12px 14px;border-radius:14px;background:linear-gradient(90deg,rgba(255,59,43,.18),rgba(255,122,26,.12));border:1px solid rgba(255,122,26,.5);font-family:var(--display);font-weight:800;font-size:22px;letter-spacing:.04em;text-align:center;line-height:1.1}
 .rule1 .ic{font-size:24px}.rule1 em{font-style:normal;color:#ff9a4a}
 .box.lk{position:relative;gap:0;padding:16px 16px 14px;max-height:calc(100dvh - 24px);overflow-y:auto}
@@ -771,6 +773,16 @@ function resHTML(d){
   return `<div class="res"><span class="muted d">${shortDate(d.datum)}</span><span class="n ${d.pobednik==='a'?'':'l'}">${esc(A.name)}</span><span class="s">${sc}</span><span class="n b ${d.pobednik==='b'?'':'l'}">${esc(B.name)}</span><span class="m ${mine?(mine===d.pobednik?'W':'L'):''}">${mine?(mine===d.pobednik?'✓':'✕'):''}</span></div>`;
 }
 let showAllRes=false;
+/* ko je trenutno online (Supabase Realtime Presence) */
+const tkm=n=>(n%10===1&&n%100!==11)?'takmičar':'takmičara';
+function onlHTML(){if(!S.online)return '';return `<div class="onl"><i></i>Trenutno online: <b id="onlN">${S.online}</b> <span id="onlW">${tkm(S.online)}</span></div>`;}
+function updOnline(){const n=$('#onlN');if(n){n.textContent=S.online;$('#onlW').textContent=tkm(S.online);}else if(current==='home'&&S.ready)renderHome();}
+function startPresence(){try{
+  const pc=S.sb.channel('online-igraci',{config:{presence:{key:S.uid||('g'+Math.random().toString(36).slice(2))}}});
+  pc.on('presence',{event:'sync'},()=>{S.online=Object.keys(pc.presenceState()||{}).length;updOnline();});
+  pc.subscribe(st=>{if(st==='SUBSCRIBED')pc.track({od:Date.now()});});
+  document.addEventListener('visibilitychange',()=>{try{document.visibilityState==='visible'?pc.track({od:Date.now()}):pc.untrack();}catch(e){}});
+}catch(e){console.warn(e);}}
 /* odbrojavanje 10 min pre emisije (pon–pet 21:20–21:30) */
 const CD_FMT=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Belgrade',weekday:'short',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
 function cdLeft(){const p=CD_FMT.formatToParts(new Date()),g=k=>(p.find(x=>x.type===k)||{}).value;
@@ -790,7 +802,7 @@ function renderHome(){
   const rest=open.filter(d=>d!==heroD);
   const res=settled().slice().reverse();
   const today=todayBG(),mine=scoreDay(S.myPicks,today);
-  let h=cdHTML()+`<div class="rule1"><span class="ic">🎯</span><span>1 POGOĐEN DUEL = <em>1 POEN</em></span></div>`+(S.LIGA==='elita'?`<div class="elinfo">★ ${esc(UP(LNAME.elita))} · ${S.admin&&!hasElite()?'pregled (admin)':vaziTxt(S.ELITA)}</div>`:'')+prizeHTML();
+  let h=cdHTML()+onlHTML()+`<div class="rule1"><span class="ic">🎯</span><span>1 POGOĐEN DUEL = <em>1 POEN</em></span></div>`+(S.LIGA==='elita'?`<div class="elinfo">★ ${esc(UP(LNAME.elita))} · ${S.admin&&!hasElite()?'pregled (admin)':vaziTxt(S.ELITA)}</div>`:'')+prizeHTML();
   if(heroD){
     h+=`<div class="sec">${heroD.uzivo?'Uživo':isLocked(heroD)?'U toku':'Sledeći duel'}${S.uid&&(mine.c+mine.w)?`<small>Danas: ${mine.c} od ${mine.c+mine.w} pogođeno</small>`:''}</div>${heroHTML(heroD)}`;
   }else{const t=bgParts(Date.now()).vreme,wd=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].indexOf(new Intl.DateTimeFormat('en-US',{timeZone:'Europe/Belgrade',weekday:'short'}).format(new Date())),
@@ -1381,7 +1393,7 @@ async function boot(){
   if(S.uid)await ensurePlayer(session.user.user_metadata);
   if(S.uid&&!S.anon)await loadPod();
   S.ready=true;lastSig=dataSig();go(current,false);checkWins();splashEnd();setTimeout(checkElitaPop,1800);
-  S.sb.channel('exatlon').on('postgres_changes',{event:'*',schema:'public'},p=>queue(p.table)).subscribe();
+  S.sb.channel('exatlon').on('postgres_changes',{event:'*',schema:'public'},p=>queue(p.table)).subscribe();startPresence();
   if(document.fonts&&document.fonts.ready)document.fonts.ready.then(refreshAll);
   setInterval(()=>{if(current==='admin')renderNow();},20000);
   setInterval(()=>{if(document.visibilityState!=='visible')return;queue('duels');queue('picks');queue('isplate');queue('elita');},12000);
