@@ -208,6 +208,7 @@ main{max-width:980px;margin:0 auto;padding-inline:16px;padding-block:18px 110px}
 .apanel{padding:16px;border-radius:14px;background:var(--panel);border:1px solid var(--line);display:grid;gap:10px;margin-bottom:14px}
 .apanel h3{margin:0;font-family:var(--display);font-weight:800;font-size:20px;letter-spacing:.04em}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.chk{display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.35;color:var(--dim);cursor:pointer;text-align:left}.chk input{width:20px;height:20px;flex:none;margin:0;accent-color:#ff7a1a}.chk b{color:var(--text,#f1f2f4)}
 .fl{display:grid;gap:4px;font-size:12px;font-weight:600;color:var(--dim)}
 .fl .inp,.fl select{height:44px;padding:0 10px;border-radius:10px;background:var(--bg);border:1px solid var(--line2);font-size:15px;width:100%}
 .adr{display:grid;gap:8px;padding:12px;border-radius:10px;background:var(--panel2);border:1px solid var(--line)}
@@ -386,6 +387,7 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
       <input class="inp" id="lNick" placeholder="Ime u igri" maxlength="16" autocomplete="nickname" hidden>
       <input class="inp" id="lEmail" type="email" placeholder="Email" autocomplete="email" required>
       <input class="inp" id="lPass" type="password" placeholder="Lozinka (najmanje 6 znakova)" minlength="6" autocomplete="current-password" required>
+      <label class="chk" id="lPodW" hidden><input type="checkbox" id="lPod"><span><b>Pošalji mi podsetnik emailom</b> pre emisije (pon–pet u 12h i 21h)</span></label>
       <button class="btn" type="submit" id="lSubmit">PRIJAVI SE</button>
       <p class="msg" id="lMsg"></p>
       <button type="button" class="btn ghost" id="lSwitch" style="width:100%">Nemaš nalog? Registruj se besplatno</button>
@@ -433,6 +435,10 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
     <div class="sec">Ime u igri</div>
     <form class="inline" id="nickForm"><input class="inp" id="nickIn" maxlength="16" style="flex:1" aria-label="Ime u igri"><button class="btn ghost" type="submit">SAČUVAJ</button></form>
     <p class="msg" id="nickMsg"></p>
+    <div id="podBox" hidden>
+    <div class="sec">Email podsetnici</div>
+    <div class="apanel"><label class="chk"><input type="checkbox" id="pPod"><span><b>Podsetnik pre emisije</b><br>Pon–pet u 12h i 21h. Vikendom ništa.</span></label><p class="msg" id="podMsg" style="margin:0"></p></div>
+    </div>
     <div class="sec">Moje nagrade</div>
     <div class="list" id="myPrizes"></div>
     <div class="sec">Podaci za isplatu nagrada</div>
@@ -804,6 +810,7 @@ function renderProfile(){
     return `<div class="res"><span class="muted d">${shortDate(h.d.datum)}</span><span class="n" style="grid-column:span 3">${esc(A.name)} – ${esc(B.name)}<br><span class="muted">Izbor: ${esc(pk.name)}</span></span><span class="m ${h.r}">${h.r==='P'?'…':h.r==='W'?'✓':'✕'}</span></div>`;}).join('')
     :'<div class="empty">Još nemaš prognoza.</div>';
   $('#toRegister').hidden=!S.anon;
+  $('#podBox').hidden=!S.uid||S.anon;$('#pPod').checked=!!S.POD;
 }
 function renderMyPrizes(){
   const today=todayBG(),rows=[];
@@ -827,19 +834,24 @@ $('#nickForm').onsubmit=async e=>{e.preventDefault();const v=$('#nickIn').value.
   if(v.length<2){m.className='msg err';m.textContent='Najmanje 2 znaka.';return;}
   const r=await saveNick(v);if(r==='ok'){S.nick=v;m.className='msg ok';m.textContent='Sačuvano.';renderAll();}else{m.className='msg err';m.textContent=r==='taken'?'To ime je zauzeto.':'Nije sačuvano.';}};
 async function saveNick(nick){const {error}=await S.sb.from('players').upsert({id:S.uid,nick});if(error){console.warn(error);return error.code==='23505'?'taken':'fail';}(S.PLAYERS[S.uid]||(S.PLAYERS[S.uid]={picks:{}})).nick=nick;return 'ok';}
+async function loadPod(){S.POD=null;if(!S.uid||S.anon)return;try{const {data,error}=await S.sb.from('podsetnici').select('ukljuceno').eq('player_id',S.uid).maybeSingle();if(!error&&data)S.POD=data.ukljuceno;}catch(e){}}
+async function savePod(on){const {error}=await S.sb.from('podsetnici').upsert({player_id:S.uid,ukljuceno:on,updated_at:new Date().toISOString()});if(error){console.warn(error);return false;}S.POD=on;return true;}
+$('#pPod').onchange=async e=>{const on=e.target.checked,m=$('#podMsg');m.className='msg';m.textContent='Čuvam…';
+  if(await savePod(on)){m.className='msg ok';m.textContent=on?'Uključeno. Stižu ti podsetnici pon–pet u 12h i 21h.':'Isključeno. Nećeš dobijati podsetnike.';}
+  else{e.target.checked=!on;m.className='msg err';m.textContent='Nije sačuvano. Pokušaj ponovo.';}};
 $('#logout').onclick=async()=>{await S.sb.auth.signOut();store.set('guest','');location.reload();};
 $('#toRegister').onclick=async()=>{await S.sb.auth.signOut();store.set('guest','');location.hash='';location.reload();};
 
 /* ================= PRIJAVA ================= */
 let regMode=false;
-function setMode(r){regMode=r;$('#lNick').hidden=!r;$('#lNick').required=r;$('#lSubmit').textContent=r?'REGISTRUJ SE BESPLATNO':'PRIJAVI SE';$('#lSwitch').textContent=r?'Već imaš nalog? Prijavi se':'Nemaš nalog? Registruj se besplatno';$('#lPass').autocomplete=r?'new-password':'current-password';$('#lMsg').textContent='';}
+function setMode(r){regMode=r;$('#lNick').hidden=!r;$('#lPodW').hidden=!r;$('#lNick').required=r;$('#lSubmit').textContent=r?'REGISTRUJ SE BESPLATNO':'PRIJAVI SE';$('#lSwitch').textContent=r?'Već imaš nalog? Prijavi se':'Nemaš nalog? Registruj se besplatno';$('#lPass').autocomplete=r?'new-password':'current-password';$('#lMsg').textContent='';}
 function showLogin(){$('#login').hidden=false;document.body.style.overflow='hidden';}
 $('#lSwitch').onclick=()=>setMode(!regMode);
 $('#authForm').onsubmit=async e=>{e.preventDefault();const m=$('#lMsg'),email=$('#lEmail').value.trim(),password=$('#lPass').value,btn=$('#lSubmit');
   btn.disabled=true;m.className='msg';m.textContent='Sačekaj…';
   try{
     if(regMode){const nick=$('#lNick').value.trim();if(nick.length<2)throw {message:'nick'};
-      const {data,error}=await S.sb.auth.signUp({email,password,options:{data:{nick},emailRedirectTo:location.origin+location.pathname}});if(error)throw error;
+      const {data,error}=await S.sb.auth.signUp({email,password,options:{data:{nick,podsetnici:$('#lPod').checked},emailRedirectTo:location.origin+location.pathname}});if(error)throw error;
       if(!data.session){m.className='msg ok';m.textContent='Poslali smo ti email. Klikni link u njemu da potvrdiš nalog, pa se prijavi.';btn.disabled=false;setMode(false);return;}}
     else{const {error}=await S.sb.auth.signInWithPassword({email,password});if(error)throw error;}
     store.set('guest','');location.reload();
@@ -1128,6 +1140,7 @@ async function boot(){
   if(S.admin){document.querySelectorAll('.admin-only').forEach(b=>b.hidden=false);}
   try{await Promise.all([loadAthletes(),loadDuels(),loadPlayers(),loadMeta(),loadIsplate(),loadPay(),loadUsers()]);}catch(e){console.warn(e);splashEnd();$('#home').innerHTML='<div class="empty">Podaci nisu učitani. Osveži stranicu.</div>';return;}
   if(S.uid)await ensurePlayer(session.user.user_metadata);
+  if(S.uid&&!S.anon){await loadPod();if(S.POD===null&&session.user.user_metadata&&session.user.user_metadata.podsetnici)await savePod(true);}
   S.ready=true;lastSig=dataSig();go(current,false);checkWins();splashEnd();
   S.sb.channel('exatlon').on('postgres_changes',{event:'*',schema:'public'},p=>queue(p.table)).subscribe();
   if(document.fonts&&document.fonts.ready)document.fonts.ready.then(refreshAll);
