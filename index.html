@@ -340,6 +340,7 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
 .box.lk h2{margin:2px 0 0;font-size:32px}
 .lktx{margin:16px 0 0!important;padding-top:16px;border-top:1px solid rgba(255,176,32,.2);white-space:pre-line;font-size:16px;line-height:1.55;color:var(--text)}
 .lktx:empty{display:none}
+.lkcta{display:flex;align-items:center;justify-content:center;margin-top:18px;text-decoration:none;border-color:rgba(255,176,32,.55)!important;color:#ffcf5a!important}
 .pzmini{margin-top:18px;padding:12px;border-radius:12px;background:rgba(0,0,0,.28);border:1px solid rgba(255,176,32,.3)}
 .pzmini .t{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#ffcf5a;margin-bottom:8px}
 .pzmini .r{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
@@ -526,6 +527,9 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
         <div class="grid2"><label class="fl">Naziv prve lige (za sve)<input class="inp" id="lgN1" maxlength="22" required></label>
         <label class="fl">Naziv zaključane lige<input class="inp" id="lgN2" maxlength="22" required></label></div>
         <label class="fl">Tekst prozora kad neko klikne na zaključanu ligu<textarea class="inp" id="lgTx" rows="5" maxlength="600" style="height:auto;padding:10px;resize:vertical;font:inherit;font-size:15px;line-height:1.45"></textarea></label>
+        <div class="grid2"><label class="fl">Tekst na dugmetu za kontakt<input class="inp" id="lgBT" maxlength="30" placeholder="npr. PIŠI NAM ZA PRISTUP"></label>
+        <label class="fl">Link dugmeta<input class="inp" id="lgBU" maxlength="200" placeholder="https://instagram.com/..."></label></div>
+        <p class="muted" style="margin:0;font-size:12px">Dozvoljeno: Instagram, WhatsApp, Telegram, Viber, Facebook/Messenger ili email. Prazno = dugme se ne prikazuje.</p>
         <label class="chk"><input type="checkbox" id="lgReq"><span>U prozoru prikaži dugme <b>ZATRAŽI PRISTUP</b></span></label>
         <div class="inline"><button class="btn" type="submit" style="flex:1">SAČUVAJ</button><button class="btn ghost" type="button" id="lgPrev">POGLEDAJ PROZOR</button></div><p class="msg" id="lgMsg" style="margin:0"></p></form>
       <div class="apanel"><h3>Top 3 dana</h3>
@@ -609,6 +613,7 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
   <button class="lkx" id="lockPopX" type="button" aria-label="Zatvori">✕</button>
   <div class="lkic">🔒</div><div class="lksub">Zaključana liga</div><h2 id="lockPopT"></h2>
   <p class="lktx" id="lockPopTx"></p>
+  <a class="btn ghost lkcta" id="lockPopCta" target="_blank" rel="noopener" hidden></a>
   <div id="lockPopPz"></div>
   <div class="lkbtn" id="lockPopBtn"></div>
 </div></div>
@@ -1159,7 +1164,9 @@ const UP=t=>t.toLocaleUpperCase('sr-Latn');
 async function loadLige(){try{const {data}=await S.sb.from('meta').select('value').eq('key','lige').maybeSingle();S.LIGE={...LIGE_DEF,...((data&&data.value)||{})};}catch(e){}applyLiga();}
 function prizeMini(n){n=n||{};const p=[+n.prvo||0,+n.drugo||0,+n.trece||0],c=esc(n.valuta||'€');if(!p.some(Boolean))return '';
   return `<div class="pzmini"><div class="t">🏆 Dnevne nagrade za prva 3 mesta</div><div class="r">${p.map((v,i)=>`<span><small>${['🥇','🥈','🥉'][i]} ${i+1}. mesto</small>${(+v).toLocaleString('sr-Latn-RS',{maximumFractionDigits:2})} ${c}</span>`).join('')}</div></div>`;}
-function lockPop(){const e=S.ELITA;$('#lockPopT').textContent=UP(LNAME.elita);$('#lockPopTx').textContent=(S.LIGE.tekst||'').trim();$('#lockPopPz').innerHTML=prizeMini(S.NAG.elita);
+const KONTAKT=/^(mailto:[^\s@]+@[^\s@]+|https:\/\/(www\.)?(instagram\.com|ig\.me|wa\.me|api\.whatsapp\.com|t\.me|telegram\.me|m\.me|facebook\.com|messenger\.com)\/\S*|viber:\/\/\S+)$/i;
+function ctaOk(u){return !!u&&KONTAKT.test(u.trim());}
+function lockPop(){const e=S.ELITA;{const c=$('#lockPopCta'),u=(S.LIGE.btn_url||'').trim(),t=(S.LIGE.btn_tekst||'').trim();c.hidden=!(t&&ctaOk(u));if(!c.hidden){c.href=u;c.textContent=t;}}$('#lockPopT').textContent=UP(LNAME.elita);$('#lockPopTx').textContent=(S.LIGE.tekst||'').trim();$('#lockPopPz').innerHTML=prizeMini(S.NAG.elita);
   let b='';
   if(S.admin)b='<button class="btn gold" id="lpAdm" type="button">UĐI U LIGU (ADMIN)</button><p class="lknote">Ovaj prozor vide igrači bez pristupa. Tekst menjaš u Admin → ELITA.</p>';
   else if(S.LIGE.zahtev!==false){
@@ -1173,9 +1180,10 @@ function lockPop(){const e=S.ELITA;$('#lockPopT').textContent=UP(LNAME.elita);$(
     if(error){console.warn(error);a.disabled=false;toast('Zahtev nije poslat. Pokušaj ponovo.');return;}toast('Zahtev je poslat');await loadElita();lockPop();};
   $('#lockPop').hidden=false;}
 $('#lockPopX').onclick=()=>{$('#lockPop').hidden=true;};$('#lockPop').onclick=e=>{if(e.target.id==='lockPop')$('#lockPop').hidden=true;};
-$('#ligeForm').onsubmit=async e=>{e.preventDefault();const v={...S.LIGE,otvorena:$('#lgN1').value.trim()||LIGE_DEF.otvorena,elita:$('#lgN2').value.trim()||LIGE_DEF.elita,tekst:$('#lgTx').value.trim(),zahtev:$('#lgReq').checked};
+$('#ligeForm').onsubmit=async e=>{e.preventDefault();const v={...S.LIGE,otvorena:$('#lgN1').value.trim()||LIGE_DEF.otvorena,elita:$('#lgN2').value.trim()||LIGE_DEF.elita,tekst:$('#lgTx').value.trim(),zahtev:$('#lgReq').checked,btn_tekst:$('#lgBT').value.trim(),btn_url:$('#lgBU').value.trim()};
+  if(v.btn_url&&!ctaOk(v.btn_url)){$('#lgMsg').className='msg err';$('#lgMsg').textContent='Link mora biti Instagram, WhatsApp, Telegram, Viber, Facebook/Messenger ili email (mailto:).';return;}
   if(await w(S.sb.from('meta').upsert({key:'lige',value:v}),'Sačuvano')){S.LIGE=v;$('#lgMsg').className='msg ok';$('#lgMsg').textContent='Sačuvano.';applyLiga();renderAll();}};
-$('#lgPrev').onclick=()=>{const t=S.LIGE.tekst;S.LIGE.tekst=$('#lgTx').value;lockPop();S.LIGE.tekst=t;$('#lockPopT').textContent=UP($('#lgN2').value.trim()||LNAME.elita);};
+$('#lgPrev').onclick=()=>{const o={...S.LIGE};S.LIGE.tekst=$('#lgTx').value;S.LIGE.btn_tekst=$('#lgBT').value;S.LIGE.btn_url=$('#lgBU').value;lockPop();S.LIGE=o;$('#lockPopT').textContent=UP($('#lgN2').value.trim()||LNAME.elita);};
 $('#lgAuto').onchange=async e=>{const v={...S.LIGE,auto_top3:e.target.checked};
   if(await w(S.sb.from('meta').upsert({key:'lige',value:v}),e.target.checked?'Top 3 ulaze automatski':'Automatski ulaz isključen'))S.LIGE=v;else e.target.checked=!e.target.checked;};
 function hasElite(e=S.ELITA){return !!(e&&e.status==='odobren'&&(!e.vazi_do||Date.parse(e.vazi_do)>Date.now()));}
@@ -1200,7 +1208,7 @@ $('#eliPopX').onclick=()=>{$('#eliPop').hidden=true;};
 /* admin: elita */
 async function eliSet(uid,row,ok){if(await w(S.sb.from('elita').upsert({player_id:uid,...row,updated_at:new Date().toISOString()}),ok)){await loadElita();renderElitaAdmin();}}
 function renderElitaAdmin(){
-  const ae=document.activeElement;if(!ae||!ae.closest||!ae.closest('#ligeForm')){$('#lgN1').value=LNAME.otvorena;$('#lgN2').value=LNAME.elita;$('#lgTx').value=S.LIGE.tekst||'';$('#lgReq').checked=S.LIGE.zahtev!==false;}
+  const ae=document.activeElement;if(!ae||!ae.closest||!ae.closest('#ligeForm')){$('#lgN1').value=LNAME.otvorena;$('#lgN2').value=LNAME.elita;$('#lgTx').value=S.LIGE.tekst||'';$('#lgReq').checked=S.LIGE.zahtev!==false;$('#lgBT').value=S.LIGE.btn_tekst||'';$('#lgBU').value=S.LIGE.btn_url||'';}
   $('#lgAuto').checked=!!S.LIGE.auto_top3;
   const nick=u=>{const p=S.PL.otvorena[u];return (p&&p.nick)||'Igrač';},mail=u=>((S.USERS||{})[u]||{}).email||'';
   const av=u=>avHTML({nick:nick(u),avatar:(S.PL.otvorena[u]||{}).avatar});
