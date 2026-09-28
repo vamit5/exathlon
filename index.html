@@ -358,6 +358,10 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
 .stMed{display:flex;gap:14px;margin-top:10px;font-weight:700}
 .onl{display:flex;align-items:center;justify-content:center;gap:8px;margin:0 0 10px;font-size:14px;color:var(--metal)}
 .onl i{width:9px;height:9px;border-radius:50%;background:var(--win);box-shadow:0 0 10px var(--win);animation:cdp 1.6s infinite}.onl b{color:#fff;font-size:16px}
+.minrule{margin:0 0 10px;padding:10px 14px;border-radius:12px;background:rgba(52,211,127,.08);border:1px solid rgba(52,211,127,.3);font-size:14px;color:var(--text)}.minrule b{color:var(--win)}
+.nqh{margin:16px 2px 8px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+.brow.nq{opacity:.55}.bmeta .need{color:#ffcf5a}
+.closed{margin:12px 16px 16px;padding:10px;border-radius:10px;text-align:center;font-family:var(--display);font-weight:800;font-size:18px;letter-spacing:.1em;color:#ff9a8f;background:rgba(255,59,43,.1);border:1px solid rgba(255,59,43,.4)}
 .rule1{display:flex;align-items:center;justify-content:center;gap:10px;margin:0 0 14px;padding:12px 14px;border-radius:14px;background:linear-gradient(90deg,rgba(255,59,43,.18),rgba(255,122,26,.12));border:1px solid rgba(255,122,26,.5);font-family:var(--display);font-weight:800;font-size:22px;letter-spacing:.04em;text-align:center;line-height:1.1}
 .rule1 .ic{font-size:24px}.rule1 em{font-style:normal;color:#ff9a4a}
 .box.lk{position:relative;gap:0;padding:16px 16px 14px;max-height:calc(100dvh - 24px);overflow-y:auto}
@@ -482,6 +486,7 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
     <div class="pagehead"><h1>Rang lista</h1>
       <div class="seg" id="rangSeg"><button data-m="danas" aria-pressed="true">DANAS</button><button data-m="ukupno" aria-pressed="false">UKUPNO</button></div></div>
     <div id="prizeRang"></div>
+    <div class="minrule" id="minRule">✅ Za dnevni plasman i nagradu moraš odigrati najmanje <b>70% duela</b> tog dana.</div>
     <div class="rules"><b>Rangiranje u slučaju istog broja poena:</b>
       <ol><li>Bolji procenat pogodaka</li><li>Najduži niz pogodaka zaredom</li><li>Ko je u proseku najbrže glasao od momenta izlaska duela</li><li>Ako je i to isto, igrači dele mesto</li></ol></div>
     <div class="board" id="board"></div>
@@ -715,6 +720,7 @@ function scorePicks(picks){let c=0,w=0,streak=0,best=0;const hist=[];
   for(const d of settled()){const p=picks&&picks[d.id];if(!p)continue;if(p===d.pobednik){c++;streak++;best=Math.max(best,streak);hist.push({d,p,r:'W'});}else{w++;streak=0;hist.push({d,p,r:'L'});}}
   return {pts:c,correct:c,wrong:w,streak,best,hist};}
 function scoreDay(picks,day){let c=0,w=0;for(const d of settled()){if(d.datum!==day)continue;const p=picks&&picks[d.id];if(!p)continue;if(p===d.pobednik)c++;else w++;}return {c,w};}
+const MIN_UDEO=0.7; // najmanje 70% duela u danu za plasman
 function standings(day){
   const inDay=id=>{const d=S.DUELS.find(x=>x.id===id);return d&&d.datum===day;};
   const done=settled().filter(d=>!day||d.datum===day);
@@ -726,9 +732,10 @@ function standings(day){
     const n=Object.keys(p.picks||{}).filter(id=>day?inDay(id):S.DUELS.some(x=>x.id===id)).length;
     return {uid,nick:(p.nick||'').trim(),avatar:p.avatar||null,c,w,n,best,lead:k?lead/k:Infinity};})
     .filter(x=>x.nick&&x.n>0)
-    .sort((a,b)=>b.c-a.c||(b.c/(b.c+b.w||1))-(a.c/(a.c+a.w||1))||b.best-a.best||a.lead-b.lead||a.nick.localeCompare(b.nick,'sr'));
+    .map(x=>{x.need=day?Math.ceil(done.length*MIN_UDEO):0;x.ok=!day||(x.c+x.w)>=x.need;return x;})
+    .sort((a,b)=>(b.ok-a.ok)||b.c-a.c||(b.c/(b.c+b.w||1))-(a.c/(a.c+a.w||1))||b.best-a.best||a.lead-b.lead||a.nick.localeCompare(b.nick,'sr'));
   // deljeno mesto kad je sve isto
-  list.forEach((x,i)=>{const q=list[i-1];x.rank=(q&&q.c===x.c&&q.w===x.w&&q.best===x.best&&(q.lead===x.lead||Math.abs(q.lead-x.lead)<1000))?q.rank:i+1;});
+  list.forEach((x,i)=>{if(!x.ok){x.rank=null;return;}const q=list[i-1];x.rank=(q&&q.ok&&q.c===x.c&&q.w===x.w&&q.best===x.best&&(q.lead===x.lead||Math.abs(q.lead-x.lead)<1000))?q.rank:i+1;});
   return list;
 }
 function crowd(d){let a=0,b=0;for(const p of Object.values(S.PLAYERS)){const v=p.picks&&p.picks[d.id];if(v==='a')a++;else if(v==='b')b++;}return {a,b,t:a+b};}
@@ -758,7 +765,8 @@ function heroHTML(d){
       <button class="pick${mine==='b'?' sel':mine?' off':''}" data-s="b" ${mine||locked?'disabled':''}>${esc(B.name)}</button>
     </div>
     ${(mine||locked)&&c.t?`<div class="split"><div class="bar"><i style="width:${pa}%"></i><i style="width:${100-pa}%"></i></div><div class="lbl"><span>${pa}%</span><span>${c.t} ${c.t%10===1&&c.t%100!==11?'prognoza':'prognoza'}</span><span>${100-pa}%</span></div></div>`
-      :!mine&&!locked?'<div class="hint">'+(d.rucno?'Glasanje se zatvara u sekundi kad duel krene. ':'')+'Tačna prognoza = 1 poen.</div>':!mine?'<div class="hint">Prognoze su zatvorene.</div>':''}
+      :!mine&&!locked?'<div class="hint">'+(d.rucno?'Glasanje se zatvara u sekundi kad duel krene. ':'')+'Tačna prognoza = 1 poen.</div>':''}
+    ${locked&&!d.pobednik?'<div class="closed">🔒 GLASANJE ZATVORENO</div>':''}
   </article>`;
 }
 function rowHTML(d){
@@ -884,13 +892,16 @@ let rangMode='danas';
 $('#rangSeg').onclick=e=>{const b=e.target.closest('button');if(!b)return;rangMode=b.dataset.m;$('#rangSeg').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));renderBoard();};
 function renderBoard(){
   if(!S.ready)return;const day=rangMode==='danas',list=standings(day?todayBG():null);
+  $('#minRule').hidden=!day;
   $('#prizeRang').innerHTML=`<div class="rule1"><span class="ic">🎯</span><span>1 POGOĐEN DUEL = <em>1 POEN</em></span></div>`+(S.LIGA==='elita'?'<div class="elinfo">★ RANG LISTA · '+esc(UP(LNAME.elita))+'</div>':'')+prizeHTML()+(S.LIGA==='elita'?`<div class="payinfo">💳 <span>Po završetku emisije, svakog dana u <b>23:30h</b>, isplaćujemo nagrade za prva 3 mesta na račune koje ste ostavili.</span> <button type="button" class="link" id="toPay">Upiši svoj račun</button></div>`:'');
   const tp=$('#toPay');if(tp)tp.onclick=()=>{go('profil',true);setTimeout(()=>{const f=$('#payForm');if(f)f.scrollIntoView({behavior:'smooth',block:'center'});},150);};
   const pz=prizes(),medal=r=>day&&r<=3&&pz[r-1]?`<span class="medal">${['🥇','🥈','🥉'][r-1]}</span>`:'';
+  let sep=false;
   $('#board').innerHTML=list.length?list.map(p=>{const tot=p.c+p.w;
-    return `<div class="brow${p.rank===1?' first':''}${p.uid===S.uid?' me':''}"><span class="rk">${p.rank}</span>${avHTML(p)}
+    const hd=!p.ok&&!sep?(sep=true,`<div class="nqh">Nisu odigrali 70% duela danas · van plasmana</div>`):'';
+    return hd+`<div class="brow${p.rank===1?' first':''}${p.uid===S.uid?' me':''}${p.ok?'':' nq'}"><span class="rk">${p.rank||'–'}</span>${avHTML(p)}
       <div style="min-width:0"><span class="un">${esc(p.nick)}${medal(p.rank)}</span>
-        <div class="bmeta">${tot?`<span>Odigrano <b>${tot}</b></span><span>Učinak <b>${Math.round(p.c/tot*100)}%</b></span><span>Niz <b>${p.best}</b></span>`:'<span>Čeka rezultat</span>'}</div></div>
+        <div class="bmeta">${tot?`<span>Odigrano <b>${tot}</b></span><span>Učinak <b>${Math.round(p.c/tot*100)}%</b></span><span>Niz <b>${p.best}</b></span>${p.ok?'':`<span class="need">treba još <b>${p.need-tot}</b></span>`}`:'<span>Čeka rezultat</span>'}</div></div>
       <span class="pt">${p.c}<small>poena</small></span></div>`;}).join('')
     :`<div class="empty">${day?'Danas još niko nije dao prognozu.':'Još niko nije dao prognozu.'}</div>`;
 }
