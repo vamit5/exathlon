@@ -790,9 +790,15 @@ function startLive(){try{
   if(liveCh)S.sb.removeChannel(liveCh);if(sigCh)S.sb.removeChannel(sigCh);
   const retry=st=>{if(['CHANNEL_ERROR','TIMED_OUT','CLOSED'].includes(st)){clearTimeout(liveT);liveT=setTimeout(startLive,2000);}};
   liveCh=S.sb.channel('exatlon').on('postgres_changes',{event:'*',schema:'public'},p=>queue(p.table));liveCh.subscribe(retry);
-  sigCh=S.sb.channel('exa-signal',{config:{broadcast:{self:false}}}).on('broadcast',{event:'refresh'},()=>{queue('duels');queue('picks');});sigCh.subscribe(retry);
+  sigCh=S.sb.channel('exa-signal',{config:{broadcast:{self:false,ack:false}}}).on('broadcast',{event:'refresh'},m=>{applyPing(m&&m.payload);queue('duels');queue('picks');});sigCh.subscribe(retry);
 }catch(e){console.warn(e);}}
-function ping(){try{sigCh&&sigCh.send({type:'broadcast',event:'refresh',payload:{t:Date.now()}});}catch(e){}}
+function ping(){try{if(!sigCh)return;const keys=['id','a','b','pocetak','vrsta','epizoda','napomena','pobednik','uzivo','rez_a','rez_b','tok','cilj','rucno','created_at'];
+  const duels=S.DUELS.slice(-60).map(d=>{const o={};keys.forEach(k=>{if(d[k]!==undefined)o[k]=d[k];});return o;});
+  sigCh.send({type:'broadcast',event:'refresh',payload:{t:Date.now(),duels,all:S.DUELS.length<=60}});}catch(e){}}
+function applyPing(p){if(!p||!Array.isArray(p.duels)||!S.ready)return;
+  const inc=p.duels.map(mapDuel),ids=new Set(inc.map(d=>d.id));
+  let list=p.all?inc:[...S.DUELS.filter(d=>!ids.has(d.id)),...inc];
+  S.DUELS=list.sort((a,b)=>startOf(a)-startOf(b));const sg=dataSig();if(sg!==lastSig){lastSig=sg;renderAll();checkWins();}}
 function wake(){if(!S.ready)return;queue('duels');queue('picks');
   const st=liveCh&&liveCh.state;if(st&&st!=='joined'&&st!=='joining'){clearTimeout(liveT);startLive();}}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')wake();});
@@ -1073,7 +1079,8 @@ $('#qGo').onclick=async()=>{
   if(!Q.a||!Q.b)return;const team=TEAM_ATH[Q.a]&&TEAM_ATH[Q.b];
   const vrsta=Q.kind!=='auto'?Q.kind:team?'Timska igra':'Pojedinačni duel';
   $('#qGo').disabled=true;
-  const row={a:Q.a,b:Q.b,pocetak:new Date(Date.now()+6*3600e3).toISOString(),vrsta,cilj:team?10:0,rucno:true};let ins=await S.sb.from('duels').insert(row);if(ins.error&&/rucno/.test(ins.error.message||'')){delete row.rucno;ins=await S.sb.from('duels').insert(row);}
+  const row={a:Q.a,b:Q.b,pocetak:new Date(Date.now()+6*3600e3).toISOString(),vrsta,cilj:team?10:0,rucno:true};let ins=await S.sb.from('duels').insert(row).select();if(ins.error&&/rucno/.test(ins.error.message||'')){delete row.rucno;ins=await S.sb.from('duels').insert(row).select();}
+  if(!ins.error&&ins.data&&ins.data[0]){S.DUELS=[...S.DUELS,mapDuel(ins.data[0])].sort((a,b)=>startOf(a)-startOf(b));ping();renderAll();}
   const ok=await w(Promise.resolve(ins),'Duel je objavljen · glasanje je otvoreno');
   if(ok){Q.a=Q.b=null;await loadDuels();renderAll();ping();scrollTo({top:0,behavior:'smooth'});}else $('#qGo').disabled=false;
 };
@@ -1232,7 +1239,7 @@ async function upload(a,inp){
   toast('Slika je sačuvana');await loadAthletes();renderAll();
 }
 async function adminAct(b){
-  const d=S.DUELS.find(x=>x.id===b.closest('[data-id]').dataset.id),act=b.dataset.act,q=v=>S.sb.from('duels').update(v).eq('id',d.id);
+  let last=null;const d=S.DUELS.find(x=>x.id===b.closest('[data-id]').dataset.id),act=b.dataset.act,q=v=>{last=v;return S.sb.from('duels').update(v).eq('id',d.id);};
   let ok=true;
   if(act==='win')ok=await w(q({pobednik:b.dataset.s,uzivo:false}),'Pobednik je označen');
   else if(act==='close'){b.disabled=true;ok=await w(q({pocetak:new Date().toISOString()}),'Glasanje je zatvoreno');}
@@ -1242,7 +1249,8 @@ async function adminAct(b){
   else if(act==='undo'){const tok=d.tok.slice(),l=tok.pop();if(!l)return;const k=l==='a'?'rez_a':'rez_b',c=l==='a'?d.rezA:d.rezB;ok=await w(q({[k]:Math.max(0,c-1),tok}));}
   else if(act==='del'){b.outerHTML='<button data-act="delok" class="danger">Obriši duel i sve prognoze za njega</button>';const n=document.querySelector(`.adr[data-id="${d.id}"] [data-act="delok"]`);n.onclick=()=>adminAct(n);return;}
   else if(act==='delok')ok=await w(S.sb.from('duels').delete().eq('id',d.id),'Duel je obrisan');
-  if(ok){await loadDuels();renderAll();ping();}
+  if(ok){if(act==='delok')S.DUELS=S.DUELS.filter(x=>x.id!==d.id);else if(last)S.DUELS=S.DUELS.map(x=>x.id===d.id?mapDuel({...x,...last}):x);
+    renderAll();ping();await loadDuels();renderAll();}
 }
 
 /* ================= KONFETE ZA POGODAK ================= */
@@ -1365,7 +1373,8 @@ $('#eliTop3').onclick=async e=>{const m=$('#eliTop3Msg');e.target.disabled=true;
 /* ================= PODACI ================= */
 async function fetchAll(t,cols){let out=[],f=0;for(;;){const {data,error}=await S.sb.from(t).select(cols).range(f,f+999);if(error)throw error;out=out.concat(data);if(data.length<1000)break;f+=1000;}return out;}
 async function loadAthletes(){const m={};(await fetchAll('athletes','*')).forEach(r=>{m[r.id]=toAthlete(r);});S.ATH=m;}
-async function loadDuels(){S.DUELS=(await fetchAll('duels','*')).map(r=>({...r,...bgParts(r.pocetak),rezA:r.rez_a||0,rezB:r.rez_b||0,tok:r.tok||[]})).sort((a,b)=>startOf(a)-startOf(b));}
+const mapDuel=r=>({...r,...bgParts(r.pocetak),rezA:r.rez_a||0,rezB:r.rez_b||0,tok:r.tok||[]});
+async function loadDuels(){S.DUELS=(await fetchAll('duels','*')).map(mapDuel).sort((a,b)=>startOf(a)-startOf(b));}
 async function loadPlayers(){
   const [pl,pk]=await Promise.all([fetchAll('players','id,nick,avatar').catch(()=>fetchAll('players','id,nick')),fetchAll('picks','player_id,duel_id,izbor,created_at,liga').catch(()=>fetchAll('picks','player_id,duel_id,izbor,created_at'))]);
   const M={otvorena:{},elita:{}};
@@ -1408,7 +1417,7 @@ async function boot(){
   splUntil=Date.now()+1600;
   go((location.hash||'#home').slice(1),false);
   if(!window.supabase){splashEnd();$('#home').innerHTML='<div class="empty">Veza nije uspela. Osveži stranicu.</div>';return;}
-  S.sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+  S.sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true},global:{fetch:(u,o)=>fetch(u,{...(o||{}),cache:'no-store'})},realtime:{params:{eventsPerSecond:20}}});
   const {data:{session}}=await S.sb.auth.getSession();
   if(session){const u=session.user;S.uid=u.id;S.anon=!!u.is_anonymous;S.email=(u.email||'').toLowerCase();S.admin=!S.anon&&S.email===ADMIN_EMAIL;}
   if(!session||S.anon){showLogin();splashEnd();}
