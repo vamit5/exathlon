@@ -334,6 +334,19 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
 .payinfo b{color:#ffcf5a}
 .rule1{display:flex;align-items:center;justify-content:center;gap:10px;margin:0 0 14px;padding:12px 14px;border-radius:14px;background:linear-gradient(90deg,rgba(255,59,43,.18),rgba(255,122,26,.12));border:1px solid rgba(255,122,26,.5);font-family:var(--display);font-weight:800;font-size:22px;letter-spacing:.04em;text-align:center;line-height:1.1}
 .rule1 .ic{font-size:24px}.rule1 em{font-style:normal;color:#ff9a4a}
+.box.lk{position:relative;gap:0;padding:30px 22px 22px}
+.lkx{position:absolute;top:10px;right:10px;width:36px;height:36px;border-radius:50%;color:var(--dim);font-size:18px}.lkx:hover{color:var(--text);background:var(--panel2)}
+.lkic{font-size:34px;line-height:1}.lksub{margin-top:10px;font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--dim)}
+.box.lk h2{margin:2px 0 0;font-size:32px}
+.lktx{margin:16px 0 0!important;padding-top:16px;border-top:1px solid rgba(255,176,32,.2);white-space:pre-line;font-size:16px;line-height:1.55;color:var(--text)}
+.lktx:empty{display:none}
+.pzmini{margin-top:18px;padding:12px;border-radius:12px;background:rgba(0,0,0,.28);border:1px solid rgba(255,176,32,.3)}
+.pzmini .t{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#ffcf5a;margin-bottom:8px}
+.pzmini .r{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.pzmini .r span{display:grid;padding:6px 4px;border-radius:8px;background:var(--panel2);font-family:var(--display);font-weight:800;font-size:20px;line-height:1.1}
+.pzmini .r small{font-family:var(--body);font-weight:600;font-size:11px;color:var(--dim)}
+.lkbtn{display:grid;gap:8px;margin-top:18px}.lkbtn:empty{display:none}.lkbtn p{margin:0;font-size:13px;color:#ffcf5a}
+.lknote{font-size:12px!important;color:var(--dim)!important}
 .pop .prize{margin:0;flex-direction:column;align-items:center;text-align:center}.pop .prize .ps{justify-content:center;flex-wrap:wrap}
 .payinfo .link{padding:0;font-size:14px;text-align:left}
 .rules{margin:-6px 0 14px;padding:12px 14px;border-radius:var(--r);background:var(--panel);border:1px solid var(--line);font-size:13px;color:var(--dim);line-height:1.5}
@@ -514,7 +527,7 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
         <label class="fl">Naziv zaključane lige<input class="inp" id="lgN2" maxlength="22" required></label></div>
         <label class="fl">Tekst prozora kad neko klikne na zaključanu ligu<textarea class="inp" id="lgTx" rows="5" maxlength="600" style="height:auto;padding:10px;resize:vertical;font:inherit;font-size:15px;line-height:1.45"></textarea></label>
         <label class="chk"><input type="checkbox" id="lgReq"><span>U prozoru prikaži dugme <b>ZATRAŽI PRISTUP</b></span></label>
-        <button class="btn" type="submit">SAČUVAJ</button><p class="msg" id="lgMsg" style="margin:0"></p></form>
+        <div class="inline"><button class="btn" type="submit" style="flex:1">SAČUVAJ</button><button class="btn ghost" type="button" id="lgPrev">POGLEDAJ PROZOR</button></div><p class="msg" id="lgMsg" style="margin:0"></p></form>
       <div class="apanel"><h3>Top 3 dana</h3>
         <label class="chk"><input type="checkbox" id="lgAuto"><span><b>Automatski pusti top 3</b> iz prve lige svakog radnog dana u 23:45h, do kraja sledećeg dana emisije. Kad je isključeno, pristup daješ samo ti.</span></label>
         <p class="muted" style="margin:0">Ili ručno, jednim klikom:</p>
@@ -592,7 +605,13 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
 <canvas id="confetti" aria-hidden="true"></canvas>
 <div class="winbanner" id="winBanner" hidden role="status" aria-live="polite"><b>POGODAK!</b><span id="winText"></span></div>
 <div class="pop" id="eliPop" hidden role="dialog" aria-modal="true" aria-labelledby="eliPopT"><div class="box"><div class="big">🏆</div><h2 id="eliPopT">ELITNA LIGA</h2><p id="eliPopTx"></p><button class="btn gold" id="eliPopGo" type="button">IGRAJ ELITNU LIGU</button><button class="btn ghost" id="eliPopX" type="button">Kasnije</button></div></div>
-<div class="pop" id="lockPop" hidden role="dialog" aria-modal="true" aria-labelledby="lockPopT"><div class="box"><div class="big">🔒</div><h2 id="lockPopT"></h2><p id="lockPopTx" style="white-space:pre-line"></p><div id="lockPopPz"></div><div id="lockPopBtn" style="display:grid;gap:10px"></div><button class="btn ghost" id="lockPopX" type="button">Zatvori</button></div></div>
+<div class="pop" id="lockPop" hidden role="dialog" aria-modal="true" aria-labelledby="lockPopT"><div class="box lk">
+  <button class="lkx" id="lockPopX" type="button" aria-label="Zatvori">✕</button>
+  <div class="lkic">🔒</div><div class="lksub">Zaključana liga</div><h2 id="lockPopT"></h2>
+  <p class="lktx" id="lockPopTx"></p>
+  <div id="lockPopPz"></div>
+  <div class="lkbtn" id="lockPopBtn"></div>
+</div></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
@@ -1138,19 +1157,25 @@ S.LIGE={...LIGE_DEF};
 const LNAME={get otvorena(){return S.LIGE.otvorena||LIGE_DEF.otvorena;},get elita(){return S.LIGE.elita||LIGE_DEF.elita;}};
 const UP=t=>t.toLocaleUpperCase('sr-Latn');
 async function loadLige(){try{const {data}=await S.sb.from('meta').select('value').eq('key','lige').maybeSingle();S.LIGE={...LIGE_DEF,...((data&&data.value)||{})};}catch(e){}applyLiga();}
-function lockPop(){const e=S.ELITA;$('#lockPopT').textContent=UP(LNAME.elita);$('#lockPopTx').textContent=S.LIGE.tekst||'';$('#lockPopPz').innerHTML=prizeBox(S.NAG.elita);
-  let b='';if(S.LIGE.zahtev!==false){
+function prizeMini(n){n=n||{};const p=[+n.prvo||0,+n.drugo||0,+n.trece||0],c=esc(n.valuta||'€');if(!p.some(Boolean))return '';
+  return `<div class="pzmini"><div class="t">🏆 Dnevne nagrade za prva 3 mesta</div><div class="r">${p.map((v,i)=>`<span><small>${['🥇','🥈','🥉'][i]} ${i+1}. mesto</small>${(+v).toLocaleString('sr-Latn-RS',{maximumFractionDigits:2})} ${c}</span>`).join('')}</div></div>`;}
+function lockPop(){const e=S.ELITA;$('#lockPopT').textContent=UP(LNAME.elita);$('#lockPopTx').textContent=(S.LIGE.tekst||'').trim();$('#lockPopPz').innerHTML=prizeMini(S.NAG.elita);
+  let b='';
+  if(S.admin)b='<button class="btn gold" id="lpAdm" type="button">UĐI U LIGU (ADMIN)</button><p class="lknote">Ovaj prozor vide igrači bez pristupa. Tekst menjaš u Admin → ELITA.</p>';
+  else if(S.LIGE.zahtev!==false){
     if(!S.uid||S.anon)b='<button class="btn gold" id="lpReg" type="button">NAPRAVI NALOG BESPLATNO</button>';
-    else if(e&&e.status==='zahtev')b='<button class="btn gold" type="button" disabled>ZAHTEV POSLAT · ČEKA ODOBRENJE</button>';
-    else b=(e&&e.status==='odobren'?'<p style="margin:0;color:#ffcf5a">Tvoj pristup je istekao.</p>':'')+'<button class="btn gold" id="lpAsk" type="button">ZATRAŽI PRISTUP</button>';}
-  $('#lockPopBtn').innerHTML=b;const a=$('#lpAsk'),r=$('#lpReg');
+    else if(e&&e.status==='zahtev')b='<button class="btn gold" type="button" disabled>ZAHTEV POSLAT ✓</button><p class="lknote">Javićemo ti kad te admin odobri.</p>';
+    else b=(e&&e.status==='odobren'?'<p>Tvoj pristup je istekao.</p>':'')+'<button class="btn gold" id="lpAsk" type="button">ZATRAŽI PRISTUP</button>';}
+  $('#lockPopBtn').innerHTML=b;const a=$('#lpAsk'),r=$('#lpReg'),ad=$('#lpAdm');
+  if(ad)ad.onclick=()=>{$('#lockPop').hidden=true;S.LIGA='elita';store.set('liga','elita');applyLiga();lastSig=dataSig();renderAll();};
   if(r)r.onclick=()=>$('#toRegister').click();
   if(a)a.onclick=async()=>{a.disabled=true;const {error}=await S.sb.from('elita').upsert({player_id:S.uid,status:'zahtev',vazi_do:null,izvor:'zahtev',updated_at:new Date().toISOString()});
     if(error){console.warn(error);a.disabled=false;toast('Zahtev nije poslat. Pokušaj ponovo.');return;}toast('Zahtev je poslat');await loadElita();lockPop();};
   $('#lockPop').hidden=false;}
-$('#lockPopX').onclick=()=>{$('#lockPop').hidden=true;};
+$('#lockPopX').onclick=()=>{$('#lockPop').hidden=true;};$('#lockPop').onclick=e=>{if(e.target.id==='lockPop')$('#lockPop').hidden=true;};
 $('#ligeForm').onsubmit=async e=>{e.preventDefault();const v={...S.LIGE,otvorena:$('#lgN1').value.trim()||LIGE_DEF.otvorena,elita:$('#lgN2').value.trim()||LIGE_DEF.elita,tekst:$('#lgTx').value.trim(),zahtev:$('#lgReq').checked};
   if(await w(S.sb.from('meta').upsert({key:'lige',value:v}),'Sačuvano')){S.LIGE=v;$('#lgMsg').className='msg ok';$('#lgMsg').textContent='Sačuvano.';applyLiga();renderAll();}};
+$('#lgPrev').onclick=()=>{const t=S.LIGE.tekst;S.LIGE.tekst=$('#lgTx').value;lockPop();S.LIGE.tekst=t;$('#lockPopT').textContent=UP($('#lgN2').value.trim()||LNAME.elita);};
 $('#lgAuto').onchange=async e=>{const v={...S.LIGE,auto_top3:e.target.checked};
   if(await w(S.sb.from('meta').upsert({key:'lige',value:v}),e.target.checked?'Top 3 ulaze automatski':'Automatski ulaz isključen'))S.LIGE=v;else e.target.checked=!e.target.checked;};
 function hasElite(e=S.ELITA){return !!(e&&e.status==='odobren'&&(!e.vazi_do||Date.parse(e.vazi_do)>Date.now()));}
@@ -1160,7 +1185,7 @@ function applyLiga(){if(S.elOk&&S.LIGA==='elita'&&!hasElite()&&!S.admin){S.LIGA=
   document.body.classList.toggle('elita',L==='elita');
   $('#ligaSeg').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.l===L));$('#ligaLock').hidden=hasElite();}
 function setLiga(L){if(L==='elita'&&!hasElite()&&!S.admin)return lockPop();if(L===S.LIGA)return;S.LIGA=L;store.set('liga',L);applyLiga();lastSig=dataSig();renderAll();}
-$('#ligaSeg').onclick=e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.l==='elita'&&!hasElite()&&!S.admin){lockPop();return;}setLiga(b.dataset.l);};
+$('#ligaSeg').onclick=e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.l==='elita'&&S.LIGA!=='elita'&&!hasElite()){lockPop();return;}setLiga(b.dataset.l);};
 async function loadElita(){S.ELITA=null;S.ELALL=[];if(!S.uid||S.anon){S.elOk=true;applyLiga();return;}
   try{const {data,error}=await S.sb.from('elita').select('*');if(error)throw error;S.ELALL=data||[];S.ELITA=S.ELALL.find(r=>r.player_id===S.uid)||null;}catch(e){}S.elOk=true;
   applyLiga();if(S.ready)checkElitaPop();}
