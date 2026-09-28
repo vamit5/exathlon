@@ -345,6 +345,17 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
 .cdbar{width:100%;max-width:320px;height:6px;border-radius:99px;background:var(--panel2);overflow:hidden}.cdbar i{display:block;height:100%;background:var(--hot);transition:width 1s linear}
 .cds{font-size:13px;color:var(--metal)}.cds b{color:#fff}
 @media (prefers-reduced-motion:reduce){.cdot,.cdt.last{animation:none}}
+.stCard{padding:14px;margin-bottom:10px;border-radius:14px;background:var(--panel);border:1px solid var(--line)}
+.stCard:first-of-type{border-color:rgba(255,176,32,.45);background:linear-gradient(160deg,rgba(255,176,32,.1),var(--panel) 60%)}
+.stH{font-family:var(--display);font-weight:800;font-size:18px;letter-spacing:.06em;color:#ffcf5a;margin-bottom:8px;text-transform:uppercase}
+.stTag{display:inline-block;padding:4px 10px;border-radius:99px;font-size:12px;font-weight:800;letter-spacing:.06em}
+.stTag.ok{background:rgba(52,211,127,.15);color:var(--win)}.stTag.wait{background:rgba(255,176,32,.15);color:#ffcf5a}.stTag.off{background:var(--panel2);color:var(--dim)}
+.stGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.stGrid>div{padding:8px 10px;border-radius:10px;background:var(--panel2)}
+.stGrid small,.stLeft small{display:block;font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.08em}.stGrid b{font-size:15px}
+.stLeft{margin-top:10px;padding:10px;border-radius:10px;background:var(--panel2);display:grid;gap:6px}
+.stLeft b{font-family:var(--display);font-weight:800;font-size:30px;font-variant-numeric:tabular-nums;line-height:1}.stLeft b.low{color:var(--loss)}.stLeft .cdbar{max-width:none}
+.stBig{font-family:var(--display);font-weight:800;font-size:40px;line-height:1;color:#ffcf5a}
+.stMed{display:flex;gap:14px;margin-top:10px;font-weight:700}
 .rule1{display:flex;align-items:center;justify-content:center;gap:10px;margin:0 0 14px;padding:12px 14px;border-radius:14px;background:linear-gradient(90deg,rgba(255,59,43,.18),rgba(255,122,26,.12));border:1px solid rgba(255,122,26,.5);font-family:var(--display);font-weight:800;font-size:22px;letter-spacing:.04em;text-align:center;line-height:1.1}
 .rule1 .ic{font-size:24px}.rule1 em{font-style:normal;color:#ff9a4a}
 .box.lk{position:relative;gap:0;padding:16px 16px 14px;max-height:calc(100dvh - 24px);overflow-y:auto}
@@ -477,6 +488,7 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
   <section class="screen" id="s-profil">
     <div class="phead"><label class="avatar avup" id="pAv" title="Promeni profilnu sliku">?<input type="file" accept="image/*" id="avIn" aria-label="Profilna slika"></label><div style="min-width:0"><h1 id="pName">Igrač</h1><div class="muted" id="pSub"></div></div></div>
     <div class="stats" id="pStats"></div>
+    <div id="myStatus"></div>
     <div class="sec">Ime u igri</div>
     <form class="inline" id="nickForm"><input class="inp" id="nickIn" maxlength="16" style="flex:1" aria-label="Ime u igri"><button class="btn ghost" type="submit">SAČUVAJ</button></form>
     <p class="msg" id="nickMsg"></p>
@@ -890,7 +902,7 @@ function renderProfile(){
   const me=scorePicks(S.myPicks),t=scoreDay(S.myPicks,todayBG()),rkE=standings(null).find(p=>p.uid===S.uid),rk=rkE?rkE.rank-1:-1;
   const nick=S.nick||'Igrač';$('#pName').textContent=nick;
   const meP=S.PLAYERS[S.uid]||{},av=$('#pAv'),inp=$('#avIn');av.textContent='';if(meP.avatar){const i=new Image();i.src=meP.avatar;i.alt='';av.appendChild(i);}else av.append(nick[0].toUpperCase());av.appendChild(inp);
-  renderMyPrizes();fillPay();
+  renderMyPrizes();fillPay();renderStatus();
   $('#pSub').textContent=S.anon?'Gost · prognoze su sačuvane samo na ovom uređaju':(S.email||'');
   if(document.activeElement!==$('#nickIn'))$('#nickIn').value=S.nick||'';
   const tot=me.correct+me.wrong;
@@ -902,10 +914,43 @@ function renderProfile(){
   $('#toRegister').hidden=!S.anon;
   $('#podBox').hidden=!S.uid||S.anon;$('#pPod').checked=S.POD!==false;
 }
+/* ===== moj status: pristup elitnoj ligi + zarada ===== */
+function eliteEarnings(){if(!S.uid)return {won:0,paid:0,wait:0,n:[0,0,0]};
+  const keep={L:S.LIGA,P:S.PLAYERS,N:S.NAGRADE};S.LIGA='elita';S.PLAYERS=S.PL.elita||{};S.NAGRADE=S.NAG.elita||null;
+  let won=0,today=todayBG(),wait=0;const n=[0,0,0];
+  try{for(const g of winnersByDay()){const me=g.list.find(x=>x.uid===S.uid);if(!me)continue;won+=me.iznos;n[me.rank-1]++;const pd=((S.ISP.elita||{}).mine||{})[g.day];if(!pd&&g.day!==today)wait+=me.iznos;}}
+  finally{S.LIGA=keep.L;S.PLAYERS=keep.P;S.NAGRADE=keep.N;}
+  const paid=Object.values(((S.ISP.elita||{}).mine)||{}).reduce((a,r)=>a+(+r.iznos||0),0);
+  return {won,paid,wait,n};}
+function leftTxt(ms){if(ms<=0)return 'isteklo';const s=Math.floor(ms/1000),d=Math.floor(s/86400),h=Math.floor(s%86400/3600),m=Math.floor(s%3600/60),x=s%60;
+  return (d?d+'d ':'')+String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(x).padStart(2,'0');}
+function dtTxt(iso){const t=bgParts(iso);return shortDate(t.datum)+' u '+t.vreme+'h';}
+function renderStatus(){const box=$('#myStatus');if(!box)return;if(!S.uid||S.anon){box.innerHTML='';return;}
+  const e=S.ELITA,has=!!e&&hasElite(e),nm=esc(LNAME.elita),c=(S.NAG.elita&&S.NAG.elita.valuta)||'€',mo=v=>`${(+v).toLocaleString('sr-Latn-RS',{maximumFractionDigits:2})} ${esc(c)}`;
+  let acc;
+  if(has){const od=e.updated_at||e.created_at;
+    acc=`<div class="stRow"><span class="stTag ok">● AKTIVAN</span></div>
+      <div class="stGrid"><div><small>Od</small><b>${od?dtTxt(od):'–'}</b></div><div><small>Do</small><b>${e.vazi_do?dtTxt(e.vazi_do):'bez roka'}</b></div></div>
+      ${e.vazi_do?`<div class="stLeft"><small>Preostalo</small><b id="stCd" data-to="${Date.parse(e.vazi_do)}" data-from="${Date.parse(od||e.vazi_do)}">${leftTxt(Date.parse(e.vazi_do)-Date.now())}</b><div class="cdbar"><i id="stBar"></i></div></div>`:'<div class="stLeft"><small>Preostalo</small><b>∞ stalni član</b></div>'}`;}
+  else if(e&&e.status==='zahtev')acc=`<div class="stRow"><span class="stTag wait">● ZAHTEV POSLAT</span></div><p class="muted" style="margin:6px 0 0">Čeka se odobrenje admina.</p>`;
+  else acc=`<div class="stRow"><span class="stTag off">● NEMAŠ PRISTUP</span></div>${e&&e.status==='odobren'&&e.vazi_do?`<p class="muted" style="margin:6px 0 0">Pristup je istekao ${dtTxt(e.vazi_do)}.</p>`:''}<button class="btn gold small" type="button" id="stAsk" style="margin-top:10px">🔒 SAZNAJ KAKO DO PRISTUPA</button>`;
+  const E=eliteEarnings();
+  box.innerHTML=`<div class="sec">Moj status</div>
+    <div class="stCard"><div class="stH">★ ${nm}</div>${acc}</div>
+    <div class="stCard"><div class="stH">💰 Zarada</div>
+      <div class="stBig">${mo(E.won)}</div><small class="muted">ukupno osvojeno</small>
+      <div class="stGrid" style="margin-top:10px"><div><small>Isplaćeno</small><b style="color:var(--win)">${mo(E.paid)}</b></div><div><small>Čeka isplatu</small><b style="color:#ffcf5a">${mo(E.wait)}</b></div></div>
+      <div class="stMed"><span>🥇 ${E.n[0]}</span><span>🥈 ${E.n[1]}</span><span>🥉 ${E.n[2]}</span></div></div>`;
+  const a=$('#stAsk');if(a)a.onclick=()=>lockPop();tickStatus();}
+function tickStatus(){const el=$('#stCd');if(!el)return;const to=+el.dataset.to,from=+el.dataset.from,now=Date.now(),left=to-now;
+  el.textContent=leftTxt(left);el.classList.toggle('low',left<3600e3);const b=$('#stBar');if(b)b.style.width=Math.max(0,Math.min(100,left/Math.max(1,to-from)*100))+'%';
+  if(left<=0&&!el.dataset.done){el.dataset.done=1;applyLiga();renderAll();}}
+setInterval(()=>{if(current==='profil')tickStatus();},1000);
 function renderMyPrizes(){
-  const today=todayBG(),rows=[];
-  for(const g of winnersByDay()){const me=g.list.find(x=>x.uid===S.uid);if(!me)continue;const paid=S.ISPLATE[g.day];
-    rows.push(`<div class="win"><span class="mk">${['🥇','🥈','🥉'][me.rank-1]}</span><div class="who"><b>${shortDate(g.day)} · ${me.rank}. mesto</b><small>${money(paid?paid.iznos:me.iznos)}</small></div>${g.day===today?'<span class="tag wait">Dan još traje</span>':paid?`<span class="tag ok">Isplaćeno ✓</span>`:'<span class="tag wait">Čeka isplatu</span>'}</div>`);}
+  const today=todayBG(),rows=[],keep={L:S.LIGA,P:S.PLAYERS,N:S.NAGRADE,I:S.ISPLATE};
+  S.LIGA='elita';S.PLAYERS=S.PL.elita||{};S.NAGRADE=S.NAG.elita||null;S.ISPLATE=((S.ISP.elita||{}).mine)||{};
+  try{for(const g of winnersByDay()){const me=g.list.find(x=>x.uid===S.uid);if(!me)continue;const paid=S.ISPLATE[g.day];
+    rows.push(`<div class="win"><span class="mk">${['🥇','🥈','🥉'][me.rank-1]}</span><div class="who"><b>${shortDate(g.day)} · ${me.rank}. mesto</b><small>${money(paid?paid.iznos:me.iznos)}</small></div>${g.day===today?'<span class="tag wait">Dan još traje</span>':paid?`<span class="tag ok">Isplaćeno ✓</span>`:'<span class="tag wait">Čeka isplatu</span>'}</div>`);}}finally{S.LIGA=keep.L;S.PLAYERS=keep.P;S.NAGRADE=keep.N;S.ISPLATE=keep.I;}
   $('#myPrizes').innerHTML=rows.join('')||'<div class="empty">Budi među prva 3 za dan i osvoji nagradu.</div>';
 }
 function fillPay(){if(S.payFilled||!S.PAY)return;S.payFilled=true;$('#pyIme').value=S.PAY.ime_prezime||'';$('#pyRacun').value=S.PAY.racun||'';$('#pyBanka').value=S.PAY.banka||'';$('#pyNap').value=S.PAY.napomena||'';}
