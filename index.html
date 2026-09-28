@@ -336,6 +336,15 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
 .cp.ok{background:var(--win);color:#000;border-color:transparent}
 .payinfo{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;margin:-6px 0 14px;padding:10px 14px;border-radius:var(--r);background:var(--panel);border:1px solid rgba(255,176,32,.35);font-size:14px;color:var(--metal);line-height:1.45}
 .payinfo b{color:#ffcf5a}
+.cdown{display:grid;justify-items:center;gap:6px;margin:0 0 14px;padding:16px 14px 14px;border-radius:16px;text-align:center;background:radial-gradient(ellipse at 50% 0%,rgba(255,59,43,.28),transparent 70%),var(--panel);border:1px solid rgba(255,59,43,.55);box-shadow:0 0 40px rgba(255,59,43,.18)}
+.cdl{display:flex;align-items:center;gap:8px;font-family:var(--display);font-weight:800;font-size:16px;letter-spacing:.14em;color:#ff9a8f}
+.cdot{width:10px;height:10px;border-radius:50%;background:#ff3b2b;box-shadow:0 0 12px #ff3b2b;animation:cdp 1s infinite}
+@keyframes cdp{50%{opacity:.25}}
+.cdt{font-family:var(--display);font-weight:800;font-size:72px;line-height:1;letter-spacing:.04em;font-variant-numeric:tabular-nums;background:linear-gradient(180deg,#fff,#ffb27a);-webkit-background-clip:text;background-clip:text;color:transparent}
+.cdt.last{animation:cdz .5s infinite alternate}@keyframes cdz{to{transform:scale(1.08)}}
+.cdbar{width:100%;max-width:320px;height:6px;border-radius:99px;background:var(--panel2);overflow:hidden}.cdbar i{display:block;height:100%;background:var(--hot);transition:width 1s linear}
+.cds{font-size:13px;color:var(--metal)}.cds b{color:#fff}
+@media (prefers-reduced-motion:reduce){.cdot,.cdt.last{animation:none}}
 .rule1{display:flex;align-items:center;justify-content:center;gap:10px;margin:0 0 14px;padding:12px 14px;border-radius:14px;background:linear-gradient(90deg,rgba(255,59,43,.18),rgba(255,122,26,.12));border:1px solid rgba(255,122,26,.5);font-family:var(--display);font-weight:800;font-size:22px;letter-spacing:.04em;text-align:center;line-height:1.1}
 .rule1 .ic{font-size:24px}.rule1 em{font-style:normal;color:#ff9a4a}
 .box.lk{position:relative;gap:0;padding:16px 16px 14px;max-height:calc(100dvh - 24px);overflow-y:auto}
@@ -750,6 +759,18 @@ function resHTML(d){
   return `<div class="res"><span class="muted d">${shortDate(d.datum)}</span><span class="n ${d.pobednik==='a'?'':'l'}">${esc(A.name)}</span><span class="s">${sc}</span><span class="n b ${d.pobednik==='b'?'':'l'}">${esc(B.name)}</span><span class="m ${mine?(mine===d.pobednik?'W':'L'):''}">${mine?(mine===d.pobednik?'✓':'✕'):''}</span></div>`;
 }
 let showAllRes=false;
+/* odbrojavanje 10 min pre emisije (pon–pet 21:20–21:30) */
+const CD_FMT=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Belgrade',weekday:'short',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+function cdLeft(){const p=CD_FMT.formatToParts(new Date()),g=k=>(p.find(x=>x.type===k)||{}).value;
+  const wd=g('weekday'),h=+g('hour')%24,m=+g('minute'),sec=+g('second');if(!['Mon','Tue','Wed','Thu','Fri'].includes(wd))return -1;
+  const left=(21*3600+30*60)-(h*3600+m*60+sec);return left>0&&left<=600?left:-1;}
+const cdTxt=l=>`${String(Math.floor(l/60)).padStart(2,'0')}:${String(l%60).padStart(2,'0')}`;
+function cdHTML(){const l=cdLeft();if(l<0)return '';
+  return `<div class="cdown"><div class="cdl"><span class="cdot"></span>EXATLON POČINJE ZA</div><div class="cdt" id="cdT">${cdTxt(l)}</div><div class="cdbar"><i id="cdB" style="width:${l/6}%"></i></div><div class="cds">Uživo u <b>21:30h</b> · budi spreman, prvi duel stiže u sekundi!</div></div>`;}
+let cdShown=false;
+setInterval(()=>{if(current!=='home'||!S.ready)return;const l=cdLeft(),el=$('#cdT');
+  if((l>=0)!==!!el){renderHome();return;}
+  if(el){el.textContent=cdTxt(l);const b=$('#cdB');if(b)b.style.width=(l/6)+'%';el.classList.toggle('last',l<=10);}},1000);
 function renderHome(){
   const box=$('#home');if(!S.ready)return;
   const open=S.DUELS.filter(d=>!d.pobednik).sort((a,b)=>(!!b.uzivo-!!a.uzivo)||startOf(a)-startOf(b));
@@ -757,7 +778,7 @@ function renderHome(){
   const rest=open.filter(d=>d!==heroD);
   const res=settled().slice().reverse();
   const today=todayBG(),mine=scoreDay(S.myPicks,today);
-  let h=`<div class="rule1"><span class="ic">🎯</span><span>1 POGOĐEN DUEL = <em>1 POEN</em></span></div>`+(S.LIGA==='elita'?`<div class="elinfo">★ ${esc(UP(LNAME.elita))} · ${S.admin&&!hasElite()?'pregled (admin)':vaziTxt(S.ELITA)}</div>`:'')+prizeHTML();
+  let h=cdHTML()+`<div class="rule1"><span class="ic">🎯</span><span>1 POGOĐEN DUEL = <em>1 POEN</em></span></div>`+(S.LIGA==='elita'?`<div class="elinfo">★ ${esc(UP(LNAME.elita))} · ${S.admin&&!hasElite()?'pregled (admin)':vaziTxt(S.ELITA)}</div>`:'')+prizeHTML();
   if(heroD){
     h+=`<div class="sec">${heroD.uzivo?'Uživo':isLocked(heroD)?'U toku':'Sledeći duel'}${S.uid&&(mine.c+mine.w)?`<small>Danas: ${mine.c} od ${mine.c+mine.w} pogođeno</small>`:''}</div>${heroHTML(heroD)}`;
   }else{const t=bgParts(Date.now()).vreme,wd=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].indexOf(new Intl.DateTimeFormat('en-US',{timeZone:'Europe/Belgrade',weekday:'short'}).format(new Date())),
