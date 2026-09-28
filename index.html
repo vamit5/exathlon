@@ -789,9 +789,27 @@ let liveCh=null,sigCh=null,liveT=0;
 function startLive(){try{
   if(liveCh)S.sb.removeChannel(liveCh);if(sigCh)S.sb.removeChannel(sigCh);
   const retry=st=>{if(['CHANNEL_ERROR','TIMED_OUT','CLOSED'].includes(st)){clearTimeout(liveT);liveT=setTimeout(startLive,2000);}};
-  liveCh=S.sb.channel('exatlon').on('postgres_changes',{event:'*',schema:'public'},p=>queue(p.table));liveCh.subscribe(retry);
+  liveCh=S.sb.channel('exatlon').on('postgres_changes',{event:'*',schema:'public'},onDb);liveCh.subscribe(retry);
   sigCh=S.sb.channel('exa-signal',{config:{broadcast:{self:false,ack:false}}}).on('broadcast',{event:'refresh'},m=>{applyPing(m&&m.payload);queue('duels');queue('picks');});sigCh.subscribe(retry);
 }catch(e){console.warn(e);}}
+/* promene iz baze primenjujemo odmah, bez ponovnog učitavanja svega */
+let fastT=0;function fastRender(){cancelAnimationFrame(fastT);fastT=requestAnimationFrame(()=>{const sg=dataSig();if(sg===lastSig)return;lastSig=sg;renderAll();checkWins();});}
+function addPick(x){if(!x||!x.player_id||!x.duel_id)return;const L=x.liga==='elita'?'elita':'otvorena',m=S.PL[L]||(S.PL[L]={});
+  const e=m[x.player_id]||(m[x.player_id]={nick:(S.PL.otvorena[x.player_id]||{}).nick||'',avatar:(S.PL.otvorena[x.player_id]||{}).avatar||null,picks:{},at:{}});
+  e.picks[x.duel_id]=x.izbor;e.at[x.duel_id]=Date.parse(x.created_at||new Date().toISOString());
+  const t=Date.parse(x.created_at||0);if(t>(S.lastPickAt||0))S.lastPickAt=t;}
+function onDb(p){if(!S.ready)return;const n=p.new||{},o=p.old||{};
+  if(p.table==='duels'){if(p.eventType==='DELETE')S.DUELS=S.DUELS.filter(d=>d.id!==o.id);
+    else if(n.id){const d=mapDuel(n);S.DUELS=[...S.DUELS.filter(x=>x.id!==d.id),d].sort((a,b)=>startOf(a)-startOf(b));}
+    applyLiga();fastRender();return;}
+  if(p.table==='picks'){if(p.eventType==='DELETE'){queue('picks');return;}addPick(n);applyLiga();fastRender();return;}
+  queue(p.table);}
+/* nove prognoze od poslednje provere (lagano, za vreme emisije) */
+async function loadPicksDelta(){if(!S.lastPickAt){return loadPlayers();}
+  const since=new Date(S.lastPickAt-5000).toISOString();
+  let r=await S.sb.from('picks').select('player_id,duel_id,izbor,created_at,liga').gt('created_at',since).limit(1000);
+  if(r.error)r=await S.sb.from('picks').select('player_id,duel_id,izbor,created_at').gt('created_at',since).limit(1000);
+  if(r.error)return;(r.data||[]).forEach(addPick);applyLiga();}
 function ping(){try{if(!sigCh)return;const keys=['id','a','b','pocetak','vrsta','epizoda','napomena','pobednik','uzivo','rez_a','rez_b','tok','cilj','rucno','created_at'];
   const duels=S.DUELS.slice(-60).map(d=>{const o={};keys.forEach(k=>{if(d[k]!==undefined)o[k]=d[k];});return o;});
   sigCh.send({type:'broadcast',event:'refresh',payload:{t:Date.now(),duels,all:S.DUELS.length<=60}});}catch(e){}}
@@ -1241,7 +1259,7 @@ async function upload(a,inp){
 async function adminAct(b){
   let last=null;const d=S.DUELS.find(x=>x.id===b.closest('[data-id]').dataset.id),act=b.dataset.act,q=v=>{last=v;return S.sb.from('duels').update(v).eq('id',d.id);};
   let ok=true;
-  if(act==='win')ok=await w(q({pobednik:b.dataset.s,uzivo:false}),'Pobednik je označen');
+  if(act==='win')ok=await w(q({pobednik:b.dataset.s,uzivo:false,...(startOf(d)>Date.now()?{pocetak:new Date().toISOString()}:{})}),'Pobednik je označen');
   else if(act==='close'){b.disabled=true;ok=await w(q({pocetak:new Date().toISOString()}),'Glasanje je zatvoreno');}
   else if(act==='clear')ok=await w(q({pobednik:null}),'Poništeno');
   else if(act==='live')ok=await w(q({uzivo:!d.uzivo}));
@@ -1379,14 +1397,14 @@ async function loadPlayers(){
   const [pl,pk]=await Promise.all([fetchAll('players','id,nick,avatar').catch(()=>fetchAll('players','id,nick')),fetchAll('picks','player_id,duel_id,izbor,created_at,liga').catch(()=>fetchAll('picks','player_id,duel_id,izbor,created_at'))]);
   const M={otvorena:{},elita:{}};
   for(const L in M)pl.forEach(p=>{M[L][p.id]={nick:p.nick,avatar:p.avatar||null,picks:{},at:{}};});
-  pk.forEach(x=>{const m=M[x.liga==='elita'?'elita':'otvorena'];const e=m[x.player_id]||(m[x.player_id]={nick:'',picks:{},at:{}});e.picks[x.duel_id]=x.izbor;e.at[x.duel_id]=Date.parse(x.created_at);});
+let mx=0;pk.forEach(x=>{const m=M[x.liga==='elita'?'elita':'otvorena'];const e=m[x.player_id]||(m[x.player_id]={nick:'',picks:{},at:{}});e.picks[x.duel_id]=x.izbor;const t=Date.parse(x.created_at);e.at[x.duel_id]=t;if(t>mx)mx=t;});S.lastPickAt=Math.max(S.lastPickAt||0,mx);
   S.PL=M;applyLiga();const me=S.PL.otvorena[S.uid];if(me&&me.nick)S.nick=me.nick;
 }
 async function loadMeta(){try{const {data}=await S.sb.from('meta').select('key,value').in('key',['nagrade','nagrade_elita']);(data||[]).forEach(r=>{S.NAG[r.key==='nagrade_elita'?'elita':'otvorena']=r.value;});applyLiga();}catch(e){}}
 async function loadIsplate(){S.ISP={otvorena:{all:{},mine:{}},elita:{all:{},mine:{}}};if(S.uid&&!S.anon){try{const {data}=await S.sb.from('isplate').select('*');(data||[]).forEach(r=>{const x=S.ISP[r.liga==='elita'?'elita':'otvorena'];x.all[r.player_id+'|'+r.datum]=r;if(r.player_id===S.uid)x.mine[r.datum]=r;});}catch(e){}}applyLiga();}
 async function loadUsers(){S.USERS={};if(!S.admin)return;try{const {data,error}=await S.sb.rpc('admin_korisnici');if(error)throw error;(data||[]).forEach(r=>{S.USERS[r.id]=r;});S.usersOk=true;}catch(e){S.usersOk=false;console.warn(e);}}
 async function loadPay(){S.PAYALL={};if(!S.uid||S.anon)return;try{const {data}=await S.sb.from('payout_info').select('*');(data||[]).forEach(r=>{S.PAYALL[r.player_id]=r;if(r.player_id===S.uid)S.PAY=r;});}catch(e){}}
-const LOAD={elita:loadElita,lige:loadLige,athletes:loadAthletes,duels:loadDuels,players:()=>Promise.all([loadPlayers(),S.admin?loadUsers():0]),picks:loadPlayers,meta:()=>Promise.all([loadMeta(),loadLige()]),isplate:loadIsplate,payout_info:loadPay};
+const LOAD={pdelta:loadPicksDelta,elita:loadElita,lige:loadLige,athletes:loadAthletes,duels:loadDuels,players:()=>Promise.all([loadPlayers(),S.admin?loadUsers():0]),picks:loadPlayers,meta:()=>Promise.all([loadMeta(),loadLige()]),isplate:loadIsplate,payout_info:loadPay};
 const pend=new Set();let pT=0;
 const dataSig=()=>JSON.stringify([S.DUELS.map(d=>[d.id,d.pobednik,d.uzivo,d.rezA,d.rezB,d.pocetak,d.a,d.b]),Object.entries(S.PLAYERS).map(([k,p])=>[k,p.nick,p.avatar,Object.keys(p.picks).length]),Object.values(S.ATH).map(a=>[a.id,a.team,a.status,a.photo]),S.NAGRADE,Object.keys(S.ISPLATE_ALL||{}).length]);
 let lastSig='';
@@ -1434,8 +1452,8 @@ async function boot(){
   setInterval(()=>{if(current==='admin')renderNow();},20000);
   // rezervno osvežavanje: za vreme emisije svake 3 s, inače na 12 s
   let pollN=0;setInterval(()=>{if(document.visibilityState!=='visible')return;pollN++;
-    const hot=showTime();if(hot||pollN%4===0){queue('duels');}
-    if(pollN%4===0){queue('picks');queue('isplate');queue('elita');}},3000);
+    const hot=showTime();if(hot||pollN%6===0){queue('duels');queue('pdelta');}
+    if(pollN%20===0)queue('picks');if(pollN%6===0){queue('isplate');queue('elita');}},2000);
   setInterval(()=>{if(current==='home'&&document.visibilityState==='visible'&&!document.querySelector('.hero.locking'))renderHome();},60000);
 }
 </script>
