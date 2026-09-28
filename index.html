@@ -488,7 +488,7 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
     <div id="prizeRang"></div>
     <div class="minrule" id="minRule">✅ Za dnevni plasman i nagradu moraš odigrati najmanje <b>70% duela</b> tog dana.</div>
     <div class="rules"><b>Rangiranje u slučaju istog broja poena:</b>
-      <ol><li>Bolji procenat pogodaka</li><li>Najduži niz pogodaka zaredom</li><li>Ko je u proseku najbrže glasao od momenta izlaska duela</li><li>Ako je i to isto, igrači dele mesto</li></ol></div>
+      <ol><li>Bolji procenat pogodaka</li><li>Najduži niz pogodaka zaredom</li><li>Ko je u proseku najbrže glasao od momenta izlaska duela <span style="white-space:nowrap">(⚡ brzina)</span></li><li>Ako je i to isto, igrači dele mesto</li></ol></div>
     <div class="board" id="board"></div>
   </section>
 
@@ -720,6 +720,7 @@ function scorePicks(picks){let c=0,w=0,streak=0,best=0;const hist=[];
   for(const d of settled()){const p=picks&&picks[d.id];if(!p)continue;if(p===d.pobednik){c++;streak++;best=Math.max(best,streak);hist.push({d,p,r:'W'});}else{w++;streak=0;hist.push({d,p,r:'L'});}}
   return {pts:c,correct:c,wrong:w,streak,best,hist};}
 function scoreDay(picks,day){let c=0,w=0;for(const d of settled()){if(d.datum!==day)continue;const p=picks&&picks[d.id];if(!p)continue;if(p===d.pobednik)c++;else w++;}return {c,w};}
+function brz(ms){const s=ms/1000;if(s<10)return s.toFixed(1).replace('.',',')+' s';if(s<60)return Math.round(s)+' s';const m=Math.floor(s/60),r=Math.round(s%60);return m+' min'+(r?' '+r+' s':'');}
 const MIN_UDEO=0.7; // najmanje 70% duela u danu za plasman
 function standings(day){
   const inDay=id=>{const d=S.DUELS.find(x=>x.id===id);return d&&d.datum===day;};
@@ -941,7 +942,7 @@ function renderBoard(){
     const hd=!p.ok&&!sep?(sep=true,`<div class="nqh">Nisu odigrali 70% duela danas · van plasmana</div>`):'';
     return hd+`<div class="brow${p.rank===1?' first':''}${p.uid===S.uid?' me':''}${p.ok?'':' nq'}"><span class="rk">${p.rank||'–'}</span>${avHTML(p)}
       <div style="min-width:0"><span class="un">${esc(p.nick)}${medal(p.rank)}</span>
-        <div class="bmeta">${tot?`<span>Odigrano <b>${tot}</b></span><span>Učinak <b>${Math.round(p.c/tot*100)}%</b></span><span>Niz <b>${p.best}</b></span>${p.ok?'':`<span class="need">treba još <b>${p.need-tot}</b></span>`}`:'<span>Čeka rezultat</span>'}</div></div>
+        <div class="bmeta">${tot?`<span>Odigrano <b>${tot}</b></span><span>Učinak <b>${Math.round(p.c/tot*100)}%</b></span><span>Niz <b>${p.best}</b></span>${isFinite(p.lead)?`<span title="Prosečno vreme od izlaska duela do glasa">⚡ <b>${brz(p.lead)}</b></span>`:''}${p.ok?'':`<span class="need">treba još <b>${p.need-tot}</b></span>`}`:'<span>Čeka rezultat</span>'}</div></div>
       <span class="pt">${p.c}<small>poena</small></span></div>`;}).join('')
     :`<div class="empty">${day?'Danas još niko nije dao prognozu.':'Još niko nije dao prognozu.'}</div>`;
 }
