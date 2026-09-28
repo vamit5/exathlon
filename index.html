@@ -407,7 +407,6 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
       <p class="msg" id="lMsg"></p>
       <button type="button" class="btn ghost" id="lSwitch" style="width:100%">Nemaš nalog? Registruj se besplatno</button>
     </form>
-    <button type="button" class="guest" id="lGuest">Nastavi bez naloga</button>
   </div>
 </div>
 
@@ -425,7 +424,7 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
 </header>
 
 <main>
-  <div class="ligabar" id="ligaBar"><div class="seg liga" id="ligaSeg"><button data-l="otvorena" aria-pressed="true">OTVORENA LIGA</button><button data-l="elita" aria-pressed="false">★ ELITNA LIGA<span id="ligaLock"> 🔒</span></button></div></div>
+  <div class="ligabar" id="ligaBar"><div class="seg liga" id="ligaSeg"><button data-l="otvorena" aria-pressed="true"><span id="ligaN1">OTVORENA LIGA</span></button><button data-l="elita" aria-pressed="false">★ <span id="ligaN2">ELITNA LIGA</span><span id="ligaLock"> 🔒</span></button></div></div>
   <section class="screen" id="s-home">
     <div id="home"><div class="empty">Učitavam…</div></div>
   </section>
@@ -507,11 +506,18 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
       <div class="list" id="adminDuels"></div>
     </div>
     <div id="adminEli" hidden>
-      <div class="apanel"><h3>Top 3 → Elitna liga</h3>
-        <p class="muted" style="margin:0">Svakog radnog dana u <b>23:45h</b> prva 3 iz Otvorene lige automatski dobijaju pristup do kraja sledećeg dana emisije (petak → ponedeljak) i email čestitku.</p>
+      <form class="apanel" id="ligeForm"><h3>Nazivi liga i tekst prozora</h3>
+        <div class="grid2"><label class="fl">Naziv prve lige (za sve)<input class="inp" id="lgN1" maxlength="22" required></label>
+        <label class="fl">Naziv zaključane lige<input class="inp" id="lgN2" maxlength="22" required></label></div>
+        <label class="fl">Tekst prozora kad neko klikne na zaključanu ligu<textarea class="inp" id="lgTx" rows="5" maxlength="600" style="height:auto;padding:10px;resize:vertical;font:inherit;font-size:15px;line-height:1.45"></textarea></label>
+        <label class="chk"><input type="checkbox" id="lgReq"><span>U prozoru prikaži dugme <b>ZATRAŽI PRISTUP</b></span></label>
+        <button class="btn" type="submit">SAČUVAJ</button><p class="msg" id="lgMsg" style="margin:0"></p></form>
+      <div class="apanel"><h3>Top 3 dana</h3>
+        <label class="chk"><input type="checkbox" id="lgAuto"><span><b>Automatski pusti top 3</b> iz prve lige svakog radnog dana u 23:45h, do kraja sledećeg dana emisije. Kad je isključeno, pristup daješ samo ti.</span></label>
+        <p class="muted" style="margin:0">Ili ručno, jednim klikom:</p>
         <button class="btn ghost" id="eliTop3" type="button">DODELI TOP 3 ZA DANAS ODMAH</button><p class="msg" id="eliTop3Msg" style="margin:0"></p></div>
       <div class="sec">Zahtevi za pristup</div><div class="list" id="eliReq"></div>
-      <div class="sec">Članovi Elitne lige</div><div class="list" id="eliMem"></div>
+      <div class="sec">Članovi zaključane lige</div><div class="list" id="eliMem"></div>
       <div class="sec">Dodaj igrača ručno</div>
       <input class="inp" id="eliQ" placeholder="Upiši ime ili email igrača" aria-label="Pretraži igrače" style="width:100%;margin-bottom:10px">
       <div class="list" id="eliAdd"></div>
@@ -583,6 +589,7 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
 <canvas id="confetti" aria-hidden="true"></canvas>
 <div class="winbanner" id="winBanner" hidden role="status" aria-live="polite"><b>POGODAK!</b><span id="winText"></span></div>
 <div class="pop" id="eliPop" hidden role="dialog" aria-modal="true" aria-labelledby="eliPopT"><div class="box"><div class="big">🏆</div><h2 id="eliPopT">ELITNA LIGA</h2><p id="eliPopTx"></p><button class="btn gold" id="eliPopGo" type="button">IGRAJ ELITNU LIGU</button><button class="btn ghost" id="eliPopX" type="button">Kasnije</button></div></div>
+<div class="pop" id="lockPop" hidden role="dialog" aria-modal="true" aria-labelledby="lockPopT"><div class="box"><div class="big">🔒</div><h2 id="lockPopT"></h2><p id="lockPopTx" style="white-space:pre-line"></p><div id="lockPopBtn" style="display:grid;gap:10px"></div><button class="btn ghost" id="lockPopX" type="button">Zatvori</button></div></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
@@ -719,8 +726,7 @@ function renderHome(){
   const rest=open.filter(d=>d!==heroD);
   const res=settled().slice().reverse();
   const today=todayBG(),mine=scoreDay(S.myPicks,today);
-  if(S.LIGA==='elita'&&!hasElite()&&!S.admin){box.innerHTML=prizeHTML()+lockHTML();wireLock(box);return;}
-  let h=(S.LIGA==='elita'?`<div class="elinfo">★ ELITNA LIGA · ${S.admin&&!hasElite()?'pregled (admin)':vaziTxt(S.ELITA)}</div>`:'')+prizeHTML();
+  let h=(S.LIGA==='elita'?`<div class="elinfo">★ ${esc(UP(LNAME.elita))} · ${S.admin&&!hasElite()?'pregled (admin)':vaziTxt(S.ELITA)}</div>`:'')+prizeHTML();
   if(heroD){
     h+=`<div class="sec">${heroD.uzivo?'Uživo':isLocked(heroD)?'U toku':'Sledeći duel'}${S.uid&&(mine.c+mine.w)?`<small>Danas: ${mine.c} od ${mine.c+mine.w} pogođeno</small>`:''}</div>${heroHTML(heroD)}`;
   }else{const t=bgParts(Date.now()).vreme,wd=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].indexOf(new Intl.DateTimeFormat('en-US',{timeZone:'Europe/Belgrade',weekday:'short'}).format(new Date())),
@@ -740,7 +746,7 @@ function renderHome(){
 async function makePick(id,s){
   const d=S.DUELS.find(x=>x.id===id);if(!d||S.myPicks[id]||isLocked(d))return;
   if(!S.uid){showLogin();return;}
-  if(S.LIGA==='elita'&&!hasElite()){toast('Elitna liga je zaključana.');return;}
+  if(S.LIGA==='elita'&&!hasElite()){lockPop();return;}
   S.myPicks={...S.myPicks,[id]:s};haptic([12,40,24]);renderHome();
   const card=document.querySelector(`.hero[data-id="${id}"]`);if(card)card.classList.add('locking');
   let {error}=await S.sb.from('picks').insert({player_id:S.uid,duel_id:id,izbor:s,liga:S.LIGA});
@@ -802,7 +808,7 @@ let rangMode='danas';
 $('#rangSeg').onclick=e=>{const b=e.target.closest('button');if(!b)return;rangMode=b.dataset.m;$('#rangSeg').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));renderBoard();};
 function renderBoard(){
   if(!S.ready)return;const day=rangMode==='danas',list=standings(day?todayBG():null);
-  $('#prizeRang').innerHTML=(S.LIGA==='elita'?'<div class="elinfo">★ RANG LISTA · ELITNA LIGA</div>':'')+prizeHTML()+`<div class="payinfo">💳 <span>Po završetku emisije, svakog dana u <b>23:30h</b>, isplaćujemo nagrade za prva 3 mesta na račune koje ste ostavili.</span> <button type="button" class="link" id="toPay">Upiši svoj račun</button></div>`;
+  $('#prizeRang').innerHTML=(S.LIGA==='elita'?'<div class="elinfo">★ RANG LISTA · '+esc(UP(LNAME.elita))+'</div>':'')+prizeHTML()+`<div class="payinfo">💳 <span>Po završetku emisije, svakog dana u <b>23:30h</b>, isplaćujemo nagrade za prva 3 mesta na račune koje ste ostavili.</span> <button type="button" class="link" id="toPay">Upiši svoj račun</button></div>`;
   const tp=$('#toPay');if(tp)tp.onclick=()=>{go('profil',true);setTimeout(()=>{const f=$('#payForm');if(f)f.scrollIntoView({behavior:'smooth',block:'center'});},150);};
   const pz=prizes(),medal=r=>day&&r<=3&&pz[r-1]?`<span class="medal">${['🥇','🥈','🥉'][r-1]}</span>`:'';
   $('#board').innerHTML=list.length?list.map(p=>{const tot=p.c+p.w;
@@ -810,7 +816,7 @@ function renderBoard(){
       <div style="min-width:0"><span class="un">${esc(p.nick)}${medal(p.rank)}</span>
         <div class="bmeta">${tot?`<span>Odigrano <b>${tot}</b></span><span>Učinak <b>${Math.round(p.c/tot*100)}%</b></span><span>Niz <b>${p.best}</b></span>`:'<span>Čeka rezultat</span>'}</div></div>
       <span class="pt">${p.c}<small>poena</small></span></div>`;}).join('')
-    :`<div class="empty">${S.LIGA==='elita'?'U Elitnoj ligi ':''}${day?'Danas još niko nije dao prognozu.':'Još niko nije dao prognozu.'}</div>`;
+    :`<div class="empty">${day?'Danas još niko nije dao prognozu.':'Još niko nije dao prognozu.'}</div>`;
 }
 
 /* ================= NAGRADE ================= */
@@ -818,7 +824,7 @@ function prizes(){const n=S.NAGRADE||{prvo:10,drugo:5,trece:2};return [+n.prvo||
 const cur=()=>(S.NAGRADE&&S.NAGRADE.valuta)||'€';
 const money=v=>`${(+v).toLocaleString('sr-Latn-RS',{maximumFractionDigits:2})} ${cur()}`;
 function prizeHTML(){const p=prizes();if(!p.some(Boolean))return '';
-  return `<div class="prize"><span class="ttl">🏆 Dnevne nagrade${S.LIGA==='elita'?' · Elitna liga':''}</span><span class="ps">${p.map((v,i)=>v?`<span class="p ${'gsb'[i]}"><small>${i+1}. mesto</small>${money(v)}</span>`:'').join('')}</span></div>`;}
+  return `<div class="prize"><span class="ttl">🏆 Dnevne nagrade${S.LIGA==='elita'?' · '+esc(LNAME.elita):''}</span><span class="ps">${p.map((v,i)=>v?`<span class="p ${'gsb'[i]}"><small>${i+1}. mesto</small>${money(v)}</span>`:'').join('')}</span></div>`;}
 function avHTML(p){return `<span class="bav">${p.avatar?`<img src="${esc(p.avatar)}" alt="" loading="lazy">`:esc((p.nick||'?')[0].toUpperCase())}</span>`;}
 /* dobitnici po danu (samo završeni dani) */
 function winnersByDay(){const days=[...new Set(settled().map(d=>d.datum))].sort().reverse(),pz=prizes(),out=[];
@@ -888,7 +894,7 @@ $('#authForm').onsubmit=async e=>{e.preventDefault();const m=$('#lMsg'),email=$(
   }catch(err){btn.disabled=false;m.className='msg err';const t=(err&&err.message)||'';
     m.textContent=t==='nick'?'Upiši ime u igri (najmanje 2 znaka).':/Invalid login/i.test(t)?'Pogrešan email ili lozinka.':/not confirmed/i.test(t)?'Potvrdi nalog preko linka iz emaila.':/already registered/i.test(t)?'Taj email već ima nalog. Prijavi se.':/at least 6/i.test(t)?'Lozinka mora imati najmanje 6 znakova.':'Nije uspelo. Pokušaj ponovo.';}
 };
-$('#lGuest').onclick=async()=>{const m=$('#lMsg');m.className='msg';m.textContent='Sačekaj…';
+if($('#lGuest'))$('#lGuest').onclick=async()=>{const m=$('#lMsg');m.className='msg';m.textContent='Sačekaj…';
   const {error}=await S.sb.auth.signInAnonymously();if(error){m.className='msg err';m.textContent='Igra bez naloga trenutno nije dostupna. Napravi nalog.';return;}
   store.set('guest','1');location.reload();};
 
@@ -1120,33 +1126,41 @@ function checkWins(){
 
 /* ================= DVE LIGE ================= */
 S.LIGA=store.get('liga','otvorena')==='elita'?'elita':'otvorena';
-const LNAME={otvorena:'Otvorena liga',elita:'Elitna liga'};
+const LIGE_DEF={otvorena:'Otvorena liga',elita:'Elitna liga',tekst:'Ova liga je zaključana.\nU nju ulaze samo igrači koje odobri admin.\nPošalji zahtev i čim te odobrimo, liga ti se otključava.',zahtev:true,auto_top3:false};
+S.LIGE={...LIGE_DEF};
+const LNAME={get otvorena(){return S.LIGE.otvorena||LIGE_DEF.otvorena;},get elita(){return S.LIGE.elita||LIGE_DEF.elita;}};
+const UP=t=>t.toLocaleUpperCase('sr-Latn');
+async function loadLige(){try{const {data}=await S.sb.from('meta').select('value').eq('key','lige').maybeSingle();S.LIGE={...LIGE_DEF,...((data&&data.value)||{})};}catch(e){}applyLiga();}
+function lockPop(){const e=S.ELITA;$('#lockPopT').textContent=UP(LNAME.elita);$('#lockPopTx').textContent=S.LIGE.tekst||'';
+  let b='';if(S.LIGE.zahtev!==false){
+    if(!S.uid||S.anon)b='<button class="btn gold" id="lpReg" type="button">NAPRAVI NALOG BESPLATNO</button>';
+    else if(e&&e.status==='zahtev')b='<button class="btn gold" type="button" disabled>ZAHTEV POSLAT · ČEKA ODOBRENJE</button>';
+    else b=(e&&e.status==='odobren'?'<p style="margin:0;color:#ffcf5a">Tvoj pristup je istekao.</p>':'')+'<button class="btn gold" id="lpAsk" type="button">ZATRAŽI PRISTUP</button>';}
+  $('#lockPopBtn').innerHTML=b;const a=$('#lpAsk'),r=$('#lpReg');
+  if(r)r.onclick=()=>$('#toRegister').click();
+  if(a)a.onclick=async()=>{a.disabled=true;const {error}=await S.sb.from('elita').upsert({player_id:S.uid,status:'zahtev',vazi_do:null,izvor:'zahtev',updated_at:new Date().toISOString()});
+    if(error){console.warn(error);a.disabled=false;toast('Zahtev nije poslat. Pokušaj ponovo.');return;}toast('Zahtev je poslat');await loadElita();lockPop();};
+  $('#lockPop').hidden=false;}
+$('#lockPopX').onclick=()=>{$('#lockPop').hidden=true;};
+$('#ligeForm').onsubmit=async e=>{e.preventDefault();const v={...S.LIGE,otvorena:$('#lgN1').value.trim()||LIGE_DEF.otvorena,elita:$('#lgN2').value.trim()||LIGE_DEF.elita,tekst:$('#lgTx').value.trim(),zahtev:$('#lgReq').checked};
+  if(await w(S.sb.from('meta').upsert({key:'lige',value:v}),'Sačuvano')){S.LIGE=v;$('#lgMsg').className='msg ok';$('#lgMsg').textContent='Sačuvano.';applyLiga();renderAll();}};
+$('#lgAuto').onchange=async e=>{const v={...S.LIGE,auto_top3:e.target.checked};
+  if(await w(S.sb.from('meta').upsert({key:'lige',value:v}),e.target.checked?'Top 3 ulaze automatski':'Automatski ulaz isključen'))S.LIGE=v;else e.target.checked=!e.target.checked;};
 function hasElite(e=S.ELITA){return !!(e&&e.status==='odobren'&&(!e.vazi_do||Date.parse(e.vazi_do)>Date.now()));}
 function vaziTxt(e){if(!e||!e.vazi_do)return 'stalni član';const t=bgParts(e.vazi_do);return 'do '+dayLabel(t.datum).toLowerCase()+' u '+t.vreme+'h';}
-function applyLiga(){const L=S.LIGA;S.PLAYERS=S.PL[L]||{};const me=S.PLAYERS[S.uid];S.myPicks={...(me?me.picks:{})};
+function applyLiga(){if(S.elOk&&S.LIGA==='elita'&&!hasElite()&&!S.admin){S.LIGA='otvorena';store.set('liga','otvorena');}const L=S.LIGA;$('#ligaN1').textContent=UP(LNAME.otvorena);$('#ligaN2').textContent=UP(LNAME.elita);S.PLAYERS=S.PL[L]||{};const me=S.PLAYERS[S.uid];S.myPicks={...(me?me.picks:{})};
   S.NAGRADE=S.NAG[L]||null;const I=S.ISP[L]||{all:{},mine:{}};S.ISPLATE=I.mine;S.ISPLATE_ALL=I.all;
   document.body.classList.toggle('elita',L==='elita');
   $('#ligaSeg').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.l===L));$('#ligaLock').hidden=hasElite();}
-function setLiga(L){if(L===S.LIGA)return;S.LIGA=L;store.set('liga',L);applyLiga();lastSig=dataSig();renderAll();}
-$('#ligaSeg').onclick=e=>{const b=e.target.closest('button');if(b)setLiga(b.dataset.l);};
-async function loadElita(){S.ELITA=null;S.ELALL=[];if(!S.uid||S.anon){applyLiga();return;}
-  try{const {data,error}=await S.sb.from('elita').select('*');if(error)throw error;S.ELALL=data||[];S.ELITA=S.ELALL.find(r=>r.player_id===S.uid)||null;}catch(e){}
+function setLiga(L){if(L==='elita'&&!hasElite()&&!S.admin)return lockPop();if(L===S.LIGA)return;S.LIGA=L;store.set('liga',L);applyLiga();lastSig=dataSig();renderAll();}
+$('#ligaSeg').onclick=e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.l==='elita'&&!hasElite()&&!S.admin){lockPop();return;}setLiga(b.dataset.l);};
+async function loadElita(){S.ELITA=null;S.ELALL=[];if(!S.uid||S.anon){S.elOk=true;applyLiga();return;}
+  try{const {data,error}=await S.sb.from('elita').select('*');if(error)throw error;S.ELALL=data||[];S.ELITA=S.ELALL.find(r=>r.player_id===S.uid)||null;}catch(e){}S.elOk=true;
   applyLiga();if(S.ready)checkElitaPop();}
-function lockHTML(){const e=S.ELITA;let btn;
-  if(!S.uid||S.anon)btn='<button class="btn gold" id="eliReg" type="button">NAPRAVI NALOG BESPLATNO</button>';
-  else if(e&&e.status==='zahtev')btn='<button class="btn gold" type="button" disabled>ZAHTEV POSLAT · ČEKA ODOBRENJE</button>';
-  else btn='<button class="btn gold" id="eliAsk" type="button">ZATRAŽI PRISTUP</button>';
-  const exp=e&&e.status==='odobren'&&!hasElite(e)?'<p style="color:#ffcf5a">Tvoj pristup je istekao.</p>':e&&e.status==='odbijen'?'<p>Prethodni zahtev nije odobren. Možeš poslati novi.</p>':'';
-  return `<article class="lock"><div class="ic">🔒</div><h2>ELITNA LIGA</h2><p>Posebna liga za najbolje: svoja rang lista i svoje dnevne nagrade.</p>${exp}
-    <ol><li><b>Top 3</b> dnevne Otvorene lige ulaze automatski.</li><li>Ili pošalji zahtev, a admin ga odobrava.</li></ol>${btn}
-    <button class="btn ghost" id="eliBack" type="button">IGRAJ OTVORENU LIGU</button></article>`;}
-function wireLock(root){const a=root.querySelector('#eliAsk'),b=root.querySelector('#eliBack'),r=root.querySelector('#eliReg');
-  if(b)b.onclick=()=>setLiga('otvorena');if(r)r.onclick=()=>$('#toRegister').click();
-  if(a)a.onclick=async()=>{a.disabled=true;const {error}=await S.sb.from('elita').upsert({player_id:S.uid,status:'zahtev',vazi_do:null,izvor:'zahtev',updated_at:new Date().toISOString()});
-    if(error){console.warn(error);a.disabled=false;toast('Zahtev nije poslat. Pokušaj ponovo.');return;}toast('Zahtev je poslat adminu');await loadElita();renderAll();};}
 function checkElitaPop(){const e=S.ELITA;if(!hasElite(e)||!$('#eliPop').hidden)return;const k='elpop_'+S.uid,v=e.updated_at||'1';if(store.get(k,'')===v)return;
   const first=store.get(k,null)===null&&e.izvor!=='top3'&&e.izvor!=='admin';store.set(k,v);if(first)return;
-  $('#eliPopTx').innerHTML=e.izvor==='top3'?`Bio si među <b>prva 3</b> u Otvorenoj ligi! Elitna liga ti je otvorena <b>${vaziTxt(e)}</b>.`:`Admin ti je odobrio pristup Elitnoj ligi (<b>${vaziTxt(e)}</b>).`;
+  $('#eliPopTx').innerHTML=e.izvor==='top3'?`Bio si među <b>prva 3</b> dana! Liga <b>${esc(LNAME.elita)}</b> ti je otključana <b>${vaziTxt(e)}</b>.`:`Otključana ti je liga <b>${esc(LNAME.elita)}</b> (${vaziTxt(e)}).`;
+  $('#eliPopT').textContent=UP(LNAME.elita);$('#eliPopGo').textContent='IGRAJ ODMAH';
   $('#eliPop').hidden=false;confetti&&confetti();}
 $('#eliPopGo').onclick=()=>{$('#eliPop').hidden=true;setLiga('elita');go('home',true);};
 $('#eliPopX').onclick=()=>{$('#eliPop').hidden=true;};
@@ -1154,6 +1168,8 @@ $('#eliPopX').onclick=()=>{$('#eliPop').hidden=true;};
 /* admin: elita */
 async function eliSet(uid,row,ok){if(await w(S.sb.from('elita').upsert({player_id:uid,...row,updated_at:new Date().toISOString()}),ok)){await loadElita();renderElitaAdmin();}}
 function renderElitaAdmin(){
+  const ae=document.activeElement;if(!ae||!ae.closest||!ae.closest('#ligeForm')){$('#lgN1').value=LNAME.otvorena;$('#lgN2').value=LNAME.elita;$('#lgTx').value=S.LIGE.tekst||'';$('#lgReq').checked=S.LIGE.zahtev!==false;}
+  $('#lgAuto').checked=!!S.LIGE.auto_top3;
   const nick=u=>{const p=S.PL.otvorena[u];return (p&&p.nick)||'Igrač';},mail=u=>((S.USERS||{})[u]||{}).email||'';
   const av=u=>avHTML({nick:nick(u),avatar:(S.PL.otvorena[u]||{}).avatar});
   const req=S.ELALL.filter(r=>r.status==='zahtev'),mem=S.ELALL.filter(r=>hasElite(r)).sort((a,b)=>(!!a.vazi_do)-(!!b.vazi_do)||nick(a.player_id).localeCompare(nick(b.player_id),'sr'));
@@ -1169,7 +1185,7 @@ function renderElitaAdmin(){
     if(e==='stalno')return eliSet(u,{status:'odobren',vazi_do:null,izvor:'admin'},'Pristup odobren (stalno)');
     if(e==='24')return eliSet(u,{status:'odobren',vazi_do:new Date(Date.now()+864e5).toISOString(),izvor:'admin'},'Pristup odobren na 24h');
     if(e==='odbij')return eliSet(u,{status:'odbijen',vazi_do:null},'Zahtev odbijen');
-    if(e==='ukloni'){if(!b.dataset.sure){b.dataset.sure=1;b.textContent='Sigurno ukloni?';return;}if(await w(S.sb.from('elita').delete().eq('player_id',u),'Uklonjen iz Elitne lige')){await loadElita();renderElitaAdmin();}}});
+    if(e==='ukloni'){if(!b.dataset.sure){b.dataset.sure=1;b.textContent='Sigurno ukloni?';return;}if(await w(S.sb.from('elita').delete().eq('player_id',u),'Uklonjen iz zaključane lige')){await loadElita();renderElitaAdmin();}}});
 }
 $('#eliQ').oninput=()=>renderElitaAdmin();
 $('#eliTop3').onclick=async e=>{const m=$('#eliTop3Msg');e.target.disabled=true;m.className='msg';m.textContent='Sačekaj…';
@@ -1193,7 +1209,7 @@ async function loadMeta(){try{const {data}=await S.sb.from('meta').select('key,v
 async function loadIsplate(){S.ISP={otvorena:{all:{},mine:{}},elita:{all:{},mine:{}}};if(S.uid&&!S.anon){try{const {data}=await S.sb.from('isplate').select('*');(data||[]).forEach(r=>{const x=S.ISP[r.liga==='elita'?'elita':'otvorena'];x.all[r.player_id+'|'+r.datum]=r;if(r.player_id===S.uid)x.mine[r.datum]=r;});}catch(e){}}applyLiga();}
 async function loadUsers(){S.USERS={};if(!S.admin)return;try{const {data,error}=await S.sb.rpc('admin_korisnici');if(error)throw error;(data||[]).forEach(r=>{S.USERS[r.id]=r;});S.usersOk=true;}catch(e){S.usersOk=false;console.warn(e);}}
 async function loadPay(){S.PAYALL={};if(!S.uid||S.anon)return;try{const {data}=await S.sb.from('payout_info').select('*');(data||[]).forEach(r=>{S.PAYALL[r.player_id]=r;if(r.player_id===S.uid)S.PAY=r;});}catch(e){}}
-const LOAD={elita:loadElita,athletes:loadAthletes,duels:loadDuels,players:loadPlayers,picks:loadPlayers,meta:loadMeta,isplate:loadIsplate,payout_info:loadPay};
+const LOAD={elita:loadElita,lige:loadLige,athletes:loadAthletes,duels:loadDuels,players:loadPlayers,picks:loadPlayers,meta:()=>Promise.all([loadMeta(),loadLige()]),isplate:loadIsplate,payout_info:loadPay};
 const pend=new Set();let pT=0;
 const dataSig=()=>JSON.stringify([S.DUELS.map(d=>[d.id,d.pobednik,d.uzivo,d.rezA,d.rezB,d.pocetak,d.a,d.b]),Object.entries(S.PLAYERS).map(([k,p])=>[k,p.nick,p.avatar,Object.keys(p.picks).length]),Object.values(S.ATH).map(a=>[a.id,a.team,a.status,a.photo]),S.NAGRADE,Object.keys(S.ISPLATE_ALL||{}).length]);
 let lastSig='';
@@ -1227,12 +1243,12 @@ async function boot(){
   S.sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
   const {data:{session}}=await S.sb.auth.getSession();
   if(session){const u=session.user;S.uid=u.id;S.anon=!!u.is_anonymous;S.email=(u.email||'').toLowerCase();S.admin=!S.anon&&S.email===ADMIN_EMAIL;}
-  if(!session||(S.anon&&store.get('guest','')!=='1')){showLogin();splashEnd();}
+  if(!session||S.anon){showLogin();splashEnd();}
   const ta=$('#topAuth');
   if(!session||S.anon){ta.setAttribute('aria-label','Prijavi se');ta.title='Prijavi se';ta.innerHTML='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h3M14 17l5-5-5-5M19 12H8"/></svg>';ta.onclick=async()=>{if(session)await S.sb.auth.signOut();store.set('guest','');location.hash='';location.reload();};}
   else ta.onclick=async()=>{await S.sb.auth.signOut();store.set('guest','');location.hash='';location.reload();};
   if(S.admin){document.querySelectorAll('.admin-only').forEach(b=>b.hidden=false);}
-  try{await Promise.all([loadAthletes(),loadDuels(),loadPlayers(),loadMeta(),loadIsplate(),loadPay(),loadUsers(),loadElita()]);}catch(e){console.warn(e);splashEnd();$('#home').innerHTML='<div class="empty">Podaci nisu učitani. Osveži stranicu.</div>';return;}
+  try{await Promise.all([loadAthletes(),loadDuels(),loadPlayers(),loadMeta(),loadIsplate(),loadPay(),loadUsers(),loadElita(),loadLige()]);}catch(e){console.warn(e);splashEnd();$('#home').innerHTML='<div class="empty">Podaci nisu učitani. Osveži stranicu.</div>';return;}
   if(S.uid)await ensurePlayer(session.user.user_metadata);
   if(S.uid&&!S.anon)await loadPod();
   S.ready=true;lastSig=dataSig();go(current,false);checkWins();splashEnd();setTimeout(checkElitaPop,1800);
