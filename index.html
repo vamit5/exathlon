@@ -356,7 +356,8 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
 .stLeft{margin-top:10px;padding:10px;border-radius:10px;background:var(--panel2);display:grid;gap:6px}
 .stLeft b{font-family:var(--display);font-weight:800;font-size:30px;font-variant-numeric:tabular-nums;line-height:1}.stLeft b.low{color:var(--loss)}.stLeft .cdbar{max-width:none}
 .stBig{font-family:var(--display);font-weight:800;font-size:40px;line-height:1;color:#ffcf5a}
-.stMed{display:flex;gap:14px;margin-top:10px;font-weight:700}
+.stMed{display:flex;gap:12px;font-weight:700;white-space:nowrap}
+.stMrow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 10px;margin-top:6px;border-radius:10px;background:var(--panel2);font-size:14px}
 .onl{display:flex;align-items:center;justify-content:center;gap:8px;margin:0 0 10px;font-size:14px;color:var(--metal)}
 .onl i{width:9px;height:9px;border-radius:50%;background:var(--win);box-shadow:0 0 10px var(--win);animation:cdp 1.6s infinite}.onl b{color:#fff;font-size:16px}
 .bmeta .mdl{background:rgba(255,176,32,.12)!important;color:#ffcf5a}.bmeta .mdl b{margin:0 4px 0 2px}
@@ -1003,6 +1004,8 @@ function renderProfile(){
   $('#podBox').hidden=!S.uid||S.anon;$('#pPod').checked=S.POD!==false;
 }
 /* ===== moj status: pristup elitnoj ligi + zarada ===== */
+function myMedals(L){const m=[0,0,0];if(!S.uid)return m;const keep={L:S.LIGA,P:S.PLAYERS};S.LIGA=L;S.PLAYERS=S.PL[L]||{};
+  try{for(const dy of [...new Set(settled().map(d=>d.datum))]){const me=standingsRaw(dy).find(x=>x.uid===S.uid);if(me&&me.rank&&me.rank<=3&&me.c>0)m[me.rank-1]++;}}finally{S.LIGA=keep.L;S.PLAYERS=keep.P;}return m;}
 function eliteEarnings(){if(!S.uid)return {won:0,paid:0,wait:0,n:[0,0,0]};
   const keep={L:S.LIGA,P:S.PLAYERS,N:S.NAGRADE};S.LIGA='elita';S.PLAYERS=S.PL.elita||{};S.NAGRADE=S.NAG.elita||null;
   let won=0,today=todayBG(),wait=0;const n=[0,0,0];
@@ -1028,7 +1031,9 @@ function renderStatus(){const box=$('#myStatus');if(!box)return;if(!S.uid||S.ano
     <div class="stCard"><div class="stH">💰 Zarada</div>
       <div class="stBig">${mo(E.won)}</div><small class="muted">ukupno osvojeno</small>
       <div class="stGrid" style="margin-top:10px"><div><small>Isplaćeno</small><b style="color:var(--win)">${mo(E.paid)}</b></div><div><small>Čeka isplatu</small><b style="color:#ffcf5a">${mo(E.wait)}</b></div></div>
-      <div class="stMed"><span>🥇 ${E.n[0]}</span><span>🥈 ${E.n[1]}</span><span>🥉 ${E.n[2]}</span></div></div>`;
+      </div>
+    <div class="stCard"><div class="stH">🏅 Moje medalje <small style="font-family:var(--body);font-size:11px;color:var(--dim);letter-spacing:0;text-transform:none">dnevni plasmani</small></div>
+      ${['otvorena','elita'].map(L=>{const m=myMedals(L);return `<div class="stMrow"><span>${esc(LNAME[L])}</span><span class="stMed"><span>🥇 ${m[0]}</span><span>🥈 ${m[1]}</span><span>🥉 ${m[2]}</span></span></div>`;}).join('')}</div>`;
   const a=$('#stAsk');if(a)a.onclick=()=>lockPop();tickStatus();}
 function tickStatus(){const el=$('#stCd');if(!el)return;const to=+el.dataset.to,from=+el.dataset.from,now=Date.now(),left=to-now;
   el.textContent=leftTxt(left);el.classList.toggle('low',left<3600e3);const b=$('#stBar');if(b)b.style.width=Math.max(0,Math.min(100,left/Math.max(1,to-from)*100))+'%';
