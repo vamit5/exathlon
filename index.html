@@ -224,6 +224,7 @@ main{max-width:980px;margin:0 auto;padding-inline:16px;padding-block:18px 110px}
 .pop .box{width:100%;max-width:380px;padding:26px 22px;border-radius:18px;text-align:center;background:linear-gradient(160deg,#2a2210,#111318 65%);border:1px solid rgba(255,176,32,.6);box-shadow:0 20px 70px rgba(255,176,32,.25);display:grid;gap:12px}
 .pop .big{font-size:52px;line-height:1}.pop h2{margin:0;font-family:var(--display);font-weight:800;font-size:30px;color:#ffcf5a;letter-spacing:.03em}.pop p{margin:0;color:var(--text)}
 .erow{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:center;padding:12px 14px;border-radius:var(--r);background:var(--panel);border:1px solid var(--line)}
+.acc{display:grid;gap:8px;padding:10px 12px;margin-top:8px;border-radius:10px;background:rgba(255,176,32,.07);border:1px solid rgba(255,176,32,.25);font-size:14px}.acc .acts{display:flex;gap:8px;flex-wrap:wrap}.acc .btn.gold{background:linear-gradient(90deg,#ffb020,#ffd76a)!important;color:#111!important}
 .erow b{font-family:var(--display);font-weight:800;font-size:18px}.erow small{display:block;color:var(--dim);font-size:12px;overflow-wrap:anywhere}
 .erow .acts{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap}
 .fl{display:grid;gap:4px;font-size:12px;font-weight:600;color:var(--dim)}
@@ -1016,8 +1017,9 @@ function renderIgraci(){
   const tot=all.reduce((t,x)=>t+x.owe,0);
   const mails=Object.values(S.USERS||{}).filter(u=>u.email).map(u=>u.email);S.MAILS=mails;
   $('#igrSum').innerHTML=`${all.length} igrača · ${S.usersOk?mails.length+' sa emailom':'<span style="color:var(--loss)">emailovi nisu učitani (pokreni admin-emailovi.sql)</span>'} · ${all.filter(x=>x.pay&&x.pay.racun).length} sa podacima za isplatu${tot?` · <b style="color:#ffcf5a">za isplatu ukupno ${money(tot)}</b>`:''}`;
-  $('#igrList').innerHTML=list.map(x=>`<div class="prow${x.owe?' owed':''}"><div class="hd">${avHTML(x)}<div style="min-width:0"><b>${esc(x.nick)}</b><small>${x.pts} poena · ${x.won} ${x.won===1?'nagrada':'nagrada'}${x.u?' · od '+shortDate(bgParts(x.u.registrovan).datum):''}</small></div>${x.owe?`<div class="owe">${money(x.owe)}<small>za isplatu</small></div>`:''}</div>${x.u&&x.u.email?`<div class="bf"><span>Email</span><code>${esc(x.u.email)}</code><button type="button" class="cp" data-cp="${esc(x.u.email)}">Kopiraj</button></div>`:x.u&&x.u.gost?'<div class="muted">Gost (bez emaila)</div>':''}${bankHTML(x.pay)}</div>`).join('')||'<div class="empty">Nema igrača.</div>';
+  $('#igrList').innerHTML=list.map(x=>`<div class="prow${x.owe?' owed':''}"><div class="hd">${avHTML(x)}<div style="min-width:0"><b>${esc(x.nick)}</b><small>${x.pts} poena · ${x.won} ${x.won===1?'nagrada':'nagrada'}${x.u?' · od '+shortDate(bgParts(x.u.registrovan).datum):''}</small></div>${x.owe?`<div class="owe">${money(x.owe)}<small>za isplatu</small></div>`:''}</div>${x.u&&x.u.email?`<div class="bf"><span>Email</span><code>${esc(x.u.email)}</code><button type="button" class="cp" data-cp="${esc(x.u.email)}">Kopiraj</button></div>`:x.u&&x.u.gost?'<div class="muted">Gost (bez emaila)</div>':''}${accHTML(x.uid)}${bankHTML(x.pay)}</div>`).join('')||'<div class="empty">Nema igrača.</div>';
   $('#igrList').querySelectorAll('[data-cp]').forEach(b=>b.onclick=()=>copyTxt(b,b.dataset.cp));
+  wireAcc($('#igrList'));
 }
 $('#igrQ').oninput=()=>renderIgraci();
 $('#cpAll').onclick=e=>{const m=S.MAILS||[];if(!m.length){$('#cpAllMsg').textContent='Nema emailova.';return;}copyTxt(e.target,m.join(', '));$('#cpAllMsg').textContent=m.length+' emailova kopirano';setTimeout(()=>{e.target.textContent='Kopiraj sve emailove';},1500);};
@@ -1208,7 +1210,17 @@ $('#eliPopGo').onclick=()=>{$('#eliPop').hidden=true;setLiga('elita');go('home',
 $('#eliPopX').onclick=()=>{$('#eliPop').hidden=true;};
 
 /* admin: elita */
-async function eliSet(uid,row,ok){if(await w(S.sb.from('elita').upsert({player_id:uid,...row,updated_at:new Date().toISOString()}),ok)){await loadElita();renderElitaAdmin();}}
+async function eliSet(uid,row,ok){if(await w(S.sb.from('elita').upsert({player_id:uid,...row,updated_at:new Date().toISOString()}),ok)){await loadElita();renderAdmin();}}
+function accHTML(uid){const r=S.ELALL.find(x=>x.player_id===uid),has=hasElite(r),n=esc(LNAME.elita);
+  const st=has?`<b style="color:var(--win)">ima pristup · ${vaziTxt(r)}</b>`:r&&r.status==='zahtev'?'<b style="color:#ffcf5a">traži pristup</b>':'<span class="muted">nema pristup</span>';
+  const bt=has?`${r.vazi_do?`<button class="btn ghost small" data-a="stalno" data-u="${uid}">Učini stalnim</button>`:''}<button class="btn ghost small" data-a="ukloni" data-u="${uid}">Ukloni pristup</button>`
+    :`<button class="btn gold small" data-a="stalno" data-u="${uid}">Dozvoli</button><button class="btn ghost small" data-a="24" data-u="${uid}">Dozvoli 24h</button>${r&&r.status==='zahtev'?`<button class="btn ghost small" data-a="odbij" data-u="${uid}">Odbij</button>`:''}`;
+  return `<div class="acc"><div>★ ${n}: ${st}</div><div class="acts">${bt}</div></div>`;}
+function wireAcc(root){root.querySelectorAll('[data-a][data-u]').forEach(b=>b.onclick=async()=>{const u=b.dataset.u,e=b.dataset.a;
+  if(e==='stalno')return eliSet(u,{status:'odobren',vazi_do:null,izvor:'admin'},'Pristup dozvoljen');
+  if(e==='24')return eliSet(u,{status:'odobren',vazi_do:new Date(Date.now()+864e5).toISOString(),izvor:'admin'},'Pristup dozvoljen na 24h');
+  if(e==='odbij')return eliSet(u,{status:'odbijen',vazi_do:null},'Zahtev odbijen');
+  if(e==='ukloni'){if(!b.dataset.sure){b.dataset.sure=1;b.textContent='Sigurno ukloni?';return;}if(await w(S.sb.from('elita').delete().eq('player_id',u),'Pristup uklonjen')){await loadElita();renderAdmin();}}});}
 function renderElitaAdmin(){
   const ae=document.activeElement;if(!ae||!ae.closest||!ae.closest('#ligeForm')){$('#lgN1').value=LNAME.otvorena;$('#lgN2').value=LNAME.elita;$('#lgTx').value=S.LIGE.tekst||'';$('#lgReq').checked=S.LIGE.zahtev!==false;$('#lgBT').value=S.LIGE.btn_tekst||'';$('#lgBU').value=S.LIGE.btn_url||'';}
   $('#lgAuto').checked=!!S.LIGE.auto_top3;
