@@ -533,6 +533,7 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
     <div class="pagehead"><h1>Admin</h1>
       <div class="seg" id="adminSeg"><button data-t="dueli" aria-pressed="true">DUELI</button><button data-t="takmicari" aria-pressed="false">TAKMIČARI</button><button data-t="nagrade" aria-pressed="false">NAGRADE</button><button data-t="igraci" aria-pressed="false">IGRAČI</button><button data-t="elita" aria-pressed="false">ELITA<span id="eliReqN"></span></button></div></div>
     <div id="adminDueli">
+      <div class="apanel" id="emBox" style="margin-bottom:12px"></div>
       <div id="nowDuel"></div>
       <div class="apanel">
         <h3>Brzi duel</h3>
@@ -857,7 +858,8 @@ const CD_FMT=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Belgrade',weekday
 const SHOW_START=21*3600+30*60,SHOW_END=23*3600+59*60; // emisija 21:30–23:59, pon–pet
 function bgNow(){const p=CD_FMT.formatToParts(new Date()),g=k=>(p.find(x=>x.type===k)||{}).value;
   return {wd:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].indexOf(g('weekday')),sod:(+g('hour')%24)*3600+(+g('minute'))*60+(+g('second'))};}
-function isLiveNow(){const n=bgNow();return n.wd>=1&&n.wd<=5&&n.sod>=SHOW_START&&n.sod<SHOW_END;}
+const emZatvorena=()=>(S.LIGE||{}).zatvoreno===todayBG();
+function isLiveNow(){const n=bgNow();return !emZatvorena()&& n.wd>=1&&n.wd<=5&&n.sod>=SHOW_START&&n.sod<SHOW_END;}
 // sekunde do sledećeg početka emisije (-1 dok emisija traje)
 function cdLeft(){const n=bgNow();if(isLiveNow())return -1;
   for(let d=0;d<8;d++){const wd=(n.wd+d)%7;if(wd<1||wd>5)continue;const l=d*86400+SHOW_START-n.sod;if(l>0)return l;}return -1;}
@@ -882,7 +884,7 @@ function renderHome(){
   if(heroD){
     h+=`<div class="sec">${heroD.uzivo?'Uživo':isLocked(heroD)?'U toku':'Sledeći duel'}${S.uid&&(mine.c+mine.w)?`<small>Danas: ${mine.c} od ${mine.c+mine.w} pogođeno</small>`:''}</div>${heroHTML(heroD)}`;
   }else{const t=bgParts(Date.now()).vreme,wd=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].indexOf(new Intl.DateTimeFormat('en-US',{timeZone:'Europe/Belgrade',weekday:'short'}).format(new Date())),
-      radni=wd>=1&&wd<=5,live=radni&&t>='21:30'&&t<'23:59',
+      radni=wd>=1&&wd<=5,live=radni&&t>='21:30'&&t<'23:59'&&!emZatvorena(),
       kada=radni&&t<'21:30'?'danas':(wd>=1&&wd<=4)?'sutra':'u ponedeljak',
       msg=live?'Novi duel za par sekundi, reaguj brzo!':`Novi duel stiže ${kada} u 21:30h`;
     h+=`<div class="sec">Sledeći duel</div><article class="hero anon"><div class="hero-top"><span class="pill${live?' soon':''}">${live?'Uživo večeras':kada.charAt(0).toUpperCase()+kada.slice(1)+' u 21:30'}</span><span class="kind">Exatlon Srbija</span></div>
@@ -1206,6 +1208,7 @@ function renderAdmin(){
   if(S.admin&&S.ready&&adminTab==='elita'){renderElitaAdmin();return;}
   if(!S.admin||!S.ready)return;fillSelects();if(!$('#fDate').value)$('#fDate').value=todayBG();
   if(adminTab==='dueli'){
+    renderEmBox();
     renderNow();if(!$('#qGrid').dataset.busy)qRender();
     const list=S.DUELS.slice().sort((a,b)=>(!!a.pobednik-!!b.pobednik)||(a.pobednik?startOf(b)-startOf(a):startOf(a)-startOf(b))).slice(0,40);
     $('#adminDuels').innerHTML=list.map(d=>{const A=side(d.a),B=side(d.b);
@@ -1366,6 +1369,14 @@ $('#ligeForm').onsubmit=async e=>{e.preventDefault();const v={...S.LIGE,otvorena
   if(v.btn_url&&!ctaOk(v.btn_url)){$('#lgMsg').className='msg err';$('#lgMsg').textContent='Link mora biti Instagram, WhatsApp, Telegram, Viber, Facebook/Messenger ili email (mailto:).';return;}
   if(await w(S.sb.from('meta').upsert({key:'lige',value:v}),'Sačuvano')){S.LIGE=v;$('#lgMsg').className='msg ok';$('#lgMsg').textContent='Sačuvano.';applyLiga();renderAll();}};
 $('#lgPrev').onclick=()=>{const o={...S.LIGE};S.LIGE.tekst=$('#lgTx').value;S.LIGE.btn_tekst=$('#lgBT').value;S.LIGE.btn_url=$('#lgBU').value;lockPop();S.LIGE=o;$('#lockPopT').textContent=UP($('#lgN2').value.trim()||LNAME.elita);};
+async function setEmisija(zat){const v={...S.LIGE,zatvoreno:zat?todayBG():null};
+  if(await w(S.sb.from('meta').upsert({key:'lige',value:v}),zat?'Emisija je zatvorena · kreće odbrojavanje':'Emisija je ponovo otvorena')){S.LIGE=v;renderAll();}}
+function renderEmBox(){const b=$('#emBox');if(!b)return;const z=emZatvorena();
+  b.innerHTML=z?`<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><span><b style="color:var(--win)">✓ Emisija je zatvorena za danas</b><br><small class="muted">Igrači vide odbrojavanje do sledeće emisije. Sutra se samo otvara.</small></span><button class="btn ghost small" type="button" id="emUndo">Poništi</button></div>`
+    :`<button class="btn" type="button" id="emClose" style="width:100%">🏁 ZATVORI EMISIJU</button><small class="muted" style="display:block;margin-top:6px">Klikni kad se emisija stvarno završi: nestaje „Novi duel za par sekundi“ i kreće odbrojavanje do sledeće emisije.</small>`;
+  const c=$('#emClose'),u=$('#emUndo');
+  if(c)c.onclick=()=>{if(!c.dataset.sure){c.dataset.sure=1;c.textContent='Sigurno? Klikni ponovo';setTimeout(()=>{if(c.isConnected&&c.dataset.sure){delete c.dataset.sure;c.textContent='🏁 ZATVORI EMISIJU';}},5000);return;}setEmisija(true);};
+  if(u)u.onclick=()=>setEmisija(false);}
 $('#lgAuto').onchange=async e=>{const v={...S.LIGE,auto_top3:e.target.checked};
   if(await w(S.sb.from('meta').upsert({key:'lige',value:v}),e.target.checked?'Top 3 ulaze automatski':'Automatski ulaz isključen'))S.LIGE=v;else e.target.checked=!e.target.checked;};
 function hasElite(e=S.ELITA){return !!(e&&e.status==='odobren'&&(!e.vazi_do||Date.parse(e.vazi_do)>Date.now()));}
