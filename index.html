@@ -494,7 +494,7 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
     <div id="prizeRang"></div>
     <div class="minrule" id="minRule">✅ Za dnevni plasman i nagradu moraš odigrati najmanje <b>70% duela</b> tog dana.</div>
     <div class="rules" id="rulesUk" hidden><b>Ukupni poredak:</b>
-      <ol><li>Broj dnevnih pobeda 🥇</li><li>Zatim broj drugih 🥈 pa trećih 🥉 mesta</li><li>Ako je i to isto: ukupno poena, pa učinak, niz i brzina ⚡</li></ol></div>
+      <ol><li>Ukupno poena (1 pogođen duel = 1 poen)</li><li>Ako je isto: više dnevnih pobeda 🥇, pa 🥈 i 🥉</li><li>Zatim učinak, niz i brzina ⚡</li></ol></div>
     <div class="rules" id="rulesDan"><b>Rangiranje u slučaju istog broja poena:</b>
       <ol><li>Bolji procenat pogodaka</li><li>Najduži niz pogodaka zaredom</li><li>Ko je u proseku najbrže glasao od momenta izlaska duela <span style="white-space:nowrap">(⚡ brzina)</span></li><li>Ako je i to isto, igrači dele mesto</li></ol></div>
     <div class="board" id="board"></div>
@@ -747,14 +747,14 @@ function standingsRaw(day){
   list.forEach((x,i)=>{if(!x.ok){x.rank=null;return;}const q=list[i-1];x.rank=(q&&q.ok&&q.c===x.c&&q.w===x.w&&q.best===x.best&&(q.lead===x.lead||Math.abs(q.lead-x.lead)<1000))?q.rank:i+1;});
   return list;
 }
-/* UKUPNO: poredak po dnevnim plasmanima (kao medalje na olimpijadi) */
+/* UKUPNO: prvo poeni, pa medalje kao prednost kod istog broja poena */
 function standings(day){if(day)return standingsRaw(day);
   const base=standingsRaw(null),M={};
   for(const u of Object.keys((S.RUC||{})[S.LIGA]||{})){const p=(S.PLAYERS||{})[u];if(p&&p.nick&&!base.some(x=>x.uid===u))base.push({uid:u,nick:p.nick.trim(),avatar:p.avatar||null,c:0,w:0,n:0,best:0,lead:Infinity,ok:true});}
   base.forEach(x=>M[x.uid]=ruc(S.LIGA,x.uid).slice());
   for(const dy of [...new Set(settled().map(d=>d.datum))]){for(const x of standingsRaw(dy))if(x.rank&&x.rank<=3&&x.c>0&&M[x.uid])M[x.uid][x.rank-1]++;}
   const pct=x=>x.c/(x.c+x.w||1);
-  const list=base.map(x=>({...x,m:M[x.uid]||[0,0,0]})).sort((a,b)=>b.m[0]-a.m[0]||b.m[1]-a.m[1]||b.m[2]-a.m[2]||b.c-a.c||pct(b)-pct(a)||b.best-a.best||a.lead-b.lead||a.nick.localeCompare(b.nick,'sr'));
+  const list=base.map(x=>({...x,m:M[x.uid]||[0,0,0]})).sort((a,b)=>b.c-a.c||b.m[0]-a.m[0]||b.m[1]-a.m[1]||b.m[2]-a.m[2]||pct(b)-pct(a)||b.best-a.best||a.lead-b.lead||a.nick.localeCompare(b.nick,'sr'));
   list.forEach((x,i)=>{const q=list[i-1];x.rank=(q&&q.m.join()===x.m.join()&&q.c===x.c&&q.w===x.w&&q.best===x.best&&(q.lead===x.lead||Math.abs(q.lead-x.lead)<1000))?q.rank:i+1;});
   return list;}
 function crowd(d){let a=0,b=0;for(const p of Object.values(S.PLAYERS)){const v=p.picks&&p.picks[d.id];if(v==='a')a++;else if(v==='b')b++;}return {a,b,t:a+b};}
