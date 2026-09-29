@@ -854,7 +854,7 @@ function startPresence(){try{
 }catch(e){console.warn(e);}}
 /* odbrojavanje 10 min pre emisije (pon–pet 21:20–21:30) */
 const CD_FMT=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Belgrade',weekday:'short',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
-const SHOW_START=21*3600+30*60,SHOW_END=23*3600; // emisija 21:30–23:00, pon–pet
+const SHOW_START=21*3600+30*60,SHOW_END=23*3600+59*60; // emisija 21:30–23:59, pon–pet
 function bgNow(){const p=CD_FMT.formatToParts(new Date()),g=k=>(p.find(x=>x.type===k)||{}).value;
   return {wd:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].indexOf(g('weekday')),sod:(+g('hour')%24)*3600+(+g('minute'))*60+(+g('second'))};}
 function isLiveNow(){const n=bgNow();return n.wd>=1&&n.wd<=5&&n.sod>=SHOW_START&&n.sod<SHOW_END;}
@@ -882,7 +882,7 @@ function renderHome(){
   if(heroD){
     h+=`<div class="sec">${heroD.uzivo?'Uživo':isLocked(heroD)?'U toku':'Sledeći duel'}${S.uid&&(mine.c+mine.w)?`<small>Danas: ${mine.c} od ${mine.c+mine.w} pogođeno</small>`:''}</div>${heroHTML(heroD)}`;
   }else{const t=bgParts(Date.now()).vreme,wd=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].indexOf(new Intl.DateTimeFormat('en-US',{timeZone:'Europe/Belgrade',weekday:'short'}).format(new Date())),
-      radni=wd>=1&&wd<=5,live=radni&&t>='21:30'&&t<'23:00',
+      radni=wd>=1&&wd<=5,live=radni&&t>='21:30'&&t<'23:59',
       kada=radni&&t<'21:30'?'danas':(wd>=1&&wd<=4)?'sutra':'u ponedeljak',
       msg=live?'Novi duel za par sekundi, reaguj brzo!':`Novi duel stiže ${kada} u 21:30h`;
     h+=`<div class="sec">Sledeći duel</div><article class="hero anon"><div class="hero-top"><span class="pill${live?' soon':''}">${live?'Uživo večeras':kada.charAt(0).toUpperCase()+kada.slice(1)+' u 21:30'}</span><span class="kind">Exatlon Srbija</span></div>
