@@ -384,6 +384,10 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
 .promoc .pg{margin-top:6px;text-align:center;font-weight:800;font-size:13px;color:#ffe7a8}
 .rule1.slim{padding:6px 12px;margin:0 0 6px;font-size:16px;border-radius:12px}.rule1.slim .ic{font-size:18px}
 .sec.first{margin-top:12px}
+.pagehead h1 small{display:block;font-family:var(--body);font-weight:600;font-size:13px;letter-spacing:0;color:var(--metal);margin-top:2px}
+.today{margin:0 0 10px;padding:8px 12px;border-radius:12px;text-align:center;font-size:14px;font-weight:600;color:var(--metal);background:var(--panel);border:1px solid rgba(255,59,43,.45)}.today b{color:#ff9a8f;letter-spacing:.06em}
+.cdd{font-size:13px;font-weight:700;color:#fff;letter-spacing:.02em}
+.visseg.two{grid-template-columns:1fr 1fr}
 .rulesd{margin:14px 0 0}.rulesd summary{cursor:pointer;list-style:none;padding:10px 14px;border-radius:12px;background:var(--panel);border:1px solid var(--line);font-weight:700;font-size:14px;color:var(--metal)}.rulesd summary::-webkit-details-marker{display:none}
 .rulesd[open] summary{margin-bottom:10px}.rulesd .rules{margin:0 0 10px}
 #payRang .payinfo{margin:12px 0 0}
@@ -393,13 +397,14 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
 @media (max-width:760px){
   main{padding-block:10px 110px}
   .pagehead{margin:2px 0 10px}.pagehead h1{font-size:28px}
-  .cdown.far{grid-template-columns:1fr auto;justify-items:start;align-items:center;text-align:left;gap:2px 10px;padding:9px 14px;margin-bottom:10px}
-  .cdown.far .cdl{grid-column:1;font-size:13px;letter-spacing:.1em}.cdown.far .cds{grid-column:1;font-size:12px}
-  .cdown.far .cdt{grid-column:2;grid-row:1/span 2;font-size:38px}
+  .cdown.far{grid-template-columns:1fr auto;justify-items:start;align-items:center;text-align:left;gap:4px 10px;padding:12px 14px;margin-bottom:10px}
+  .cdown.far .cdd{grid-column:1/-1;justify-self:center;padding-bottom:6px;margin-bottom:2px;border-bottom:1px solid rgba(255,59,43,.3);width:100%;text-align:center}
+  .cdown.far .cdl{grid-column:1;font-size:12px;letter-spacing:.08em;white-space:nowrap}.cdown.far .cds{grid-column:1;font-size:12px}
+  .cdown.far .cdt{grid-column:2;grid-row:2/span 2;font-size:clamp(40px,12vw,52px)}
   .cdown:not(.far){padding:10px 14px;gap:4px;margin-bottom:10px}.cdown:not(.far) .cdt{font-size:54px}
   .onl{margin-bottom:8px;font-size:13px}
   .hero-top{padding:10px 12px 0}
-  .hero .faces{padding-top:6px}.hero .faces .photo{max-height:19vh}
+  .hero .faces{padding-top:6px}.hero .faces .photo{max-height:16vh}
   .hero .face{gap:4px}.hero .fname{font-size:clamp(20px,5.5vw,30px)}.hero .fsub{margin-top:-2px;font-size:12px}
   .hero .mid{margin-bottom:40px}
   .hero .picks{padding:10px 12px 12px;gap:8px}.hero .pick{min-height:48px}
@@ -541,7 +546,7 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
   </section>
 
   <section class="screen" id="s-rang">
-    <div class="pagehead"><h1>Rang lista</h1>
+    <div class="pagehead"><h1>Rang lista<small id="rangDate"></small></h1>
       <div class="seg" id="rangSeg"><button data-m="danas" aria-pressed="true">DANAS</button><button data-m="ukupno" aria-pressed="false">UKUPNO</button></div></div>
     <div id="prizeRang"></div>
     <div class="board" id="board"></div>
@@ -627,8 +632,11 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
     </div>
     <div id="adminEli" hidden>
       <div class="apanel"><h3>👁 Prikaz Elitne lige</h3>
-        <div class="visseg" id="lgVisSeg"><button type="button" data-v="clanovi">✅ PRIKAŽI<small>samo igračima koji imaju pristup</small></button><button type="button" data-v="svi">🔓 PRIKAŽI SVIMA<small>ostali je vide sa katancem</small></button><button type="button" data-v="niko">🙈 SAKRIJ<small>niko ne vidi, ništa se ne briše</small></button></div>
+        <div class="visseg" id="lgVisSeg"><button type="button" data-v="clanovi">✅ SAMO ZA ODOBRENE<small>vide je samo igrači sa pristupom (npr. 24h za prvo mesto) i ti. Ostali ne vide ništa.</small></button><button type="button" data-v="svi">🔓 SVIMA<small>ostali je vide zaključanu, sa katancem</small></button><button type="button" data-v="niko">🙈 NIKOME<small>ne vide je ni oni koji imaju pristup. Ništa se ne briše.</small></button></div>
         <p class="msg" id="lgVisMsg" style="margin:0"></p></div>
+      <div class="apanel"><h3>⭐ Istaknuti tekst i nagrade (prva liga)</h3>
+        <div class="visseg two" id="lgPromoSeg"><button type="button" data-p="1">✅ PRIKAŽI<small>na početnoj i na rang listi (DANAS)</small></button><button type="button" data-p="0">🙈 SAKRIJ<small>tekst i boks sa nagradama ne vide se</small></button></div>
+        <p class="muted" style="margin:0;font-size:13px">Ne zavisi od Elitne lige. Sam tekst menjaš niže, u polju „Istaknuti tekst“.</p></div>
       <form class="apanel" id="ligeForm"><h3>Nazivi liga i tekst prozora</h3>
         <div class="grid2"><label class="fl">Naziv prve lige (za sve)<input class="inp" id="lgN1" maxlength="22" required></label>
         <label class="fl">Naziv zaključane lige<input class="inp" id="lgN2" maxlength="22" required></label></div>
@@ -973,9 +981,11 @@ const p2=x=>String(x).padStart(2,'0');
 function cdTxt(l){const d=Math.floor(l/86400),h=Math.floor(l%86400/3600),m=Math.floor(l%3600/60),x=l%60;
   return d?`${d}d ${p2(h)}:${p2(m)}:${p2(x)}`:h?`${p2(h)}:${p2(m)}:${p2(x)}`:`${p2(m)}:${p2(x)}`;}
 const cdMode=l=>l<=600?'soon':'far';
+const DLONG=new Intl.DateTimeFormat('sr-Latn-RS',{timeZone:'Europe/Belgrade',weekday:'long',day:'numeric',month:'long',year:'numeric'});
+function dateLong(){const t=DLONG.format(new Date()).replace(/\.$/,'');return t.charAt(0).toUpperCase()+t.slice(1);}
 function cdHTML(){const l=cdLeft();if(l<0)return '';const soon=cdMode(l)==='soon';
   const kad=l<86400&&bgNow().sod<SHOW_START?'danas':l<2*86400&&bgNow().wd>=1&&bgNow().wd<=4?'sutra':'u ponedeljak';
-  return `<div class="cdown${soon?'':' far'}" data-mode="${cdMode(l)}"><div class="cdl"><span class="cdot"></span>${soon?'EXATLON POČINJE ZA':'SLEDEĆA EMISIJA ZA'}</div><div class="cdt" id="cdT">${cdTxt(l)}</div>${soon?`<div class="cdbar"><i id="cdB" style="width:${l/6}%"></i></div>`:''}<div class="cds">Uživo ${kad} u <b>21:30h</b>${soon?' · budi spreman, prvi duel stiže u sekundi!':' · pon–pet'}</div></div>`;}
+  return `<div class="cdown${soon?'':' far'}" data-mode="${cdMode(l)}"><div class="cdd">📅 ${esc(dateLong())}</div><div class="cdl"><span class="cdot"></span>${soon?'EXATLON POČINJE ZA':'SLEDEĆA EMISIJA ZA'}</div><div class="cdt" id="cdT">${cdTxt(l)}</div>${soon?`<div class="cdbar"><i id="cdB" style="width:${l/6}%"></i></div>`:''}<div class="cds">Uživo ${kad} u <b>21:30h</b>${soon?' · budi spreman, prvi duel stiže u sekundi!':''}</div></div>`;}
 setInterval(()=>{if(current!=='home'||!S.ready)return;const l=cdLeft(),el=$('#cdT'),box=el&&el.closest('.cdown');
   if((l>=0)!==!!el||(box&&box.dataset.mode!==cdMode(l))){renderHome();return;}
   if(el){el.textContent=cdTxt(l);const b=$('#cdB');if(b)b.style.width=(l/6)+'%';el.classList.toggle('last',l<=10);}},1000);
@@ -986,7 +996,7 @@ function renderHome(){
   const rest=open.filter(d=>d!==heroD);
   const res=settled().slice().reverse();
   const today=todayBG(),mine=scoreDay(S.myPicks,today);
-  let h=cdHTML()+onlHTML()+promoHTML()+`<div class="rule1 slim"><span class="ic">🎯</span><span>1 POGOĐEN DUEL = <em>1 POEN</em></span></div>`+(S.LIGA==='elita'?`<div class="elinfo">★ ${esc(UP(LNAME.elita))} · ${S.admin&&!hasElite()?'pregled (admin)':vaziTxt(S.ELITA)}</div>`:'')+prizeHTML();
+  let h=(cdHTML()||`<div class="today">📅 ${esc(dateLong())} · <b>EMISIJA UŽIVO</b></div>`)+onlHTML()+promoHTML()+`<div class="rule1 slim"><span class="ic">🎯</span><span>1 POGOĐEN DUEL = <em>1 POEN</em></span></div>`+(S.LIGA==='elita'?`<div class="elinfo">★ ${esc(UP(LNAME.elita))} · ${S.admin&&!hasElite()?'pregled (admin)':vaziTxt(S.ELITA)}</div>`:'')+prizeHTML();
   if(heroD){
     h+=`<div class="sec first">${heroD.uzivo?'Uživo':isLocked(heroD)?'U toku':'Sledeći duel'}${S.uid&&(mine.c+mine.w)?`<small>Danas: ${mine.c} od ${mine.c+mine.w} pogođeno</small>`:''}</div>${heroHTML(heroD)}`;
   }else{const t=bgParts(Date.now()).vreme,wd=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].indexOf(new Intl.DateTimeFormat('en-US',{timeZone:'Europe/Belgrade',weekday:'short'}).format(new Date())),
@@ -1071,6 +1081,7 @@ $('#rangSeg').onclick=e=>{const b=e.target.closest('button');if(!b)return;rangMo
 function renderBoard(){
   if(!S.ready)return;const day=rangMode==='danas',list=standings(day?todayBG():null);
   $('#minRule').hidden=!day;$('#rulesUk').hidden=day;$('#rulesDan').hidden=!day;
+  $('#rangDate').textContent=day?'📅 '+dateLong():'Ukupno · stanje na dan '+dateLong().replace(/^[^,]+, /,'');
   $('#prizeRang').innerHTML=(day?promoHTML():'')+(S.LIGA==='elita'?'<div class="elinfo">★ RANG LISTA · '+esc(UP(LNAME.elita))+'</div>':'')+(day?prizeHTML():'');
   $('#payRang').innerHTML=(S.LIGA==='elita'?`<div class="payinfo">💳 <span>Po završetku emisije, svakog dana u <b>23:30h</b>, isplaćujemo nagrade za prva 3 mesta na račune koje ste ostavili.</span> <button type="button" class="link" id="toPay">Upiši svoj račun</button></div>`:'');
   const tp=$('#toPay');if(tp)tp.onclick=()=>{go('profil',true);setTimeout(()=>{const f=$('#payForm');if(f)f.scrollIntoView({behavior:'smooth',block:'center'});},150);};
@@ -1526,7 +1537,7 @@ function growHTML(){const g=((S.LIGE||{}).nagrade_tekst??LIGE_DEF.nagrade_tekst)
 function elPrizeHTML(){return prizeBox(S.NAG.elita,growHTML())||`<div class="prize"><span class="ttl">🏆 Novčane nagrade za prva 3 mesta</span>${growHTML()}</div>`;}
 function chipsHTML(n){n=n||{};const c=n.valuta||'€',p=[+n.prvo||0,+n.drugo||0,+n.trece||0];if(!p.some(Boolean))return '';const m=v=>`${(+v).toLocaleString('sr-Latn-RS',{maximumFractionDigits:2})} ${esc(c)}`;
   return `<div class="pcz">${p.map((v,i)=>v?`<span class="p ${'gsb'[i]}">${['🥇','🥈','🥉'][i]} ${m(v)}</span>`:'').join('')}</div>`;}
-function promoHTML(){const L=S.LIGE||{},t=(L.promo??LIGE_DEF.promo)||'';if(L.promo_vis===false||!t.trim()||eliMode()==='niko'||S.LIGA!=='otvorena')return '';
+function promoHTML(){const L=S.LIGE||{},t=(L.promo??LIGE_DEF.promo)||'';if(L.promo_vis===false||!t.trim()||S.LIGA!=='otvorena')return '';
   const g=(L.nagrade_tekst??LIGE_DEF.nagrade_tekst)||'';
   return `<div class="promoc"><div class="pt"><span>⭐</span><b>${esc(t)}</b></div><div class="pb">${chipsHTML(S.NAG.elita)||'<div class="pcz"><span class="p g">🏆 Novčane nagrade za prva 3 mesta</span></div>'}${g.trim()?`<div class="pg">📈 ${esc(g)}</div>`:''}</div></div>`;}
 const eliMode=()=>{const L=S.LIGE||{};return ['svi','clanovi','niko'].includes(L.elita_prikaz)?L.elita_prikaz:(L.elita_skrivena===true?'niko':'clanovi');};
@@ -1566,8 +1577,10 @@ function wireAcc(root){root.querySelectorAll('[data-rm]').forEach(b=>b.onclick=(
   if(e==='24')return eliSet(u,{status:'odobren',vazi_do:new Date(Date.now()+864e5).toISOString(),izvor:'admin'},'Pristup dozvoljen na 24h');
   if(e==='odbij')return eliSet(u,{status:'odbijen',vazi_do:null},'Zahtev odbijen');
   if(e==='ukloni'){if(!b.dataset.sure){b.dataset.sure=1;b.textContent='Sigurno ukloni?';return;}if(await w(S.sb.from('elita').delete().eq('player_id',u),'Pristup uklonjen')){await loadElita();renderAdmin();}}});}
-function renderVisSeg(){const m=eliMode();$('#lgVisSeg').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.v===m));
-  $('#lgVisMsg').className='msg';$('#lgVisMsg').textContent=m==='niko'?'Elitna liga je SAKRIVENA.':m==='svi'?'Elitnu ligu vide SVI (bez pristupa sa katancem).':'Elitnu ligu vide samo igrači koji imaju pristup.';}
+function renderVisSeg(){const pv=(S.LIGE||{}).promo_vis!==false;$('#lgPromoSeg').querySelectorAll('button').forEach(b=>b.classList.toggle('on',(b.dataset.p==='1')===pv));const m=eliMode();$('#lgVisSeg').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.v===m));
+  $('#lgVisMsg').className='msg';$('#lgVisMsg').textContent=m==='niko'?'Elitna liga je sakrivena za SVE, i za one koji imaju pristup.':m==='svi'?'Elitnu ligu vide svi (bez pristupa sa katancem).':'Elitnu ligu vide samo igrači koji imaju pristup.';}
+$('#lgPromoSeg').onclick=async e=>{const b=e.target.closest('button');if(!b)return;const on=b.dataset.p==='1',v={...S.LIGE,promo_vis:on};
+  if(await w(S.sb.from('meta').upsert({key:'lige',value:v}),on?'Istaknuti tekst je prikazan':'Istaknuti tekst je sakriven')){S.LIGE=v;$('#lgPromoVis').checked=on;renderAll();renderVisSeg();}};
 $('#lgVisSeg').onclick=async e=>{const b=e.target.closest('button');if(!b)return;const m=b.dataset.v,v={...S.LIGE,elita_prikaz:m,elita_skrivena:m==='niko'};
   if(await w(S.sb.from('meta').upsert({key:'lige',value:v}),'Sačuvano')){S.LIGE=v;applyLiga();renderAll();renderVisSeg();}};
 function renderElitaAdmin(){renderVisSeg();
