@@ -370,7 +370,8 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
 .closed{margin:12px 16px 16px;padding:10px;border-radius:10px;text-align:center;font-family:var(--display);font-weight:800;font-size:18px;letter-spacing:.1em;color:#ff9a8f;background:rgba(255,59,43,.1);border:1px solid rgba(255,59,43,.4)}
 .hero.multi .mq{padding:4px 16px 0;font-family:var(--display);font-weight:800;font-size:30px;letter-spacing:.04em;text-align:center}.hero.multi .mq small{display:block;font-family:var(--body);font-size:13px;font-weight:600;color:var(--dim);letter-spacing:0}
 .mgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:12px 14px 4px}
-.hero.solo .sface{display:grid;justify-items:center;gap:6px;padding:8px 16px 0}.hero.solo .sface .photo{width:min(46%,190px);aspect-ratio:3/4;border-radius:14px;overflow:hidden}
+.hero.solo .sface{display:grid;justify-items:center;gap:6px;padding:8px 16px 0}.hero.solo .sface .photo{flex:none;width:190px;height:253px;min-width:190px;max-width:none;aspect-ratio:auto;border-radius:14px;overflow:hidden}
+.hero.solo .sface .photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .hero.solo .sq{padding:10px 16px 2px;font-family:var(--display);font-weight:800;font-size:28px;letter-spacing:.03em;text-align:center;text-transform:uppercase}
 .hero.solo .pick.yes.sel{background:linear-gradient(90deg,#1fbf6a,#39d98a);color:#04140b;border-color:#39d98a}
 .promoc{margin:0 0 10px;border-radius:14px;overflow:hidden;border:1px solid rgba(255,176,32,.6);background:linear-gradient(180deg,rgba(255,176,32,.14),var(--panel));box-shadow:0 8px 30px rgba(255,176,32,.16)}
@@ -385,6 +386,7 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
 .rule1.slim{padding:6px 12px;margin:0 0 6px;font-size:16px;border-radius:12px}.rule1.slim .ic{font-size:18px}
 .sec.first{margin-top:12px}
 .heroes{display:grid;gap:14px}
+.nowlist{display:grid;gap:12px}
 .pagehead h1 small{display:block;font-family:var(--body);font-weight:600;font-size:13px;letter-spacing:0;color:var(--metal);margin-top:2px}
 .today{margin:0 0 10px;padding:8px 12px;border-radius:12px;text-align:center;font-size:14px;font-weight:600;color:var(--metal);background:var(--panel);border:1px solid rgba(255,59,43,.45)}.today b{color:#ff9a8f;letter-spacing:.06em}
 .cdd{font-size:13px;font-weight:700;color:#fff;letter-spacing:.02em}
@@ -410,7 +412,7 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
   .hero .mid{margin-bottom:40px}
   .hero .picks{padding:10px 12px 12px;gap:8px}.hero .pick{min-height:48px}
   .hero .hint{padding-bottom:10px}
-  .hero.solo .sface .photo{height:22vh;max-height:230px;min-height:150px;width:auto;max-width:none;aspect-ratio:3/4}
+  .hero.solo .sface .photo{width:150px;min-width:150px;height:200px}
   .hero.solo .sq{font-size:24px;padding-top:6px}
   .hero.multi .mq{font-size:24px}
   .elinfo{margin-bottom:8px}
@@ -870,7 +872,7 @@ function heroSoloHTML(d){
   const pa=c.t?Math.round(c.a/c.t*100):50;
   return `<article class="hero solo" data-id="${d.id}">
     <div class="hero-top">${pill}<span class="kind">${esc(d.vrsta||'Solo nastup')}${d.napomena?' · '+esc(d.napomena):''}</span></div>
-    <div class="sface">${photoBox(A,0)}<div class="fname">${esc(A.name)}</div><div class="fsub">nastupa sam · bez protivnika</div></div>
+    <div class="sface">${photoBox(A,0).replace(' loading="lazy"','')}<div class="fname">${esc(A.name)}</div><div class="fsub">nastupa sam · bez protivnika</div></div>
     <div class="sq">${esc(soloQ(d))}</div>
     <div class="picks">
       <button class="pick yes${mine==='a'?' sel':mine?' off':''}" data-s="a" ${mine||locked?'disabled':''}>✓ DA</button>
@@ -999,8 +1001,7 @@ function renderHome(){
   const box=$('#home');if(!S.ready)return;
   const open=S.DUELS.filter(d=>!d.pobednik).sort((a,b)=>(!!b.uzivo-!!a.uzivo)||startOf(a)-startOf(b));
   // aktuelno: uživo, otvoreno glasanje (brzi duel/solo/takmičenje) i ono što čeka rezultat — sve gore kao glavne kartice
-  const rk=d=>d.uzivo?0:!isLocked(d)?1:2,ct=d=>Date.parse(d.created_at||d.pocetak)||0;
-  let heroes=open.filter(d=>d.uzivo||isLocked(d)||(d.rucno&&!isLocked(d))).sort((a,b)=>rk(a)-rk(b)||(rk(a)===2?startOf(b)-startOf(a):ct(b)-ct(a)));
+  let heroes=curEvents();
   if(!heroes.length){const f=open.find(d=>!isLocked(d))||open[0];heroes=f?[f]:[];}
   const heroD=heroes[0];
   const rest=open.filter(d=>!heroes.includes(d));
@@ -1300,17 +1301,23 @@ function duelTiming(d){const pub=d.created_at?Date.parse(d.created_at):null;if(!
   for(const L of ['otvorena','elita'])for(const p of Object.values(S.PL[L]||{})){const at=p.at&&p.at[d.id];if(!at)continue;n++;tot+=Math.max(0,at-pub);const o=p.od&&p.od[d.id];if(o!=null){k++;dec+=o;seen+=Math.max(0,at-pub-o);}}
   if(!n)return '';const f=ms=>brz(ms);
   return `<div class="tmg">⏱ Prosek do glasa: <b>${f(tot/n)}</b>${k?` · dok nije video duel: <b>${f(seen/k)}</b> · razmišljanje: <b>${f(dec/k)}</b>`:''} <small>(${n} glasova)</small></div>`;}
-function renderNow(){
-  const box=$('#nowDuel');const open=S.DUELS.filter(d=>!d.pobednik).sort((a,b)=>(!!b.uzivo-!!a.uzivo)||startOf(a)-startOf(b));
-  const d=open.find(x=>isLocked(x))||open[0];
-  if(!d){box.innerHTML='';return;}
+function curEvents(){const open=S.DUELS.filter(d=>!d.pobednik);
+  const rk=d=>d.uzivo?0:!isLocked(d)?1:2,ct=d=>Date.parse(d.created_at||d.pocetak)||0;
+  return open.filter(d=>d.uzivo||isLocked(d)||(d.rucno&&!isLocked(d))).sort((a,b)=>rk(a)-rk(b)||(rk(a)===2?startOf(b)-startOf(a):ct(b)-ct(a)));}
+function nowCard(d){
   const A=side(d.a),B=side(d.b),left=startOf(d)-Date.now();
   const c=crowd(d),lk=isLocked(d),tm=duelTiming(d);
-  box.innerHTML=`<div class="nowcard" data-id="${d.id}">${tm}<div class="acts" style="justify-content:space-between"><span class="pill${lk?'':' live'}">${lk?'Glasanje zatvoreno':'<i></i>Glasanje otvoreno'}</span><span class="muted">${c.t} ${c.t===1?'glas':'glasova'}</span></div>
+  return `<div class="nowcard" data-id="${d.id}">${tm}<div class="acts" style="justify-content:space-between"><span class="pill${lk?'':' live'}">${lk?'Glasanje zatvoreno':'<i></i>Glasanje otvoreno'}</span><span class="muted">${c.t} ${c.t===1?'glas':'glasova'}</span></div>
     <div class="p">${isSolo(d)?'🏃 '+esc(evTitle(d)):isMulti(d)?'🏁 Ko pobeđuje? · '+d.ucesnici.length+' takmičara':esc(A.name)+' – '+esc(B.name)+((d.rezA||d.rezB)?` · ${d.rezA}:${d.rezB}`:'')}</div>
     ${lk?'':'<button class="closebtn" data-act="close">⏱ ZATVORI GLASANJE<small>klikni tačno kad duel krene</small></button>'}
     ${isSolo(d)?`<div class="bigwin"><button data-act="win" data-s="a">✓ DA<br><small style="font-size:13px;color:var(--dim)">uspeo · ${c.a} glasova</small></button><button data-act="win" data-s="b">✕ NE<br><small style="font-size:13px;color:var(--dim)">nije uspeo · ${c.b} glasova</small></button></div>`:isMulti(d)?`<div class="bigwin">${d.ucesnici.map(u=>`<button data-act="win" data-s="${esc(u)}">✓ Pobedio<br>${esc(side(u).name)}<small style="display:block;font-size:13px;color:var(--dim)">${(c.by[u]||0)} glasova</small></button>`).join('')}</div>`:`<div class="bigwin"><button data-act="win" data-s="a">✓ Pobedio<br>${esc(A.name)}</button><button data-act="win" data-s="b">✓ Pobedio<br>${esc(B.name)}</button></div>`}
     ${d.cilj&&!isMulti(d)&&!isSolo(d)?`<div class="acts" style="justify-content:center"><button data-act="pt" data-s="a">+1 ${esc(A.name)}</button><button data-act="pt" data-s="b">+1 ${esc(B.name)}</button><button data-act="undo">−1</button></div>`:''}</div>`;
+}
+function renderNow(){
+  const box=$('#nowDuel');let list=curEvents();
+  if(!list.length){const open=S.DUELS.filter(d=>!d.pobednik).sort((a,b)=>(!!b.uzivo-!!a.uzivo)||startOf(a)-startOf(b));if(open[0])list=[open[0]];}
+  if(!list.length){box.innerHTML='';return;}
+  box.innerHTML=`<div class="nowlist">${list.map(nowCard).join('')}</div>`;
   box.querySelectorAll('[data-act]').forEach(b=>b.onclick=()=>adminAct(b));
 }
 $('#prizeForm').onsubmit=async e=>{e.preventDefault();const v={prvo:+$('#nz1').value||0,drugo:+$('#nz2').value||0,trece:+$('#nz3').value||0,valuta:$('#nzV').value.trim()||'€'};
