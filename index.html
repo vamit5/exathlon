@@ -373,6 +373,43 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
 .hero.solo .sface{display:grid;justify-items:center;gap:6px;padding:8px 16px 0}.hero.solo .sface .photo{width:min(46%,190px);aspect-ratio:3/4;border-radius:14px;overflow:hidden}
 .hero.solo .sq{padding:10px 16px 2px;font-family:var(--display);font-weight:800;font-size:28px;letter-spacing:.03em;text-align:center;text-transform:uppercase}
 .hero.solo .pick.yes.sel{background:linear-gradient(90deg,#1fbf6a,#39d98a);color:#04140b;border-color:#39d98a}
+.promoc{margin:0 0 10px;border-radius:14px;overflow:hidden;border:1px solid rgba(255,176,32,.6);background:linear-gradient(180deg,rgba(255,176,32,.14),var(--panel));box-shadow:0 8px 30px rgba(255,176,32,.16)}
+.promoc .pt{display:flex;align-items:center;gap:10px;padding:10px 14px;color:#1a1200;background:linear-gradient(90deg,#ffb020,#ffd76a)}
+.promoc .pt span{font-size:20px}.promoc .pt b{flex:1;font-family:var(--display);font-weight:800;font-size:18px;letter-spacing:.02em;line-height:1.15;white-space:pre-line}
+.promoc .pb{padding:8px 10px 9px}
+.pcz{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.pcz .p{display:flex;align-items:baseline;gap:4px;padding:4px 10px;border-radius:999px;background:rgba(0,0,0,.35);font-family:var(--display);font-weight:800;font-size:16px;white-space:nowrap}
+.pcz .p small{font-family:var(--body);font-weight:600;font-size:11px;color:var(--metal)}
+.pcz .p.g{color:#ffcf5a}.pcz .p.s{color:#d7dde6}.pcz .p.b{color:#e2a36b}
+.promoc .pg{margin-top:6px;text-align:center;font-weight:800;font-size:13px;color:#ffe7a8}
+.rule1.slim{padding:6px 12px;margin:0 0 6px;font-size:16px;border-radius:12px}.rule1.slim .ic{font-size:18px}
+.sec.first{margin-top:12px}
+.rulesd{margin:14px 0 0}.rulesd summary{cursor:pointer;list-style:none;padding:10px 14px;border-radius:12px;background:var(--panel);border:1px solid var(--line);font-weight:700;font-size:14px;color:var(--metal)}.rulesd summary::-webkit-details-marker{display:none}
+.rulesd[open] summary{margin-bottom:10px}.rulesd .rules{margin:0 0 10px}
+#payRang .payinfo{margin:12px 0 0}
+.visseg{display:grid;gap:8px}.visseg button{display:grid;gap:2px;padding:12px 14px;border-radius:12px;text-align:left;background:var(--panel2);border:2px solid var(--line2);font-family:var(--display);font-weight:800;font-size:17px;letter-spacing:.03em;color:var(--text)}
+.visseg button small{font-family:var(--body);font-weight:500;font-size:13px;letter-spacing:0;color:var(--dim)}
+.visseg button.on{border-color:#ff7a1a;background:rgba(255,122,26,.15)}
+@media (max-width:760px){
+  main{padding-block:10px 110px}
+  .pagehead{margin:2px 0 10px}.pagehead h1{font-size:28px}
+  .cdown.far{grid-template-columns:1fr auto;justify-items:start;align-items:center;text-align:left;gap:2px 10px;padding:9px 14px;margin-bottom:10px}
+  .cdown.far .cdl{grid-column:1;font-size:13px;letter-spacing:.1em}.cdown.far .cds{grid-column:1;font-size:12px}
+  .cdown.far .cdt{grid-column:2;grid-row:1/span 2;font-size:38px}
+  .cdown:not(.far){padding:10px 14px;gap:4px;margin-bottom:10px}.cdown:not(.far) .cdt{font-size:54px}
+  .onl{margin-bottom:8px;font-size:13px}
+  .hero-top{padding:10px 12px 0}
+  .hero .faces{padding-top:6px}.hero .faces .photo{max-height:19vh}
+  .hero .face{gap:4px}.hero .fname{font-size:clamp(20px,5.5vw,30px)}.hero .fsub{margin-top:-2px;font-size:12px}
+  .hero .mid{margin-bottom:40px}
+  .hero .picks{padding:10px 12px 12px;gap:8px}.hero .pick{min-height:48px}
+  .hero .hint{padding-bottom:10px}
+  .hero.solo .sface .photo{max-height:21vh;width:auto}
+  .hero.solo .sq{font-size:24px;padding-top:6px}
+  .hero.multi .mq{font-size:24px}
+  .elinfo{margin-bottom:8px}
+  .prize{padding:8px 12px;margin-bottom:10px;gap:8px}.prize .ttl{font-size:15px}.prize .p{font-size:15px}
+}
 .promo.static{cursor:default;margin-bottom:10px}.promo.static b{white-space:pre-line}
 .prize .grow{flex-basis:100%;font-weight:800;font-size:14px;color:#ffe7a8;letter-spacing:.02em}
 .mtile{position:relative;display:grid;gap:6px;padding:6px 6px 8px;border-radius:14px;background:var(--panel2);border:2px solid var(--line2);text-align:center;color:var(--text)}
@@ -507,12 +544,16 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
     <div class="pagehead"><h1>Rang lista</h1>
       <div class="seg" id="rangSeg"><button data-m="danas" aria-pressed="true">DANAS</button><button data-m="ukupno" aria-pressed="false">UKUPNO</button></div></div>
     <div id="prizeRang"></div>
+    <div class="board" id="board"></div>
+    <div id="payRang"></div>
+    <details class="rulesd"><summary>ℹ️ Pravila rangiranja</summary>
+    <div class="rule1 slim"><span class="ic">🎯</span><span>1 POGOĐEN DUEL = <em>1 POEN</em></span></div>
     <div class="minrule" id="minRule">✅ Za dnevni plasman i nagradu moraš odigrati najmanje <b>70% duela</b> tog dana.</div>
     <div class="rules" id="rulesUk" hidden><b>Ukupni poredak:</b>
       <ol><li>Ukupno poena (1 pogođen duel = 1 poen)</li><li>Ako je isto: više dnevnih pobeda 🥇, pa 🥈 i 🥉</li><li>Zatim učinak, niz i brzina ⚡</li></ol></div>
     <div class="rules" id="rulesDan"><b>Rangiranje u slučaju istog broja poena:</b>
       <ol><li>Bolji procenat pogodaka</li><li>Najduži niz pogodaka zaredom</li><li>Ko je u proseku najbrže glasao od momenta izlaska duela <span style="white-space:nowrap">(⚡ brzina)</span></li><li>Ako je i to isto, igrači dele mesto</li></ol></div>
-    <div class="board" id="board"></div>
+    </details>
   </section>
 
   <section class="screen" id="s-profil">
@@ -585,11 +626,13 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
       <div class="list" id="adminDuels"></div>
     </div>
     <div id="adminEli" hidden>
+      <div class="apanel"><h3>👁 Prikaz Elitne lige</h3>
+        <div class="visseg" id="lgVisSeg"><button type="button" data-v="clanovi">✅ PRIKAŽI<small>samo igračima koji imaju pristup</small></button><button type="button" data-v="svi">🔓 PRIKAŽI SVIMA<small>ostali je vide sa katancem</small></button><button type="button" data-v="niko">🙈 SAKRIJ<small>niko ne vidi, ništa se ne briše</small></button></div>
+        <p class="msg" id="lgVisMsg" style="margin:0"></p></div>
       <form class="apanel" id="ligeForm"><h3>Nazivi liga i tekst prozora</h3>
         <div class="grid2"><label class="fl">Naziv prve lige (za sve)<input class="inp" id="lgN1" maxlength="22" required></label>
         <label class="fl">Naziv zaključane lige<input class="inp" id="lgN2" maxlength="22" required></label></div>
-        <label class="fl">Ko vidi zaključanu ligu<select class="inp" id="lgVis"><option value="clanovi">Samo igrači koji imaju pristup (i ti)</option><option value="svi">Svi (ostali je vide sa katancem)</option><option value="niko">Niko (sakrivena, ništa se ne briše)</option></select></label>
-        <label class="chk"><input type="checkbox" id="lgPromoVis"><span><b>Prikaži istaknuti tekst</b> u prvoj ligi (na početnoj i na rang listi)</span></label>
+                <label class="chk"><input type="checkbox" id="lgPromoVis"><span><b>Prikaži istaknuti tekst</b> u prvoj ligi (na početnoj i na rang listi)</span></label>
         <label class="fl">Istaknuti tekst (isti na početnoj i rang listi)<textarea class="inp" id="lgPromo" rows="3" maxlength="300" style="height:auto;padding:10px;resize:vertical;font:inherit;font-size:15px;line-height:1.45"></textarea></label>
         <label class="fl">Tekst u boksu sa nagradama<input class="inp" id="lgGrow" maxlength="80" placeholder="Nagrade rastu iz dana u dan"></label>
         <label class="fl">Tekst prozora kad neko klikne na zaključanu ligu<textarea class="inp" id="lgTx" rows="5" maxlength="600" style="height:auto;padding:10px;resize:vertical;font:inherit;font-size:15px;line-height:1.45"></textarea></label>
@@ -943,9 +986,9 @@ function renderHome(){
   const rest=open.filter(d=>d!==heroD);
   const res=settled().slice().reverse();
   const today=todayBG(),mine=scoreDay(S.myPicks,today);
-  let h=cdHTML()+onlHTML()+promoHTML()+`<div class="rule1"><span class="ic">🎯</span><span>1 POGOĐEN DUEL = <em>1 POEN</em></span></div>`+(S.LIGA==='elita'?`<div class="elinfo">★ ${esc(UP(LNAME.elita))} · ${S.admin&&!hasElite()?'pregled (admin)':vaziTxt(S.ELITA)}</div>`:'')+prizeHTML();
+  let h=cdHTML()+onlHTML()+promoHTML()+`<div class="rule1 slim"><span class="ic">🎯</span><span>1 POGOĐEN DUEL = <em>1 POEN</em></span></div>`+(S.LIGA==='elita'?`<div class="elinfo">★ ${esc(UP(LNAME.elita))} · ${S.admin&&!hasElite()?'pregled (admin)':vaziTxt(S.ELITA)}</div>`:'')+prizeHTML();
   if(heroD){
-    h+=`<div class="sec">${heroD.uzivo?'Uživo':isLocked(heroD)?'U toku':'Sledeći duel'}${S.uid&&(mine.c+mine.w)?`<small>Danas: ${mine.c} od ${mine.c+mine.w} pogođeno</small>`:''}</div>${heroHTML(heroD)}`;
+    h+=`<div class="sec first">${heroD.uzivo?'Uživo':isLocked(heroD)?'U toku':'Sledeći duel'}${S.uid&&(mine.c+mine.w)?`<small>Danas: ${mine.c} od ${mine.c+mine.w} pogođeno</small>`:''}</div>${heroHTML(heroD)}`;
   }else{const t=bgParts(Date.now()).vreme,wd=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].indexOf(new Intl.DateTimeFormat('en-US',{timeZone:'Europe/Belgrade',weekday:'short'}).format(new Date())),
       radni=wd>=1&&wd<=5,live=radni&&t>='21:30'&&t<'23:59'&&!emZatvorena(),
       kada=radni&&t<'21:30'?'danas':(wd>=1&&wd<=4)?'sutra':'u ponedeljak',
@@ -1028,7 +1071,8 @@ $('#rangSeg').onclick=e=>{const b=e.target.closest('button');if(!b)return;rangMo
 function renderBoard(){
   if(!S.ready)return;const day=rangMode==='danas',list=standings(day?todayBG():null);
   $('#minRule').hidden=!day;$('#rulesUk').hidden=day;$('#rulesDan').hidden=!day;
-  $('#prizeRang').innerHTML=promoHTML()+`<div class="rule1"><span class="ic">🎯</span><span>1 POGOĐEN DUEL = <em>1 POEN</em></span></div>`+(S.LIGA==='elita'?'<div class="elinfo">★ RANG LISTA · '+esc(UP(LNAME.elita))+'</div>':'')+prizeHTML()+(S.LIGA==='elita'?`<div class="payinfo">💳 <span>Po završetku emisije, svakog dana u <b>23:30h</b>, isplaćujemo nagrade za prva 3 mesta na račune koje ste ostavili.</span> <button type="button" class="link" id="toPay">Upiši svoj račun</button></div>`:'');
+  $('#prizeRang').innerHTML=(day?promoHTML():'')+(S.LIGA==='elita'?'<div class="elinfo">★ RANG LISTA · '+esc(UP(LNAME.elita))+'</div>':'')+(day?prizeHTML():'');
+  $('#payRang').innerHTML=(S.LIGA==='elita'?`<div class="payinfo">💳 <span>Po završetku emisije, svakog dana u <b>23:30h</b>, isplaćujemo nagrade za prva 3 mesta na račune koje ste ostavili.</span> <button type="button" class="link" id="toPay">Upiši svoj račun</button></div>`:'');
   const tp=$('#toPay');if(tp)tp.onclick=()=>{go('profil',true);setTimeout(()=>{const f=$('#payForm');if(f)f.scrollIntoView({behavior:'smooth',block:'center'});},150);};
   const pz=prizes(),medal=r=>day&&r<=3&&pz[r-1]?`<span class="medal">${['🥇','🥈','🥉'][r-1]}</span>`:'';
   let sep=false;
@@ -1461,7 +1505,7 @@ function lockPop(){const e=S.ELITA;{const c=$('#lockPopCta'),u=(S.LIGE.btn_url||
     if(error){console.warn(error);a.disabled=false;toast('Zahtev nije poslat. Pokušaj ponovo.');return;}toast('Zahtev je poslat');await loadElita();lockPop();};
   $('#lockPop').hidden=false;}
 $('#lockPopX').onclick=()=>{$('#lockPop').hidden=true;};$('#lockPop').onclick=e=>{if(e.target.id==='lockPop')$('#lockPop').hidden=true;};
-$('#ligeForm').onsubmit=async e=>{e.preventDefault();const v={...S.LIGE,otvorena:$('#lgN1').value.trim()||LIGE_DEF.otvorena,elita:$('#lgN2').value.trim()||LIGE_DEF.elita,tekst:$('#lgTx').value.trim(),promo:$('#lgPromo').value.trim(),promo_vis:$('#lgPromoVis').checked,nagrade_tekst:$('#lgGrow').value.trim(),elita_prikaz:$('#lgVis').value,elita_skrivena:$('#lgVis').value==='niko',zahtev:$('#lgReq').checked,btn_tekst:$('#lgBT').value.trim(),btn_url:$('#lgBU').value.trim()};
+$('#ligeForm').onsubmit=async e=>{e.preventDefault();const v={...S.LIGE,otvorena:$('#lgN1').value.trim()||LIGE_DEF.otvorena,elita:$('#lgN2').value.trim()||LIGE_DEF.elita,tekst:$('#lgTx').value.trim(),promo:$('#lgPromo').value.trim(),promo_vis:$('#lgPromoVis').checked,nagrade_tekst:$('#lgGrow').value.trim(),zahtev:$('#lgReq').checked,btn_tekst:$('#lgBT').value.trim(),btn_url:$('#lgBU').value.trim()};
   if(v.btn_url&&!ctaOk(v.btn_url)){$('#lgMsg').className='msg err';$('#lgMsg').textContent='Link mora biti Instagram, WhatsApp, Telegram, Viber, Facebook/Messenger ili email (mailto:).';return;}
   if(await w(S.sb.from('meta').upsert({key:'lige',value:v}),'Sačuvano')){S.LIGE=v;$('#lgMsg').className='msg ok';$('#lgMsg').textContent='Sačuvano.';applyLiga();renderAll();}};
 $('#lgPrev').onclick=()=>{const o={...S.LIGE};S.LIGE.tekst=$('#lgTx').value;S.LIGE.btn_tekst=$('#lgBT').value;S.LIGE.btn_url=$('#lgBU').value;lockPop();S.LIGE=o;$('#lockPopT').textContent=UP($('#lgN2').value.trim()||LNAME.elita);};
@@ -1480,7 +1524,11 @@ $('#lgAuto').onchange=async e=>{const v={...S.LIGE,auto_top3:e.target.checked};
   if(await w(S.sb.from('meta').upsert({key:'lige',value:v}),e.target.checked?'Top 3 ulaze automatski':'Automatski ulaz isključen'))S.LIGE=v;else e.target.checked=!e.target.checked;};
 function growHTML(){const g=((S.LIGE||{}).nagrade_tekst??LIGE_DEF.nagrade_tekst)||'';return g.trim()?`<span class="grow">📈 ${esc(g)}</span>`:'';}
 function elPrizeHTML(){return prizeBox(S.NAG.elita,growHTML())||`<div class="prize"><span class="ttl">🏆 Novčane nagrade za prva 3 mesta</span>${growHTML()}</div>`;}
-function promoHTML(){const L=S.LIGE||{},t=(L.promo??LIGE_DEF.promo)||'';if(L.promo_vis===false||!t.trim()||eliMode()==='niko'||S.LIGA!=='otvorena')return '';return `<div class="promo static"><span>⭐</span><b>${esc(t)}</b></div>`+elPrizeHTML();}
+function chipsHTML(n){n=n||{};const c=n.valuta||'€',p=[+n.prvo||0,+n.drugo||0,+n.trece||0];if(!p.some(Boolean))return '';const m=v=>`${(+v).toLocaleString('sr-Latn-RS',{maximumFractionDigits:2})} ${esc(c)}`;
+  return `<div class="pcz">${p.map((v,i)=>v?`<span class="p ${'gsb'[i]}">${['🥇','🥈','🥉'][i]} ${m(v)}</span>`:'').join('')}</div>`;}
+function promoHTML(){const L=S.LIGE||{},t=(L.promo??LIGE_DEF.promo)||'';if(L.promo_vis===false||!t.trim()||eliMode()==='niko'||S.LIGA!=='otvorena')return '';
+  const g=(L.nagrade_tekst??LIGE_DEF.nagrade_tekst)||'';
+  return `<div class="promoc"><div class="pt"><span>⭐</span><b>${esc(t)}</b></div><div class="pb">${chipsHTML(S.NAG.elita)||'<div class="pcz"><span class="p g">🏆 Novčane nagrade za prva 3 mesta</span></div>'}${g.trim()?`<div class="pg">📈 ${esc(g)}</div>`:''}</div></div>`;}
 const eliMode=()=>{const L=S.LIGE||{};return ['svi','clanovi','niko'].includes(L.elita_prikaz)?L.elita_prikaz:(L.elita_skrivena===true?'niko':'clanovi');};
 const eliVis=()=>{const m=eliMode();return m==='svi'||(m==='clanovi'&&(!!S.admin||hasElite()));};
 function hasElite(e=S.ELITA){return !!(e&&e.status==='odobren'&&(!e.vazi_do||Date.parse(e.vazi_do)>Date.now()));}
@@ -1518,8 +1566,12 @@ function wireAcc(root){root.querySelectorAll('[data-rm]').forEach(b=>b.onclick=(
   if(e==='24')return eliSet(u,{status:'odobren',vazi_do:new Date(Date.now()+864e5).toISOString(),izvor:'admin'},'Pristup dozvoljen na 24h');
   if(e==='odbij')return eliSet(u,{status:'odbijen',vazi_do:null},'Zahtev odbijen');
   if(e==='ukloni'){if(!b.dataset.sure){b.dataset.sure=1;b.textContent='Sigurno ukloni?';return;}if(await w(S.sb.from('elita').delete().eq('player_id',u),'Pristup uklonjen')){await loadElita();renderAdmin();}}});}
-function renderElitaAdmin(){
-  const ae=document.activeElement;if(!ae||!ae.closest||!ae.closest('#ligeForm')){$('#lgN1').value=LNAME.otvorena;$('#lgN2').value=LNAME.elita;$('#lgTx').value=S.LIGE.tekst||'';$('#lgPromo').value=(S.LIGE.promo??LIGE_DEF.promo)||'';$('#lgVis').value=eliMode();$('#lgPromoVis').checked=S.LIGE.promo_vis!==false;$('#lgGrow').value=(S.LIGE.nagrade_tekst??LIGE_DEF.nagrade_tekst)||'';$('#lgReq').checked=S.LIGE.zahtev!==false;$('#lgBT').value=S.LIGE.btn_tekst||'';$('#lgBU').value=S.LIGE.btn_url||'';}
+function renderVisSeg(){const m=eliMode();$('#lgVisSeg').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.v===m));
+  $('#lgVisMsg').className='msg';$('#lgVisMsg').textContent=m==='niko'?'Elitna liga je SAKRIVENA.':m==='svi'?'Elitnu ligu vide SVI (bez pristupa sa katancem).':'Elitnu ligu vide samo igrači koji imaju pristup.';}
+$('#lgVisSeg').onclick=async e=>{const b=e.target.closest('button');if(!b)return;const m=b.dataset.v,v={...S.LIGE,elita_prikaz:m,elita_skrivena:m==='niko'};
+  if(await w(S.sb.from('meta').upsert({key:'lige',value:v}),'Sačuvano')){S.LIGE=v;applyLiga();renderAll();renderVisSeg();}};
+function renderElitaAdmin(){renderVisSeg();
+  const ae=document.activeElement;if(!ae||!ae.closest||!ae.closest('#ligeForm')){$('#lgN1').value=LNAME.otvorena;$('#lgN2').value=LNAME.elita;$('#lgTx').value=S.LIGE.tekst||'';$('#lgPromo').value=(S.LIGE.promo??LIGE_DEF.promo)||'';$('#lgPromoVis').checked=S.LIGE.promo_vis!==false;$('#lgGrow').value=(S.LIGE.nagrade_tekst??LIGE_DEF.nagrade_tekst)||'';$('#lgReq').checked=S.LIGE.zahtev!==false;$('#lgBT').value=S.LIGE.btn_tekst||'';$('#lgBU').value=S.LIGE.btn_url||'';}
   $('#lgAuto').checked=!!S.LIGE.auto_top3;$('#lgMesta').value=String(S.LIGE.auto_mesta||3);
   const nick=u=>{const p=S.PL.otvorena[u];return (p&&p.nick)||'Igrač';},mail=u=>((S.USERS||{})[u]||{}).email||'';
   const av=u=>avHTML({nick:nick(u),avatar:(S.PL.otvorena[u]||{}).avatar});
