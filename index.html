@@ -384,6 +384,7 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
 .promoc .pg{margin-top:6px;text-align:center;font-weight:800;font-size:13px;color:#ffe7a8}
 .rule1.slim{padding:6px 12px;margin:0 0 6px;font-size:16px;border-radius:12px}.rule1.slim .ic{font-size:18px}
 .sec.first{margin-top:12px}
+.heroes{display:grid;gap:14px}
 .pagehead h1 small{display:block;font-family:var(--body);font-weight:600;font-size:13px;letter-spacing:0;color:var(--metal);margin-top:2px}
 .today{margin:0 0 10px;padding:8px 12px;border-radius:12px;text-align:center;font-size:14px;font-weight:600;color:var(--metal);background:var(--panel);border:1px solid rgba(255,59,43,.45)}.today b{color:#ff9a8f;letter-spacing:.06em}
 .cdd{font-size:13px;font-weight:700;color:#fff;letter-spacing:.02em}
@@ -860,6 +861,9 @@ function heroMultiHTML(d){
     ${!mine&&!locked?'<div class="hint">Tačna prognoza = 1 poen.</div>':show?`<div class="hint">${c.t} prognoza</div>`:''}
     ${locked&&!d.pobednik?'<div class="closed">🔒 GLASANJE ZATVORENO</div>':''}
   </article>`;}
+const openNow=d=>d.rucno&&!isLocked(d)&&!d.uzivo;
+function tLbl(d){return openNow(d)?'Glasanje otvoreno':dayLabel(d.datum)+' '+d.vreme;}
+function whenHTML(d){return openNow(d)?'Sada<b>GLASAJ</b>':`${esc(dayLabel(d.datum))}<b>${esc(d.vreme)}</b>`;}
 function heroSoloHTML(d){
   const A=side(d.a),mine=S.myPicks[d.id],locked=isLocked(d),c=crowd(d);
   const pill=d.uzivo?'<span class="pill live"><i></i>UŽIVO</span>':!locked?'<span class="pill live"><i></i>Glasaj sada</span>':'<span class="pill">Čeka se rezultat</span>';
@@ -903,10 +907,10 @@ function heroHTML(d){if(isSolo(d))return heroSoloHTML(d);if(isMulti(d))return he
   </article>`;
 }
 function rowHTML(d){
-  if(isSolo(d)){const mine=S.myPicks[d.id],locked=isLocked(d);return `<div class="row" data-id="${d.id}"><div class="when">${esc(dayLabel(d.datum))}<b>${esc(d.vreme)}</b></div><div class="pair">${esc(side(d.a).name)}<small>${esc(soloQ(d))}</small></div><div class="mini">${['a','b'].map(s=>`<button data-s="${s}" class="${mine===s?'sel':mine?'off':''}" ${mine||locked?'disabled':''}>${s==='a'?'DA':'NE'}</button>`).join('')}</div></div>`;}
-  if(isMulti(d))return `<div class="row" data-id="${d.id}"><div class="when">${esc(dayLabel(d.datum))}<b>${esc(d.vreme)}</b></div><div class="pair">Ko pobeđuje? · ${d.ucesnici.length} takmičara<small>${esc(d.vrsta||'Pojedinačno takmičenje')}</small></div><div class="mini"></div></div>`;
+  if(isSolo(d)){const mine=S.myPicks[d.id],locked=isLocked(d);return `<div class="row" data-id="${d.id}"><div class="when">${whenHTML(d)}</div><div class="pair">${esc(side(d.a).name)}<small>${esc(soloQ(d))}</small></div><div class="mini">${['a','b'].map(s=>`<button data-s="${s}" class="${mine===s?'sel':mine?'off':''}" ${mine||locked?'disabled':''}>${s==='a'?'DA':'NE'}</button>`).join('')}</div></div>`;}
+  if(isMulti(d))return `<div class="row" data-id="${d.id}"><div class="when">${whenHTML(d)}</div><div class="pair">Ko pobeđuje? · ${d.ucesnici.length} takmičara<small>${esc(d.vrsta||'Pojedinačno takmičenje')}</small></div><div class="mini"></div></div>`;
   const A=side(d.a),B=side(d.b),mine=S.myPicks[d.id],locked=isLocked(d);
-  return `<div class="row" data-id="${d.id}"><div class="when">${esc(dayLabel(d.datum))}<b>${esc(d.vreme)}</b></div>
+  return `<div class="row" data-id="${d.id}"><div class="when">${whenHTML(d)}</div>
     <div class="pair">${esc(A.name)} – ${esc(B.name)}<small>${esc(d.vrsta)}</small></div>
     <div class="mini">${['a','b'].map(s=>`<button data-s="${s}" class="${mine===s?'sel':mine?'off':''}" ${mine||locked?'disabled':''}>${esc((s==='a'?A:B).name)}</button>`).join('')}</div></div>`;
 }
@@ -994,13 +998,18 @@ setInterval(()=>{if(current!=='home'||!S.ready)return;const l=cdLeft(),el=$('#cd
 function renderHome(){
   const box=$('#home');if(!S.ready)return;
   const open=S.DUELS.filter(d=>!d.pobednik).sort((a,b)=>(!!b.uzivo-!!a.uzivo)||startOf(a)-startOf(b));
-  const heroD=open.find(d=>d.uzivo)||open.find(d=>!isLocked(d))||open[0];
-  const rest=open.filter(d=>d!==heroD);
+  // aktuelno: uživo, otvoreno glasanje (brzi duel/solo/takmičenje) i ono što čeka rezultat — sve gore kao glavne kartice
+  const rk=d=>d.uzivo?0:!isLocked(d)?1:2,ct=d=>Date.parse(d.created_at||d.pocetak)||0;
+  let heroes=open.filter(d=>d.uzivo||isLocked(d)||(d.rucno&&!isLocked(d))).sort((a,b)=>rk(a)-rk(b)||(rk(a)===2?startOf(b)-startOf(a):ct(b)-ct(a)));
+  if(!heroes.length){const f=open.find(d=>!isLocked(d))||open[0];heroes=f?[f]:[];}
+  const heroD=heroes[0];
+  const rest=open.filter(d=>!heroes.includes(d));
   const res=settled().slice().reverse();
   const today=todayBG(),mine=scoreDay(S.myPicks,today);
   let h=(cdHTML()||`<div class="today">📅 ${esc(dateLong())} · <b>EMISIJA UŽIVO</b></div>`)+onlHTML()+promoHTML()+`<div class="rule1 slim"><span class="ic">🎯</span><span>1 POGOĐEN DUEL = <em>1 POEN</em></span></div>`+(S.LIGA==='elita'?`<div class="elinfo">★ ${esc(UP(LNAME.elita))} · ${S.admin&&!hasElite()?'pregled (admin)':vaziTxt(S.ELITA)}</div>`:'')+prizeHTML();
   if(heroD){
-    h+=`<div class="sec first">${heroD.uzivo?'Uživo':isLocked(heroD)?'U toku':'Sledeći duel'}${S.uid&&(mine.c+mine.w)?`<small>Danas: ${mine.c} od ${mine.c+mine.w} pogođeno</small>`:''}</div>${heroHTML(heroD)}`;
+    const lbl=heroes.length>1?'Aktuelno · '+heroes.length:heroD.uzivo?'Uživo':isLocked(heroD)?'U toku':(heroD.rucno?'Glasaj sada':'Sledeći duel');
+    h+=`<div class="sec first">${lbl}${S.uid&&(mine.c+mine.w)?`<small>Danas: ${mine.c} od ${mine.c+mine.w} pogođeno</small>`:''}</div><div class="heroes">${heroes.map(heroHTML).join('')}</div>`;
   }else{const t=bgParts(Date.now()).vreme,wd=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].indexOf(new Intl.DateTimeFormat('en-US',{timeZone:'Europe/Belgrade',weekday:'short'}).format(new Date())),
       radni=wd>=1&&wd<=5,live=radni&&t>='21:30'&&t<'23:59'&&!emZatvorena(),
       kada=radni&&t<'21:30'?'danas':(wd>=1&&wd<=4)?'sutra':'u ponedeljak',
@@ -1361,11 +1370,11 @@ function renderAdmin(){
     renderNow();if(!$('#qGrid').dataset.busy)qRender();
     const list=S.DUELS.slice().sort((a,b)=>(!!a.pobednik-!!b.pobednik)||(a.pobednik?startOf(b)-startOf(a):startOf(a)-startOf(b))).slice(0,40);
     $('#adminDuels').innerHTML=list.map(d=>{const A=side(d.a),B=side(d.b);
-      if(isSolo(d))return `<div class="adr" data-id="${d.id}"><div class="t">${esc(dayLabel(d.datum))} ${esc(d.vreme)} · ${esc(d.vrsta||'Solo nastup')}</div><div class="p">🏃 ${esc(evTitle(d))}</div>
+      if(isSolo(d))return `<div class="adr" data-id="${d.id}"><div class="t">${esc(tLbl(d))} · ${esc(d.vrsta||'Solo nastup')}</div><div class="p">🏃 ${esc(evTitle(d))}</div>
         <div class="acts"><button data-act="win" data-s="a" class="${d.pobednik==='a'?'on':''}">✓ DA</button><button data-act="win" data-s="b" class="${d.pobednik==='b'?'on':''}">✕ NE</button>${d.pobednik?'<button data-act="clear">Poništi</button>':''}<button data-act="del" class="danger">Obriši</button></div></div>`;
-      if(isMulti(d))return `<div class="adr" data-id="${d.id}"><div class="t">${esc(dayLabel(d.datum))} ${esc(d.vreme)} · ${esc(d.vrsta||'Pojedinačno takmičenje')}</div><div class="p">🏁 ${d.ucesnici.map(u=>esc(side(u).name)).join(', ')}</div>
+      if(isMulti(d))return `<div class="adr" data-id="${d.id}"><div class="t">${esc(tLbl(d))} · ${esc(d.vrsta||'Pojedinačno takmičenje')}</div><div class="p">🏁 ${d.ucesnici.map(u=>esc(side(u).name)).join(', ')}</div>
         <div class="acts">${d.ucesnici.map(u=>`<button data-act="win" data-s="${esc(u)}" class="${d.pobednik===u?'on':''}">🏆 ${esc(side(u).name)}</button>`).join('')}${d.pobednik?'<button data-act="clear">Poništi</button>':''}<button data-act="del" class="danger">Obriši</button></div></div>`;
-      return `<div class="adr${d.uzivo?' live':''}" data-id="${d.id}"><div class="t">${esc(dayLabel(d.datum))} ${esc(d.vreme)} · ${esc(d.vrsta)}${d.napomena?' · '+esc(d.napomena):''}</div>
+      return `<div class="adr${d.uzivo?' live':''}" data-id="${d.id}"><div class="t">${esc(tLbl(d))} · ${esc(d.vrsta)}${d.napomena?' · '+esc(d.napomena):''}</div>
         <div class="p">${esc(A.name)} – ${esc(B.name)}</div>
         <div class="acts"><button data-act="win" data-s="a" class="${d.pobednik==='a'?'on':''}">Pobeda ${esc(A.name)}</button><button data-act="win" data-s="b" class="${d.pobednik==='b'?'on':''}">Pobeda ${esc(B.name)}</button>
           ${d.pobednik?'<button data-act="clear">Poništi</button>':`<button data-act="live" class="${d.uzivo?'on':''}">${d.uzivo?'Uživo: uključeno':'Uživo'}</button>`}</div>
