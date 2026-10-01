@@ -386,6 +386,10 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
 .rule1.slim{padding:6px 12px;margin:0 0 6px;font-size:16px;border-radius:12px}.rule1.slim .ic{font-size:18px}
 .sec.first{margin-top:12px}
 .heroes{display:grid;gap:14px}
+.skpre{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:4px 0;padding:8px;border-radius:10px;background:var(--panel2);border:1px solid var(--line2);font-size:12px}
+.skpre span{grid-column:1/-1;font-weight:700;color:var(--metal)}.skpre label{display:grid;gap:2px;color:var(--dim)}
+.skpre input{width:100%;padding:6px 8px;border-radius:8px;border:1px solid var(--line2);background:var(--bg);color:var(--text);font:inherit;font-size:16px;font-weight:700}
+.skpre small{grid-column:1/-1;color:var(--win);font-weight:700}
 .wl{display:inline-flex;align-items:center;gap:4px;margin-top:2px;padding:3px 10px;border-radius:999px;background:rgba(0,0,0,.45);border:1px solid var(--line2);font-size:12px;font-weight:600;color:var(--dim);white-space:nowrap}
 .wl b{font-family:var(--display);font-size:15px;font-weight:800}.wl b.w{color:var(--win)}.wl b.l{color:#ff6b5e}.wl span{color:var(--faint)}
 .acard .info .wl{margin-top:6px}.mtile .wl{justify-self:center;font-size:11px;padding:2px 8px}
@@ -855,7 +859,7 @@ const pickName=(d,v)=>isSolo(d)?(v==='a'?'DA':'NE'):isMulti(d)?side(v).name:side
 const evTitle=d=>isSolo(d)?side(d.a).name+' · '+soloQ(d):isMulti(d)?'Ko pobeđuje? · '+d.ucesnici.length+' takmičara':side(d.a).name+' – '+side(d.b).name;
 function crowd(d){let a=0,b=0;const by={};for(const p of Object.values(S.PLAYERS)){const v=p.picks&&p.picks[d.id];if(!v)continue;by[v]=(by[v]||0)+1;if(v==='a')a++;else if(v==='b')b++;}return {a,b,t:Object.values(by).reduce((x,y)=>x+y,0),by};}
 function wlHTML(id){const r=record(id);return `<span class="wl"><b class="w">${r.w}</b> pob. <span>·</span> <b class="l">${r.l}</b> por.</span>`;}
-function record(id){let w=0,l=0;for(const d of settled()){if(isSolo(d))continue;if(isMulti(d)){if(d.ucesnici.includes(id))(d.pobednik===id?w++:l++);continue;}if(d.a!==id&&d.b!==id)continue;((d.pobednik==='a')===(d.a===id))?w++:l++;}return {w,l};}
+function record(id){const ra=(S.ATH[id]||{}).raw||{};let w=+ra.pob_pre||0,l=+ra.por_pre||0;for(const d of settled()){if(isSolo(d))continue;if(isMulti(d)){if(d.ucesnici.includes(id))(d.pobednik===id?w++:l++);continue;}if(d.a!==id&&d.b!==id)continue;((d.pobednik==='a')===(d.a===id))?w++:l++;}return {w,l};}
 
 /* ================= DUELI ================= */
 const SEEN_AT={}; // kada je igrač prvi put video duel na ekranu
@@ -1407,6 +1411,7 @@ function renderAdmin(){
     const card=a=>`<div class="aath" data-a="${esc(a.id)}">${photoBox(a,.3)}<div class="body"><b>${esc(a.full)}</b>
       <select data-f="tim" aria-label="Tim"><option value="crveni">Crveni</option><option value="plavi">Plavi</option></select>
       <select data-f="status" aria-label="Status">${STATUSES.map(s=>`<option>${s}</option>`).join('')}</select>
+      <div class="skpre"><span>Skor pre aplikacije</span><label>Pob.<input type="number" min="0" max="999" inputmode="numeric" data-k2="pob_pre" value="${+a.raw.pob_pre||0}"></label><label>Por.<input type="number" min="0" max="999" inputmode="numeric" data-k2="por_pre" value="${+a.raw.por_pre||0}"></label><small>Ukupno: ${(r=>r.w+'–'+r.l)(record(a.id))}</small></div>
       <label class="upl">${a.photo?'Promeni sliku':'Dodaj sliku'}<input type="file" accept="image/*" data-k="p"></label>
       <label class="upl ghost">360° snimci<input type="file" accept="image/*" multiple data-k="f"></label>
       ${a.photo?'<button type="button" class="upl ghost" data-recrop="1" style="width:100%">Iseci postojeću sliku</button><button type="button" class="guest" data-rm="1" style="padding:2px">Ukloni sliku</button>':''}
@@ -1418,6 +1423,8 @@ function renderAdmin(){
       c.querySelector('[data-f="tim"]').value=a.team;c.querySelector('[data-f="status"]').value=STATUSES.includes(a.status)?a.status:'Aktivan';
       c.querySelectorAll('select').forEach(s=>s.onchange=async()=>{if(await w(S.sb.from('athletes').update({[s.dataset.f]:s.value}).eq('id',a.id),'Sačuvano')){await loadAthletes();renderAll();}});
       c.querySelectorAll('input[type=file]').forEach(i=>i.onchange=()=>upload(a,i));
+      c.querySelectorAll('[data-k2]').forEach(i=>i.onchange=async()=>{const v=Math.max(0,Math.min(999,parseInt(i.value)||0));const r=await S.sb.from('athletes').update({[i.dataset.k2]:v}).eq('id',a.id).select('id');
+        if(r.error||!r.data||!r.data.length){toast(r.error&&/pob_pre|por_pre/.test(r.error.message||'')?'Pokreni skor-pre-aplikacije.sql u Supabase':'Nije sačuvano');return;}toast('Skor sačuvan');await loadAthletes();renderAll();});
       const del=c.querySelector('[data-del]');del.onclick=async()=>{
         if(!del.dataset.sure){const n=S.DUELS.filter(d=>d.a===a.id||d.b===a.id).length;del.dataset.sure=1;del.textContent=n?`Potvrdi brisanje (ima ${n} ${n===1?'duel':'duela'})`:'Potvrdi brisanje';return;}
         const {data,error}=await S.sb.from('athletes').delete().eq('id',a.id).select('id');
