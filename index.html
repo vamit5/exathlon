@@ -386,6 +386,7 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
 .rule1.slim{padding:6px 12px;margin:0 0 6px;font-size:16px;border-radius:12px}.rule1.slim .ic{font-size:18px}
 .sec.first{margin-top:12px}
 .heroes{display:grid;gap:14px}
+.bmeta .vk{background:rgba(255,176,32,.15);color:#ffcf5a}
 .nowlist{display:grid;gap:12px}
 .pagehead h1 small{display:block;font-family:var(--body);font-weight:600;font-size:13px;letter-spacing:0;color:var(--metal);margin-top:2px}
 .today{margin:0 0 10px;padding:8px 12px;border-radius:12px;text-align:center;font-size:14px;font-weight:600;color:var(--metal);background:var(--panel);border:1px solid rgba(255,59,43,.45)}.today b{color:#ff9a8f;letter-spacing:.06em}
@@ -827,7 +828,8 @@ function standingsRaw(day){
     .map(x=>{x.need=day?Math.ceil(done.length*MIN_UDEO):0;x.ok=!day||(x.c+x.w)>=x.need;return x;})
     .sort((a,b)=>(b.ok-a.ok)||b.c-a.c||(b.c/(b.c+b.w||1))-(a.c/(a.c+a.w||1))||b.best-a.best||a.lead-b.lead||a.nick.localeCompare(b.nick,'sr'));
   // deljeno mesto kad je sve isto
-  list.forEach((x,i)=>{if(!x.ok){x.rank=null;return;}const q=list[i-1];x.rank=(q&&q.ok&&q.c===x.c&&q.w===x.w&&q.best===x.best&&(q.lead===x.lead||Math.abs(q.lead-x.lead)<1000))?q.rank:i+1;});
+  let k=0,q=null;const au=day?admUid():null;
+  list.forEach(x=>{if(au&&x.uid===au){x.rank=null;x.vk=true;return;}if(!x.ok){x.rank=null;return;}k++;x.rank=(q&&q.c===x.c&&q.w===x.w&&q.best===x.best&&(q.lead===x.lead||Math.abs(q.lead-x.lead)<1000))?q.rank:k;q=x;});
   return list;
 }
 /* UKUPNO: prvo poeni, pa medalje kao prednost kod istog broja poena */
@@ -841,6 +843,9 @@ function standings(day){if(day)return standingsRaw(day);
   list.forEach((x,i)=>{const q=list[i-1];x.rank=(q&&q.m.join()===x.m.join()&&q.c===x.c&&q.w===x.w&&q.best===x.best&&(q.lead===x.lead||Math.abs(q.lead-x.lead)<1000))?q.rank:i+1;});
   return list;}
 const isMulti=d=>Array.isArray(d.ucesnici)&&d.ucesnici.length>2;
+/* admin (vamit5.team) sme da glasa i posle zatvaranja, dok rezultat nije upisan */
+const admV=d=>!!S.admin&&!d.pobednik;
+const admUid=()=>(S.LIGE||{}).admin_uid||null;
 const isSolo=d=>Array.isArray(d.ucesnici)&&d.ucesnici.length===1;
 const soloQ=d=>(d.pitanje||'Osvaja medalju?').trim();
 const pickName=(d,v)=>isSolo(d)?(v==='a'?'DA':'NE'):isMulti(d)?side(v).name:side(v==='a'?d.a:d.b).name;
@@ -859,7 +864,7 @@ function heroMultiHTML(d){
     <div class="hero-top">${pill}<span class="kind">${esc(d.vrsta||'Pojedinačno takmičenje')}${d.napomena?' · '+esc(d.napomena):''}</span></div>
     <div class="mq">KO POBEĐUJE?<small>${P.length} takmičara · izaberi jednog</small></div>
     <div class="mgrid">${P.map(x=>{const v=x.id,pc=show?Math.round((c.by[v]||0)/c.t*100):null;
-      return `<button class="mtile${mine===v?' sel':mine?' off':''}" data-s="${esc(v)}" ${mine||locked?'disabled':''} style="--tc:${TEAMS[x.team]?TEAMS[x.team].color:'#888'}">${photoBox(x,.3)}<b>${esc(x.name)}</b>${pc!=null?`<i class="mpc"><em style="width:${pc}%"></em><span>${pc}%</span></i>`:''}</button>`;}).join('')}</div>
+      return `<button class="mtile${mine===v?' sel':mine?' off':''}" data-s="${esc(v)}" ${mine||(locked&&!admV(d))?'disabled':''} style="--tc:${TEAMS[x.team]?TEAMS[x.team].color:'#888'}">${photoBox(x,.3)}<b>${esc(x.name)}</b>${pc!=null?`<i class="mpc"><em style="width:${pc}%"></em><span>${pc}%</span></i>`:''}</button>`;}).join('')}</div>
     ${!mine&&!locked?'<div class="hint">Tačna prognoza = 1 poen.</div>':show?`<div class="hint">${c.t} prognoza</div>`:''}
     ${locked&&!d.pobednik?'<div class="closed">🔒 GLASANJE ZATVORENO</div>':''}
   </article>`;}
@@ -875,8 +880,8 @@ function heroSoloHTML(d){
     <div class="sface">${photoBox(A,0).replace(' loading="lazy"','')}<div class="fname">${esc(A.name)}</div><div class="fsub">nastupa sam · bez protivnika</div></div>
     <div class="sq">${esc(soloQ(d))}</div>
     <div class="picks">
-      <button class="pick yes${mine==='a'?' sel':mine?' off':''}" data-s="a" ${mine||locked?'disabled':''}>✓ DA</button>
-      <button class="pick no${mine==='b'?' sel':mine?' off':''}" data-s="b" ${mine||locked?'disabled':''}>✕ NE</button>
+      <button class="pick yes${mine==='a'?' sel':mine?' off':''}" data-s="a" ${mine||(locked&&!admV(d))?'disabled':''}>✓ DA</button>
+      <button class="pick no${mine==='b'?' sel':mine?' off':''}" data-s="b" ${mine||(locked&&!admV(d))?'disabled':''}>✕ NE</button>
     </div>
     ${(mine||locked)&&c.t?`<div class="split"><div class="bar"><i style="width:${pa}%"></i><i style="width:${100-pa}%"></i></div><div class="lbl"><span>DA ${pa}%</span><span>${c.t} prognoza</span><span>NE ${100-pa}%</span></div></div>`
       :!mine&&!locked?'<div class="hint">Tačna prognoza = 1 poen.</div>':''}
@@ -900,8 +905,8 @@ function heroHTML(d){if(isSolo(d))return heroSoloHTML(d);if(isMulti(d))return he
       <div class="face b">${photoBox(B,-.5)}<div class="fname">${esc(B.name)}</div><div class="fsub">${esc(sub(B))}</div></div>
     </div>
     <div class="picks">
-      <button class="pick${mine==='a'?' sel':mine?' off':''}" data-s="a" ${mine||locked?'disabled':''}>${esc(A.name)}</button>
-      <button class="pick${mine==='b'?' sel':mine?' off':''}" data-s="b" ${mine||locked?'disabled':''}>${esc(B.name)}</button>
+      <button class="pick${mine==='a'?' sel':mine?' off':''}" data-s="a" ${mine||(locked&&!admV(d))?'disabled':''}>${esc(A.name)}</button>
+      <button class="pick${mine==='b'?' sel':mine?' off':''}" data-s="b" ${mine||(locked&&!admV(d))?'disabled':''}>${esc(B.name)}</button>
     </div>
     ${(mine||locked)&&c.t?`<div class="split"><div class="bar"><i style="width:${pa}%"></i><i style="width:${100-pa}%"></i></div><div class="lbl"><span>${pa}%</span><span>${c.t} ${c.t%10===1&&c.t%100!==11?'prognoza':'prognoza'}</span><span>${100-pa}%</span></div></div>`
       :!mine&&!locked?'<div class="hint">'+(d.rucno?'Glasanje se zatvara u sekundi kad duel krene. ':'')+'Tačna prognoza = 1 poen.</div>':''}
@@ -909,12 +914,12 @@ function heroHTML(d){if(isSolo(d))return heroSoloHTML(d);if(isMulti(d))return he
   </article>`;
 }
 function rowHTML(d){
-  if(isSolo(d)){const mine=S.myPicks[d.id],locked=isLocked(d);return `<div class="row" data-id="${d.id}"><div class="when">${whenHTML(d)}</div><div class="pair">${esc(side(d.a).name)}<small>${esc(soloQ(d))}</small></div><div class="mini">${['a','b'].map(s=>`<button data-s="${s}" class="${mine===s?'sel':mine?'off':''}" ${mine||locked?'disabled':''}>${s==='a'?'DA':'NE'}</button>`).join('')}</div></div>`;}
+  if(isSolo(d)){const mine=S.myPicks[d.id],locked=isLocked(d);return `<div class="row" data-id="${d.id}"><div class="when">${whenHTML(d)}</div><div class="pair">${esc(side(d.a).name)}<small>${esc(soloQ(d))}</small></div><div class="mini">${['a','b'].map(s=>`<button data-s="${s}" class="${mine===s?'sel':mine?'off':''}" ${mine||(locked&&!admV(d))?'disabled':''}>${s==='a'?'DA':'NE'}</button>`).join('')}</div></div>`;}
   if(isMulti(d))return `<div class="row" data-id="${d.id}"><div class="when">${whenHTML(d)}</div><div class="pair">Ko pobeđuje? · ${d.ucesnici.length} takmičara<small>${esc(d.vrsta||'Pojedinačno takmičenje')}</small></div><div class="mini"></div></div>`;
   const A=side(d.a),B=side(d.b),mine=S.myPicks[d.id],locked=isLocked(d);
   return `<div class="row" data-id="${d.id}"><div class="when">${whenHTML(d)}</div>
     <div class="pair">${esc(A.name)} – ${esc(B.name)}<small>${esc(d.vrsta)}</small></div>
-    <div class="mini">${['a','b'].map(s=>`<button data-s="${s}" class="${mine===s?'sel':mine?'off':''}" ${mine||locked?'disabled':''}>${esc((s==='a'?A:B).name)}</button>`).join('')}</div></div>`;
+    <div class="mini">${['a','b'].map(s=>`<button data-s="${s}" class="${mine===s?'sel':mine?'off':''}" ${mine||(locked&&!admV(d))?'disabled':''}>${esc((s==='a'?A:B).name)}</button>`).join('')}</div></div>`;
 }
 function resHTML(d){
   if(isSolo(d)){const mine=S.myPicks[d.id];return `<div class="res"><span class="muted d">${shortDate(d.datum)}</span><span class="n" style="grid-column:span 3">${esc(side(d.a).name)} · ${esc(soloQ(d))}<br><span class="muted">Ishod: <b style="color:${d.pobednik==='a'?'var(--win)':'var(--text)'}">${d.pobednik==='a'?'DA':'NE'}</b></span></span><span class="m ${mine?(mine===d.pobednik?'W':'L'):''}">${mine?(mine===d.pobednik?'✓':'✕'):''}</span></div>`;}
@@ -1026,9 +1031,9 @@ function renderHome(){
   if(heroD&&heroD.uzivo){const p=PREV[heroD.id];if(p){if(p.a!==heroD.rezA)$('#hsA').classList.add('bump');if(p.b!==heroD.rezB)$('#hsB').classList.add('bump');}PREV[heroD.id]={a:heroD.rezA,b:heroD.rezB};}
 }
 async function makePick(id,s){
-  const d=S.DUELS.find(x=>x.id===id);if(!d||S.myPicks[id]||isLocked(d))return;
+  const d=S.DUELS.find(x=>x.id===id);if(!d||S.myPicks[id]||(isLocked(d)&&!admV(d)))return;
   if(!S.uid){showLogin();return;}
-  if(S.LIGA==='elita'&&!hasElite()){lockPop();return;}
+  if(S.LIGA==='elita'&&!hasElite()&&!S.admin){lockPop();return;}
   S.myPicks={...S.myPicks,[id]:s};haptic([12,40,24]);renderHome();
   const card=document.querySelector(`.hero[data-id="${id}"]`);if(card)card.classList.add('locking');
   const odl=SEEN_AT[id]!=null?Math.max(0,Math.min(36e5,Math.round(performance.now()-SEEN_AT[id]))):null;
@@ -1101,9 +1106,9 @@ function renderBoard(){
   let sep=false;
   $('#board').innerHTML=list.length?list.map(p=>{const tot=p.c+p.w;
     const hd=!p.ok&&!sep?(sep=true,`<div class="nqh">Nisu odigrali 70% duela danas · van plasmana</div>`):'';
-    return hd+`<div class="brow${p.rank===1?' first':''}${p.uid===S.uid?' me':''}${p.ok?'':' nq'}"><span class="rk">${p.rank||'–'}</span>${avHTML(p)}
+    return hd+`<div class="brow${p.rank===1?' first':''}${p.uid===S.uid?' me':''}${p.ok?'':' nq'}"><span class="rk">${p.vk?'★':p.rank||'–'}</span>${avHTML(p)}
       <div style="min-width:0"><span class="un">${esc(p.nick)}${medal(p.rank)}</span>
-        <div class="bmeta">${!day&&p.m?`<span class="mdl">🥇<b>${p.m[0]}</b> 🥈<b>${p.m[1]}</b> 🥉<b>${p.m[2]}</b></span>`:''}${tot?`<span>Odigrano <b>${tot}</b></span><span>Učinak <b>${Math.round(p.c/tot*100)}%</b></span><span>Niz <b>${p.best}</b></span>${isFinite(p.lead)?`<span title="Prosečno vreme od izlaska duela do glasa">⚡ <b>${brz(p.lead)}</b></span>`:''}${p.ok?'':`<span class="need">treba još <b>${p.need-tot}</b></span>`}`:'<span>Čeka rezultat</span>'}</div></div>
+        <div class="bmeta">${p.vk?'<span class="vk">admin · van konkurencije za nagrade</span>':''}${!day&&p.m?`<span class="mdl">🥇<b>${p.m[0]}</b> 🥈<b>${p.m[1]}</b> 🥉<b>${p.m[2]}</b></span>`:''}${tot?`<span>Odigrano <b>${tot}</b></span><span>Učinak <b>${Math.round(p.c/tot*100)}%</b></span><span>Niz <b>${p.best}</b></span>${isFinite(p.lead)?`<span title="Prosečno vreme od izlaska duela do glasa">⚡ <b>${brz(p.lead)}</b></span>`:''}${p.ok?'':`<span class="need">treba još <b>${p.need-tot}</b></span>`}`:'<span>Čeka rezultat</span>'}</div></div>
       <span class="pt">${p.c}<small>poena</small></span></div>`;}).join('')
     :`<div class="empty">${day?'Danas još niko nije dao prognozu.':'Još niko nije dao prognozu.'}</div>`;
 }
@@ -1515,7 +1520,8 @@ const LIGE_DEF={promo:'Budi danas među prva 3 i ulaziš automatski u Elitnu lig
 S.LIGE={...LIGE_DEF};
 const LNAME={get otvorena(){return S.LIGE.otvorena||LIGE_DEF.otvorena;},get elita(){return S.LIGE.elita||LIGE_DEF.elita;}};
 const UP=t=>t.toLocaleUpperCase('sr-Latn');
-async function loadLige(){try{const {data}=await S.sb.from('meta').select('value').eq('key','lige').maybeSingle();S.LIGE={...LIGE_DEF,...((data&&data.value)||{})};}catch(e){}applyLiga();}
+async function loadLige(){try{const {data}=await S.sb.from('meta').select('value').eq('key','lige').maybeSingle();S.LIGE={...LIGE_DEF,...((data&&data.value)||{})};}catch(e){}applyLiga();admUidSave();}
+async function admUidSave(){if(!S.admin||!S.uid||S.LIGE.admin_uid===S.uid)return;const v={...S.LIGE,admin_uid:S.uid};try{const {error}=await S.sb.from('meta').upsert({key:'lige',value:v});if(!error)S.LIGE=v;}catch(e){}}
 function prizeMini(n){n=n||{};const p=[+n.prvo||0,+n.drugo||0,+n.trece||0],c=esc(n.valuta||'€');if(!p.some(Boolean))return '';
   return `<div class="pzmini"><div class="t">🏆 Dnevne nagrade za prva 3 mesta</div><div class="r">${p.map((v,i)=>`<span><small>${['🥇','🥈','🥉'][i]} ${i+1}. mesto</small>${(+v).toLocaleString('sr-Latn-RS',{maximumFractionDigits:2})} ${c}</span>`).join('')}</div></div>`;}
 const KONTAKT=/^(mailto:[^\s@]+@[^\s@]+|https:\/\/(www\.)?(instagram\.com|ig\.me|wa\.me|api\.whatsapp\.com|t\.me|telegram\.me|m\.me|facebook\.com|messenger\.com)\/\S*|viber:\/\/\S+)$/i;
