@@ -1040,7 +1040,7 @@ async function makePick(id,s){
   let {error}=await S.sb.from('picks').insert({player_id:S.uid,duel_id:id,izbor:s,liga:S.LIGA,...(odl!=null?{odluka_ms:odl}:{})});
   if(error&&/odluka_ms/.test(error.message||''))({error}=await S.sb.from('picks').insert({player_id:S.uid,duel_id:id,izbor:s,liga:S.LIGA}));
   if(error&&S.LIGA==='otvorena'&&/liga/.test(error.message||''))({error}=await S.sb.from('picks').insert({player_id:S.uid,duel_id:id,izbor:s}));
-  if(error){console.warn(error);const {[id]:_,...r}=S.myPicks;S.myPicks=r;renderAll();toast('Prognoza nije sačuvana. Pokušaj ponovo.');return;}
+  if(error){console.warn(error);const {[id]:_,...r}=S.myPicks;S.myPicks=r;renderAll();toast(S.admin&&isLocked(d)&&/security|policy|row-level/i.test(error.message||'')?'Baza odbija glas posle zatvaranja: pokreni admin-glasanje.sql u Supabase':'Prognoza nije sačuvana. Pokušaj ponovo.');return;}
   (S.PLAYERS[S.uid]||(S.PLAYERS[S.uid]={nick:S.nick,picks:{}})).picks[id]=s;
   toast('Zaključano: '+pickName(d,s));renderChip();if(isMulti(d)||isSolo(d))setTimeout(renderAll,1300);
 }
