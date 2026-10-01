@@ -828,8 +828,7 @@ function standingsRaw(day){
     .map(x=>{x.need=day?Math.ceil(done.length*MIN_UDEO):0;x.ok=!day||(x.c+x.w)>=x.need;return x;})
     .sort((a,b)=>(b.ok-a.ok)||b.c-a.c||(b.c/(b.c+b.w||1))-(a.c/(a.c+a.w||1))||b.best-a.best||a.lead-b.lead||a.nick.localeCompare(b.nick,'sr'));
   // deljeno mesto kad je sve isto
-  let k=0,q=null;const au=day?admUid():null;
-  list.forEach(x=>{if(au&&x.uid===au){x.rank=null;x.vk=true;return;}if(!x.ok){x.rank=null;return;}k++;x.rank=(q&&q.c===x.c&&q.w===x.w&&q.best===x.best&&(q.lead===x.lead||Math.abs(q.lead-x.lead)<1000))?q.rank:k;q=x;});
+  list.forEach((x,i)=>{if(!x.ok){x.rank=null;return;}const q=list[i-1];x.rank=(q&&q.ok&&q.c===x.c&&q.w===x.w&&q.best===x.best&&(q.lead===x.lead||Math.abs(q.lead-x.lead)<1000))?q.rank:i+1;});
   return list;
 }
 /* UKUPNO: prvo poeni, pa medalje kao prednost kod istog broja poena */
@@ -1106,7 +1105,7 @@ function renderBoard(){
   let sep=false;
   $('#board').innerHTML=list.length?list.map(p=>{const tot=p.c+p.w;
     const hd=!p.ok&&!sep?(sep=true,`<div class="nqh">Nisu odigrali 70% duela danas · van plasmana</div>`):'';
-    return hd+`<div class="brow${p.rank===1?' first':''}${p.uid===S.uid?' me':''}${p.ok?'':' nq'}"><span class="rk">${p.vk?'':p.rank||'–'}</span>${avHTML(p)}
+    return hd+`<div class="brow${p.rank===1?' first':''}${p.uid===S.uid?' me':''}${p.ok?'':' nq'}"><span class="rk">${p.rank||'–'}</span>${avHTML(p)}
       <div style="min-width:0"><span class="un">${esc(p.nick)}${medal(p.rank)}</span>
         <div class="bmeta">${!day&&p.m?`<span class="mdl">🥇<b>${p.m[0]}</b> 🥈<b>${p.m[1]}</b> 🥉<b>${p.m[2]}</b></span>`:''}${tot?`<span>Odigrano <b>${tot}</b></span><span>Učinak <b>${Math.round(p.c/tot*100)}%</b></span><span>Niz <b>${p.best}</b></span>${isFinite(p.lead)?`<span title="Prosečno vreme od izlaska duela do glasa">⚡ <b>${brz(p.lead)}</b></span>`:''}${p.ok?'':`<span class="need">treba još <b>${p.need-tot}</b></span>`}`:'<span>Čeka rezultat</span>'}</div></div>
       <span class="pt">${p.c}<small>poena</small></span></div>`;}).join('')
