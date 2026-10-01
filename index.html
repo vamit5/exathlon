@@ -1041,7 +1041,12 @@ async function makePick(id,s){
   if(error&&/odluka_ms/.test(error.message||''))({error}=await S.sb.from('picks').insert({player_id:S.uid,duel_id:id,izbor:s,liga:S.LIGA}));
   if(error&&S.LIGA==='otvorena'&&/liga/.test(error.message||''))({error}=await S.sb.from('picks').insert({player_id:S.uid,duel_id:id,izbor:s}));
   if(error){console.warn(error);const {[id]:_,...r}=S.myPicks;S.myPicks=r;renderAll();toast(admV(d)&&isLocked(d)&&/security|policy|row-level/i.test(error.message||'')?'Baza odbija glas posle zatvaranja: pokreni admin-glasanje.sql u Supabase':'Prognoza nije sačuvana. Pokušaj ponovo.');return;}
-  (S.PLAYERS[S.uid]||(S.PLAYERS[S.uid]={nick:S.nick,picks:{}})).picks[id]=s;
+  const now=Date.now(),put=L=>{const m=S.PL[L]||(S.PL[L]={});const e=m[S.uid]||(m[S.uid]={nick:S.nick,avatar:null,picks:{},at:{}});e.picks[id]=s;(e.at||(e.at={}))[id]=now;};
+  put(S.LIGA);
+  // ko ima pristup Elitnoj ligi: jedan glas važi u obe lige (ne mora da glasa dva puta)
+  const L2=S.LIGA==='elita'?'otvorena':'elita';
+  if((L2==='otvorena'||hasElite()||S.admin)&&!(((S.PL[L2]||{})[S.uid]||{}).picks||{})[id]){
+    S.sb.from('picks').insert({player_id:S.uid,duel_id:id,izbor:s,liga:L2,...(odl!=null?{odluka_ms:odl}:{})}).then(r=>{if(!r.error)put(L2);else console.warn('druga liga',r.error);});}
   toast('Zaključano: '+pickName(d,s));renderChip();if(isMulti(d)||isSolo(d))setTimeout(renderAll,1300);
 }
 
@@ -1303,16 +1308,17 @@ $('#qGo').onclick=async()=>{
   if(ok){Q.a=Q.b=null;await loadDuels();renderAll();ping();scrollTo({top:0,behavior:'smooth'});}else $('#qGo').disabled=false;
 };
 function duelTiming(d){const pub=d.created_at?Date.parse(d.created_at):null;if(!pub)return '';let n=0,tot=0,seen=0,dec=0,k=0;
-  for(const L of ['otvorena','elita'])for(const p of Object.values(S.PL[L]||{})){const at=p.at&&p.at[d.id];if(!at)continue;n++;tot+=Math.max(0,at-pub);const o=p.od&&p.od[d.id];if(o!=null){k++;dec+=o;seen+=Math.max(0,at-pub-o);}}
+  const seenU=new Set();for(const L of ['otvorena','elita'])for(const [uid,p] of Object.entries(S.PL[L]||{})){const at=p.at&&p.at[d.id];if(!at||seenU.has(uid))continue;seenU.add(uid);n++;tot+=Math.max(0,at-pub);const o=p.od&&p.od[d.id];if(o!=null){k++;dec+=o;seen+=Math.max(0,at-pub-o);}}
   if(!n)return '';const f=ms=>brz(ms);
   return `<div class="tmg">⏱ Prosek do glasa: <b>${f(tot/n)}</b>${k?` · dok nije video duel: <b>${f(seen/k)}</b> · razmišljanje: <b>${f(dec/k)}</b>`:''} <small>(${n} glasova)</small></div>`;}
 function curEvents(){const open=S.DUELS.filter(d=>!d.pobednik);
   const rk=d=>d.uzivo?0:!isLocked(d)?1:2,ct=d=>Date.parse(d.created_at||d.pocetak)||0;
   return open.filter(d=>d.uzivo||isLocked(d)||(d.rucno&&!isLocked(d))).sort((a,b)=>rk(a)-rk(b)||(rk(a)===2?startOf(b)-startOf(a):ct(b)-ct(a)));}
+function ligaCnt(d){const n=L=>Object.values(S.PL[L]||{}).filter(p=>p.picks&&p.picks[d.id]).length;const a=n('otvorena'),b=n('elita');return `${esc(LNAME.otvorena)}: <b>${a}</b> · ${esc(LNAME.elita)}: <b>${b}</b>`;}
 function nowCard(d){
   const A=side(d.a),B=side(d.b),left=startOf(d)-Date.now();
   const c=crowd(d),lk=isLocked(d),tm=duelTiming(d);
-  return `<div class="nowcard" data-id="${d.id}">${tm}<div class="acts" style="justify-content:space-between"><span class="pill${lk?'':' live'}">${lk?'Glasanje zatvoreno':'<i></i>Glasanje otvoreno'}</span><span class="muted">${c.t} ${c.t===1?'glas':'glasova'}</span></div>
+  return `<div class="nowcard" data-id="${d.id}">${tm}<div class="acts" style="justify-content:space-between"><span class="pill${lk?'':' live'}">${lk?'Glasanje zatvoreno':'<i></i>Glasanje otvoreno'}</span><span class="muted">${ligaCnt(d)}</span></div>
     <div class="p">${isSolo(d)?'🏃 '+esc(evTitle(d)):isMulti(d)?'🏁 Ko pobeđuje? · '+d.ucesnici.length+' takmičara':esc(A.name)+' – '+esc(B.name)+((d.rezA||d.rezB)?` · ${d.rezA}:${d.rezB}`:'')}</div>
     ${lk?'':'<button class="closebtn" data-act="close">⏱ ZATVORI GLASANJE<small>klikni tačno kad duel krene</small></button>'}
     ${isSolo(d)?`<div class="bigwin"><button data-act="win" data-s="a">✓ DA<br><small style="font-size:13px;color:var(--dim)">uspeo · ${c.a} glasova</small></button><button data-act="win" data-s="b">✕ NE<br><small style="font-size:13px;color:var(--dim)">nije uspeo · ${c.b} glasova</small></button></div>`:isMulti(d)?`<div class="bigwin">${d.ucesnici.map(u=>`<button data-act="win" data-s="${esc(u)}">✓ Pobedio<br>${esc(side(u).name)}<small style="display:block;font-size:13px;color:var(--dim)">${(c.by[u]||0)} glasova</small></button>`).join('')}</div>`:`<div class="bigwin"><button data-act="win" data-s="a">✓ Pobedio<br>${esc(A.name)}</button><button data-act="win" data-s="b">✓ Pobedio<br>${esc(B.name)}</button></div>`}
