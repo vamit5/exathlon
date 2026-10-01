@@ -1106,7 +1106,7 @@ function renderBoard(){
   let sep=false;
   $('#board').innerHTML=list.length?list.map(p=>{const tot=p.c+p.w;
     const hd=!p.ok&&!sep?(sep=true,`<div class="nqh">Nisu odigrali 70% duela danas · van plasmana</div>`):'';
-    return hd+`<div class="brow${p.rank===1?' first':''}${p.uid===S.uid?' me':''}${p.ok?'':' nq'}"><span class="rk">${p.vk?'★':p.rank||'–'}</span>${avHTML(p)}
+    return hd+`<div class="brow${p.rank===1?' first':''}${p.uid===S.uid?' me':''}${p.ok?'':' nq'}"><span class="rk">${p.rank||'–'}</span>${avHTML(p)}
       <div style="min-width:0"><span class="un">${esc(p.nick)}${medal(p.rank)}</span>
         <div class="bmeta">${!day&&p.m?`<span class="mdl">🥇<b>${p.m[0]}</b> 🥈<b>${p.m[1]}</b> 🥉<b>${p.m[2]}</b></span>`:''}${tot?`<span>Odigrano <b>${tot}</b></span><span>Učinak <b>${Math.round(p.c/tot*100)}%</b></span><span>Niz <b>${p.best}</b></span>${isFinite(p.lead)?`<span title="Prosečno vreme od izlaska duela do glasa">⚡ <b>${brz(p.lead)}</b></span>`:''}${p.ok?'':`<span class="need">treba još <b>${p.need-tot}</b></span>`}`:'<span>Čeka rezultat</span>'}</div></div>
       <span class="pt">${p.c}<small>poena</small></span></div>`;}).join('')
