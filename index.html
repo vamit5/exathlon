@@ -386,6 +386,13 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
 .rule1.slim{padding:6px 12px;margin:0 0 6px;font-size:16px;border-radius:12px}.rule1.slim .ic{font-size:18px}
 .sec.first{margin-top:12px}
 .heroes{display:grid;gap:14px}
+.champ{display:flex;align-items:center;gap:12px;margin:0 0 10px;padding:10px 14px;border-radius:14px;background:linear-gradient(100deg,rgba(255,59,43,.16),rgba(255,122,26,.08) 55%,var(--panel));border:1px solid rgba(255,122,26,.55);box-shadow:0 10px 30px rgba(255,59,43,.12)}
+.champ .ci{font-size:30px;line-height:1;filter:drop-shadow(0 0 10px rgba(255,176,32,.5))}
+.champ b{display:block;font-family:var(--display);font-weight:800;font-size:19px;letter-spacing:.03em;line-height:1.1;text-transform:uppercase}
+.champ small{display:block;margin-top:2px;font-size:13px;color:var(--metal)}
+.champ.me{border-color:#ffb020;background:linear-gradient(100deg,rgba(255,176,32,.22),rgba(255,122,26,.08) 60%,var(--panel))}.champ.me b{color:#ffcf5a}
+.champ.hot{border-color:#ff3b2b}
+.brow .cb{display:inline-block;margin-left:8px;padding:2px 8px;border-radius:999px;background:linear-gradient(90deg,#ff3b2b,#ff7a1a);color:#fff;font-family:var(--display);font-weight:800;font-size:11px;letter-spacing:.06em;vertical-align:middle;white-space:nowrap}
 .skpre{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:4px 0;padding:8px;border-radius:10px;background:var(--panel2);border:1px solid var(--line2);font-size:12px}
 .skpre span{grid-column:1/-1;font-weight:700;color:var(--metal)}.skpre label{display:grid;gap:2px;color:var(--dim)}
 .skpre input{width:100%;padding:6px 8px;border-radius:8px;border:1px solid var(--line2);background:var(--bg);color:var(--text);font:inherit;font-size:16px;font-weight:700}
@@ -739,6 +746,7 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
 </div>
 <canvas id="confetti" aria-hidden="true"></canvas>
 <div class="winbanner" id="winBanner" hidden role="status" aria-live="polite"><b>POGODAK!</b><span id="winText"></span></div>
+<div class="pop" id="champPop" hidden role="dialog" aria-modal="true" aria-labelledby="champPopT"><div class="box"><div class="big">🏆</div><h2 id="champPopT"></h2><p id="champPopTx"></p><button class="btn gold" id="champPopOk" type="button">RANG LISTA</button><button class="btn ghost" id="champPopX" type="button">Zatvori</button></div></div>
 <div class="pop" id="eliPop" hidden role="dialog" aria-modal="true" aria-labelledby="eliPopT"><div class="box"><div class="big">🏆</div><h2 id="eliPopT">ELITNA LIGA</h2><p id="eliPopTx"></p><button class="btn gold" id="eliPopGo" type="button">IGRAJ ELITNU LIGU</button><button class="btn ghost" id="eliPopX" type="button">Kasnije</button></div></div>
 <div class="pop" id="lockPop" hidden role="dialog" aria-modal="true" aria-labelledby="lockPopT"><div class="box lk">
   <button class="lkx" id="lockPopX" type="button" aria-label="Zatvori">✕</button>
@@ -860,6 +868,55 @@ const evTitle=d=>isSolo(d)?side(d.a).name+' · '+soloQ(d):isMulti(d)?'Ko pobeđu
 function crowd(d){let a=0,b=0;const by={};for(const p of Object.values(S.PLAYERS)){const v=p.picks&&p.picks[d.id];if(!v)continue;by[v]=(by[v]||0)+1;if(v==='a')a++;else if(v==='b')b++;}return {a,b,t:Object.values(by).reduce((x,y)=>x+y,0),by};}
 function wlHTML(id){const r=record(id);return `<span class="wl"><b class="w">${r.w}</b> pob. <span>·</span> <b class="l">${r.l}</b> por.</span>`;}
 function record(id){const ra=(S.ATH[id]||{}).raw||{};let w=+ra.pob_pre||0,l=+ra.por_pre||0;for(const d of settled()){if(isSolo(d))continue;if(isMulti(d)){if(d.ucesnici.includes(id))(d.pobednik===id?w++:l++);continue;}if(d.a!==id&&d.b!==id)continue;((d.pobednik==='a')===(d.a===id))?w++:l++;}return {w,l};}
+
+
+/* ================= ŠAMPION VEČERI (samo prikaz; koristi postojeću dnevnu rang listu prve lige) ================= */
+function champBadge(p){const st=champState();if(st.liveDay&&p.rank===1&&p.c>0)return `<span class="cb">🏆 ${st.C&&st.C.ids.includes(p.uid)?'ŠAMPION · BRANI TITULU':'NA VRHU'}</span>`;
+  if(st.finalToday&&p.rank===1&&p.c>0)return '<span class="cb">🏆 ŠAMPION VEČERI</span>';if(!st.finalToday&&st.C&&st.C.ids.includes(p.uid))return '<span class="cb">🏆 ŠAMPION · BRANI TITULU</span>';return '';}
+function rankFor(L,day){const keep=S.PLAYERS;S.PLAYERS=S.PL[L]||{};try{return standingsRaw(day);}finally{S.PLAYERS=keep;}}
+function topOf(L,day){const st=rankFor(L,day).filter(x=>x.rank===1&&x.c>0);return st.length?{list:st,ids:st.map(x=>x.uid),pts:st[0].c,names:st.map(x=>UP(x.nick))}:null;}
+const pnTx=n=>n+' '+(n%10===1&&n%100!==11?'poen':'poena');
+const nmJoin=a=>a.length<=1?(a[0]||''):a.slice(0,-1).join(', ')+' i '+a[a.length-1];
+function champState(){
+  const today=todayBG(),days=[...new Set(settled().map(d=>d.datum))].sort();
+  const done=days.filter(d=>d<today||(d===today&&emZatvorena()));
+  const last=done[done.length-1]||null,prevDay=done[done.length-2]||null;
+  const C=last?topOf('otvorena',last):null,P=prevDay?topOf('otvorena',prevDay):null;
+  const liveDay=!emZatvorena()&&days.includes(today)&&last!==today?today:null;
+  const L=liveDay?topOf('otvorena',liveDay):null;
+  const defended=!!(C&&P&&C.ids.some(u=>P.ids.includes(u)));
+  return {today,last,C,P,L,liveDay,defended,finalToday:last===today};}
+function prizeAmt(){const n=(S.NAG&&S.NAG.elita)||{};const v=+n.prvo||0;return v?`${v.toLocaleString('sr-Latn-RS')} ${n.valuta||'€'}`:'';}
+const pick1=(arr,k)=>arr[Math.abs(k)%arr.length];
+function champHTML(){if(!S.ready)return '';const st=champState(),me=S.uid,amt=prizeAmt(),seed=+(st.today||'0').replace(/-/g,'')||0;
+  const card=(ic,t,sub,cls='')=>`<div class="champ ${cls}"><span class="ci">${ic}</span><div><b>${t}</b><small>${sub}</small></div></div>`;
+  // tokom emisije: ko je trenutno na vrhu
+  if(st.L){const L=st.L,C=st.C,meL=L.ids.includes(me),meC=C&&C.ids.includes(me),cHolds=C&&C.ids.some(u=>L.ids.includes(u));
+    const myRow=rankFor('otvorena',st.liveDay).find(x=>x.uid===me),gap=myRow&&!meL?L.pts-myRow.c:null;
+    const gapTx=gap!=null&&gap>0&&gap<=2?` · Još samo ${gap} ${gap===1?'poen':'poena'} do vrha.`:'';
+    if(meL)return card('🏆',meC?'BRANIŠ TITULU – NA VRHU SI':'TI SI NA VRHU',`${pnTx(L.pts)} · Svi te jure.`,'me');
+    if(cHolds)return card('🏆',`${nmJoin(C.names.filter((n,i)=>L.ids.includes(C.ids[i])))} BRANI 1. MESTO`,'Skini ga.'+gapTx);
+    if(meC)return card('⚠️',`${nmJoin(L.names)} TI JE PREUZEO VRH`,'Vrati titulu.'+gapTx,'hot');
+    return card('🔥',`${nmJoin(L.names)} JE NA VRHU`,(C?'Novi lider večeri.':'Ko će preuzeti vrh?')+gapTx,'hot');}
+  if(!st.C)return '';
+  const C=st.C,meC=C.ids.includes(me),nm=nmJoin(C.names);
+  // emisija je upravo završena: rezultat večeri
+  if(st.finalToday){
+    if(st.defended)return card('🏆',meC?'ODBRANIO SI TITULU':'ŠAMPION JE ODBRANIO TITULU',`${nm} · ${pnTx(C.pts)}`,meC?'me':'');
+    if(st.P&&!meC)return card('🏆','IMAMO NOVOG ŠAMPIONA',`${nm} · ${pnTx(C.pts)} · `+(st.P.ids.includes(me)?'Izgubio si titulu. Vrati je sledeće večeri.':`${nmJoin(st.P.names)} više nije na vrhu.`));
+    return card('🏆',meC?'TI SI NOVI ŠAMPION VEČERI':'NOVI ŠAMPION VEČERI',`${nm} · ${pnTx(C.pts)}`,meC?'me':'');}
+  // pre sledeće emisije: šampion brani titulu
+  if(meC)return card('🏆','TI SI ŠAMPION VEČERI',pick1(['Večeras braniš titulu.',amt?`${amt} je tvoj sledeći cilj. Odbrani prvo mesto.`:'Odbrani prvo mesto.','Svi te jure. Odbrani titulu.'],seed),'me');
+  const head=pick1([`${nm} BRANI TITULU VEČERAS`,`${nm} JE ŠAMPION. KO ĆE GA SKINUTI?`,`DA LI ${nm} MOŽE DO NOVE POBEDE?`],seed);
+  const sub=pick1(['Da li ćeš ga večeras skinuti?','Ti si izazivač.','Šampion je poznat. Sada ga skidaš ti.'],seed+1)+(amt?` · ${amt} čeka šampiona.`:'');
+  return card('🏆',head,sub);}
+function checkChampPop(){if(!S.ready||!S.uid)return;const st=champState();if(!st.finalToday||!st.C)return;const k='champ_'+st.today;if(store.get(k,'')==='1'||!$('#champPop').hidden)return;
+  store.set(k,'1');const C=st.C,me=S.uid,meC=C.ids.includes(me),nm=nmJoin(C.names);
+  let t,tx;if(st.defended){t=meC?'ODBRANIO SI TITULU':'ŠAMPION JE ODBRANIO TITULU';tx=`<b>${esc(nm)}</b><br>${pnTx(C.pts)}`;}
+  else if(st.P){t='IMAMO NOVOG ŠAMPIONA';tx=`<b>${esc(nm)}</b><br>${pnTx(C.pts)}<br><span class="muted">${st.P.ids.includes(me)?'Izgubio si titulu. Vrati je sledeće večeri.':esc(nmJoin(st.P.names))+' više nije na vrhu.'}</span>`;}
+  else{t='NOVI ŠAMPION VEČERI';tx=`<b>${esc(nm)}</b><br>${pnTx(C.pts)}`;}
+  const amt=prizeAmt();if(amt)tx+=`<br><span class="muted">Sledeće večeri: ${esc(amt)} čeka šampiona.</span>`;
+  $('#champPopT').textContent=t;$('#champPopTx').innerHTML=tx;$('#champPop').hidden=false;if(meC&&typeof confetti==='function')confetti();}
 
 /* ================= DUELI ================= */
 const SEEN_AT={}; // kada je igrač prvi put video duel na ekranu
@@ -1020,7 +1077,7 @@ function renderHome(){
   const rest=open.filter(d=>!heroes.includes(d));
   const res=settled().slice().reverse();
   const today=todayBG(),mine=scoreDay(S.myPicks,today);
-  let h=(cdHTML()||`<div class="today">📅 ${esc(dateLong())} · <b>EMISIJA UŽIVO</b></div>`)+onlHTML()+promoHTML()+`<div class="rule1 slim"><span class="ic">🎯</span><span>1 POGOĐEN DUEL = <em>1 POEN</em></span></div>`+(S.LIGA==='elita'?`<div class="elinfo">★ ${esc(UP(LNAME.elita))} · ${S.admin&&!hasElite()?'pregled (admin)':vaziTxt(S.ELITA)}</div>`:'')+prizeHTML();
+  let h=(cdHTML()||`<div class="today">📅 ${esc(dateLong())} · <b>EMISIJA UŽIVO</b></div>`)+onlHTML()+(S.LIGA==='otvorena'?champHTML():'')+promoHTML()+`<div class="rule1 slim"><span class="ic">🎯</span><span>1 POGOĐEN DUEL = <em>1 POEN</em></span></div>`+(S.LIGA==='elita'?`<div class="elinfo">★ ${esc(UP(LNAME.elita))} · ${S.admin&&!hasElite()?'pregled (admin)':vaziTxt(S.ELITA)}</div>`:'')+prizeHTML();
   if(heroD){
     const lbl=heroes.length>1?'Aktuelno · '+heroes.length:heroD.uzivo?'Uživo':isLocked(heroD)?'U toku':(heroD.rucno?'Glasaj sada':'Sledeći duel');
     h+=`<div class="sec first">${lbl}${S.uid&&(mine.c+mine.w)?`<small>Danas: ${mine.c} od ${mine.c+mine.w} pogođeno</small>`:''}</div><div class="heroes">${heroes.map(heroHTML).join('')}</div>`;
@@ -1120,7 +1177,7 @@ function renderBoard(){
   $('#board').innerHTML=list.length?list.map(p=>{const tot=p.c+p.w;
     const hd=!p.ok&&!sep?(sep=true,`<div class="nqh">Nisu odigrali 70% duela danas · van plasmana</div>`):'';
     return hd+`<div class="brow${p.rank===1?' first':''}${p.uid===S.uid?' me':''}${p.ok?'':' nq'}"><span class="rk">${p.rank||'–'}</span>${avHTML(p)}
-      <div style="min-width:0"><span class="un">${esc(p.nick)}${medal(p.rank)}</span>
+      <div style="min-width:0"><span class="un">${esc(p.nick)}${medal(p.rank)}</span>${day&&S.LIGA==='otvorena'?champBadge(p):''}
         <div class="bmeta">${!day&&p.m?`<span class="mdl">🥇<b>${p.m[0]}</b> 🥈<b>${p.m[1]}</b> 🥉<b>${p.m[2]}</b></span>`:''}${tot?`<span>Odigrano <b>${tot}</b></span><span>Učinak <b>${Math.round(p.c/tot*100)}%</b></span><span>Niz <b>${p.best}</b></span>${isFinite(p.lead)?`<span title="Prosečno vreme od izlaska duela do glasa">⚡ <b>${brz(p.lead)}</b></span>`:''}${p.ok?'':`<span class="need">treba još <b>${p.need-tot}</b></span>`}`:'<span>Čeka rezultat</span>'}</div></div>
       <span class="pt">${p.c}<small>poena</small></span></div>`;}).join('')
     :`<div class="empty">${day?'Danas još niko nije dao prognozu.':'Još niko nije dao prognozu.'}</div>`;
@@ -1694,7 +1751,8 @@ function go(s,push){if(!SCREENS.includes(s)||(s==='admin'&&!S.admin))s='home';if
   document.querySelectorAll('[data-go]').forEach(b=>{if(b.classList.contains('chip'))return;b.toggleAttribute('aria-current',b.dataset.go===s);if(b.dataset.go===s)b.setAttribute('aria-current','page');});
   if(push){try{history.replaceState(null,'','#'+s);}catch(e){}}scrollTo({top:0});renderAll();}
 document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.go,true)));
-let rq=0;function renderAll(){cancelAnimationFrame(rq);rq=requestAnimationFrame(()=>{renderChip();if(S.ready)checkWins();
+$('#champPopOk').onclick=()=>{$('#champPop').hidden=true;go('rang',true);};$('#champPopX').onclick=()=>{$('#champPop').hidden=true;};
+let rq=0;function renderAll(){cancelAnimationFrame(rq);rq=requestAnimationFrame(()=>{renderChip();if(S.ready){checkWins();try{checkChampPop();}catch(e){console.warn(e);}}
   if(current==='home')renderHome();else if(current==='roster')renderRoster();else if(current==='rang')renderBoard();else if(current==='profil')renderProfile();else if(current==='admin')renderAdmin();});}
 
 async function boot(){
