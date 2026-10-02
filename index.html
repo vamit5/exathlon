@@ -386,6 +386,14 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
 .rule1.slim{padding:6px 12px;margin:0 0 6px;font-size:16px;border-radius:12px}.rule1.slim .ic{font-size:18px}
 .sec.first{margin-top:12px}
 .heroes{display:grid;gap:14px}
+.tbox{margin:0 0 10px;border-radius:14px;overflow:hidden;border:1px solid rgba(255,122,26,.55);background:linear-gradient(100deg,rgba(255,59,43,.14),rgba(255,122,26,.06) 55%,var(--panel))}
+.tbox.me{border-color:#ffb020}.tbox.hot{border-color:#ff3b2b}
+.tbox .th{display:flex;align-items:center;gap:10px;padding:9px 12px}
+.tbox .th .ci{font-size:26px;line-height:1}.tbox .th b{display:block;font-family:var(--display);font-weight:800;font-size:17px;letter-spacing:.03em;line-height:1.1;text-transform:uppercase}
+.tbox.me .th b{color:#ffcf5a}.tbox .th small{display:block;margin-top:2px;font-size:12.5px;color:var(--metal)}
+.tbox .tp{display:grid;gap:3px;padding:7px 12px 8px;background:rgba(255,176,32,.1);border-top:1px solid rgba(255,176,32,.3)}
+.tbox .th+.tp{}.tbox .tp .pt{font-size:12.5px;font-weight:700;color:#ffe7a8;line-height:1.3}
+.tbox .tp .pz{font-family:var(--display);font-weight:800;font-size:15px;color:#ffcf5a;letter-spacing:.02em}.tbox .tp .pz i{font-style:normal;font-family:var(--body);font-weight:600;font-size:12px;color:var(--metal)}
 .champ{display:flex;align-items:center;gap:12px;margin:0 0 10px;padding:10px 14px;border-radius:14px;background:linear-gradient(100deg,rgba(255,59,43,.16),rgba(255,122,26,.08) 55%,var(--panel));border:1px solid rgba(255,122,26,.55);box-shadow:0 10px 30px rgba(255,59,43,.12)}
 .champ .ci{font-size:30px;line-height:1;filter:drop-shadow(0 0 10px rgba(255,176,32,.5))}
 .champ b{display:block;font-family:var(--display);font-weight:800;font-size:19px;letter-spacing:.03em;line-height:1.1;text-transform:uppercase}
@@ -888,8 +896,8 @@ function champState(){
   return {today,last,C,P,L,liveDay,defended,finalToday:last===today};}
 function prizeAmt(){const n=(S.NAG&&S.NAG.elita)||{};const v=+n.prvo||0;return v?`${v.toLocaleString('sr-Latn-RS')} ${n.valuta||'€'}`:'';}
 const pick1=(arr,k)=>arr[Math.abs(k)%arr.length];
-function champHTML(){if(!S.ready)return '';const st=champState(),me=S.uid,amt=prizeAmt(),seed=+(st.today||'0').replace(/-/g,'')||0;
-  const card=(ic,t,sub,cls='')=>`<div class="champ ${cls}"><span class="ci">${ic}</span><div><b>${t}</b><small>${sub}</small></div></div>`;
+function champData(){if(!S.ready)return null;const st=champState(),me=S.uid,amt=prizeAmt(),seed=+(st.today||'0').replace(/-/g,'')||0;
+  const card=(ic,t,sub,cls='')=>({ic,t,sub,cls});
   // tokom emisije: ko je trenutno na vrhu
   if(st.L){const L=st.L,C=st.C,meL=L.ids.includes(me),meC=C&&C.ids.includes(me),cHolds=C&&C.ids.some(u=>L.ids.includes(u));
     const myRow=rankFor('otvorena',st.liveDay).find(x=>x.uid===me),gap=myRow&&!meL?L.pts-myRow.c:null;
@@ -898,7 +906,7 @@ function champHTML(){if(!S.ready)return '';const st=champState(),me=S.uid,amt=pr
     if(cHolds)return card('🏆',`${nmJoin(C.names.filter((n,i)=>L.ids.includes(C.ids[i])))} BRANI 1. MESTO`,'Skini ga.'+gapTx);
     if(meC)return card('⚠️',`${nmJoin(L.names)} TI JE PREUZEO VRH`,'Vrati titulu.'+gapTx,'hot');
     return card('🔥',`${nmJoin(L.names)} JE NA VRHU`,(C?'Novi lider večeri.':'Ko će preuzeti vrh?')+gapTx,'hot');}
-  if(!st.C)return '';
+  if(!st.C)return null;
   const C=st.C,meC=C.ids.includes(me),nm=nmJoin(C.names);
   // emisija je upravo završena: rezultat večeri
   if(st.finalToday){
@@ -907,9 +915,14 @@ function champHTML(){if(!S.ready)return '';const st=champState(),me=S.uid,amt=pr
     return card('🏆',meC?'TI SI NOVI ŠAMPION VEČERI':'NOVI ŠAMPION VEČERI',`${nm} · ${pnTx(C.pts)}`,meC?'me':'');}
   // pre sledeće emisije: šampion brani titulu
   if(meC)return card('🏆','TI SI ŠAMPION VEČERI',pick1(['Večeras braniš titulu.',amt?`${amt} je tvoj sledeći cilj. Odbrani prvo mesto.`:'Odbrani prvo mesto.','Svi te jure. Odbrani titulu.'],seed),'me');
-  const head=pick1([`${nm} BRANI TITULU VEČERAS`,`${nm} JE ŠAMPION. KO ĆE GA SKINUTI?`,`DA LI ${nm} MOŽE DO NOVE POBEDE?`],seed);
-  const sub=pick1(['Da li ćeš ga večeras skinuti?','Ti si izazivač.','Šampion je poznat. Sada ga skidaš ti.'],seed+1)+(amt?` · ${amt} čeka šampiona.`:'');
+  const head=pick1([`${nm} BRANI TITULU VEČERAS`,`${nm} JE ŠAMPION. KO ĆE GA SKINUTI VEČERAS?`,`DA LI ${nm} MOŽE DO NOVE POBEDE?`],seed);
+  const sub=pick1(['Da li ćeš ga večeras skinuti?','Ti si izazivač.','Šampion je poznat. Sada ga skidaš ti.'],seed+1)+'';
   return card('🏆',head,sub);}
+function topBoxHTML(){const c=S.LIGA==='otvorena'?champData():null,L=S.LIGE||{},t=(L.promo??LIGE_DEF.promo)||'',pv=L.promo_vis!==false&&t.trim()&&S.LIGA==='otvorena';
+  if(!c&&!pv)return '';const n=(S.NAG&&S.NAG.elita)||{},g=(L.nagrade_tekst??LIGE_DEF.nagrade_tekst)||'';
+  const pz=[+n.prvo||0,+n.drugo||0,+n.trece||0].map((v,i)=>v?`${['🥇','🥈','🥉'][i]} ${v.toLocaleString('sr-Latn-RS')} ${esc(n.valuta||'€')}`:'').filter(Boolean).join(' · ');
+  const bottom=pv?`<div class="tp"><span class="pt">⭐ ${esc(t)}</span>${pz?`<span class="pz">${pz}${g.trim()?`<i> · 📈 ${esc(g)}</i>`:''}</span>`:''}</div>`:'';
+  return `<div class="tbox ${c?c.cls:''}">${c?`<div class="th"><span class="ci">${c.ic}</span><div><b>${c.t}</b><small>${c.sub}</small></div></div>`:''}${bottom}</div>`;}
 function checkChampPop(){if(!S.ready||!S.uid)return;const st=champState();if(!st.finalToday||!st.C)return;const k='champ_'+st.today;if(store.get(k,'')==='1'||!$('#champPop').hidden)return;
   store.set(k,'1');const C=st.C,me=S.uid,meC=C.ids.includes(me),nm=nmJoin(C.names);
   let t,tx;if(st.defended){t=meC?'ODBRANIO SI TITULU':'ŠAMPION JE ODBRANIO TITULU';tx=`<b>${esc(nm)}</b><br>${pnTx(C.pts)}`;}
@@ -1077,7 +1090,7 @@ function renderHome(){
   const rest=open.filter(d=>!heroes.includes(d));
   const res=settled().slice().reverse();
   const today=todayBG(),mine=scoreDay(S.myPicks,today);
-  let h=(cdHTML()||`<div class="today">📅 ${esc(dateLong())} · <b>EMISIJA UŽIVO</b></div>`)+onlHTML()+(S.LIGA==='otvorena'?champHTML():'')+promoHTML()+`<div class="rule1 slim"><span class="ic">🎯</span><span>1 POGOĐEN DUEL = <em>1 POEN</em></span></div>`+(S.LIGA==='elita'?`<div class="elinfo">★ ${esc(UP(LNAME.elita))} · ${S.admin&&!hasElite()?'pregled (admin)':vaziTxt(S.ELITA)}</div>`:'')+prizeHTML();
+  let h=(cdHTML()||`<div class="today">📅 ${esc(dateLong())} · <b>EMISIJA UŽIVO</b></div>`)+onlHTML()+topBoxHTML()+`<div class="rule1 slim"><span class="ic">🎯</span><span>1 POGOĐEN DUEL = <em>1 POEN</em></span></div>`+(S.LIGA==='elita'?`<div class="elinfo">★ ${esc(UP(LNAME.elita))} · ${S.admin&&!hasElite()?'pregled (admin)':vaziTxt(S.ELITA)}</div>`:'')+prizeHTML();
   if(heroD){
     const lbl=heroes.length>1?'Aktuelno · '+heroes.length:heroD.uzivo?'Uživo':isLocked(heroD)?'U toku':(heroD.rucno?'Glasaj sada':'Sledeći duel');
     h+=`<div class="sec first">${lbl}${S.uid&&(mine.c+mine.w)?`<small>Danas: ${mine.c} od ${mine.c+mine.w} pogođeno</small>`:''}</div><div class="heroes">${heroes.map(heroHTML).join('')}</div>`;
@@ -1169,7 +1182,7 @@ function renderBoard(){
   if(!S.ready)return;const day=rangMode==='danas',list=standings(day?todayBG():null);
   $('#minRule').hidden=!day;$('#rulesUk').hidden=day;$('#rulesDan').hidden=!day;
   $('#rangDate').textContent=day?'📅 '+dateLong():'Ukupno · stanje na dan '+dateLong().replace(/^[^,]+, /,'');
-  $('#prizeRang').innerHTML=(day?promoHTML():'')+(S.LIGA==='elita'?'<div class="elinfo">★ RANG LISTA · '+esc(UP(LNAME.elita))+'</div>':'')+(day?prizeHTML():'');
+  $('#prizeRang').innerHTML=(day?topBoxHTML():'')+(S.LIGA==='elita'?'<div class="elinfo">★ RANG LISTA · '+esc(UP(LNAME.elita))+'</div>':'')+(day?prizeHTML():'');
   $('#payRang').innerHTML=(S.LIGA==='elita'?`<div class="payinfo">💳 <span>Po završetku emisije, svakog dana u <b>23:30h</b>, ${pzTxt(S.NAG.elita)==='1. mesto'?'isplaćujemo nagradu pobedniku dana na račun koji je ostavio.':'isplaćujemo nagrade za '+pzTxt(S.NAG.elita)+' na račune koje ste ostavili.'}</span> <button type="button" class="link" id="toPay">Upiši svoj račun</button></div>`:'');
   const tp=$('#toPay');if(tp)tp.onclick=()=>{go('profil',true);setTimeout(()=>{const f=$('#payForm');if(f)f.scrollIntoView({behavior:'smooth',block:'center'});},150);};
   const pz=prizes(),medal=r=>day&&r<=3&&pz[r-1]?`<span class="medal">${['🥇','🥈','🥉'][r-1]}</span>`:'';
@@ -1649,8 +1662,9 @@ function applyLiga(){if(!eliVis()&&S.LIGA==='elita'&&(S.elOk||eliMode()==='niko'
   $('#ligaSeg').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.l===L));$('#ligaLock').hidden=hasElite();}
 function setLiga(L){if(L==='elita'&&!hasElite()&&!S.admin)return lockPop();if(L===S.LIGA)return;S.LIGA=L;store.set('liga',L);applyLiga();lastSig=dataSig();renderAll();}
 $('#ligaSeg').onclick=e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.l==='elita'&&S.LIGA!=='elita'&&!hasElite()){lockPop();return;}setLiga(b.dataset.l);};
-async function loadElita(){S.ELITA=null;S.ELALL=[];if(!S.uid||S.anon){S.elOk=true;applyLiga();return;}
-  try{const {data,error}=await S.sb.from('elita').select('*');if(error)throw error;S.ELALL=data||[];S.ELITA=S.ELALL.find(r=>r.player_id===S.uid)||null;}catch(e){}S.elOk=true;
+async function loadElita(){if(!S.uid||S.anon){S.ELITA=null;S.ELALL=[];S.elOk=true;applyLiga();return;}
+  // staro stanje ostaje dok novo ne stigne (inače na sporijoj mreži, npr. Android, liga na trenutak "nestane" i vrati na prvu ligu)
+  try{const {data,error}=await S.sb.from('elita').select('*');if(error)throw error;S.ELALL=data||[];S.ELITA=S.ELALL.find(r=>r.player_id===S.uid)||null;}catch(e){if(!S.elOk){S.ELITA=null;S.ELALL=[];}}S.elOk=true;
   applyLiga();if(S.ready)checkElitaPop();}
 function checkElitaPop(){const e=S.ELITA;if(!eliVis())return;if(!hasElite(e)||!$('#eliPop').hidden)return;const k='elpop_'+S.uid,v=e.updated_at||'1';if(store.get(k,'')===v)return;
   const first=store.get(k,null)===null&&e.izvor!=='top3'&&e.izvor!=='admin';store.set(k,v);if(first)return;
