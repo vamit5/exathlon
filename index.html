@@ -678,7 +678,7 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
         <label class="chk"><input type="checkbox" id="lgReq"><span>U prozoru prikaži dugme <b>ZATRAŽI PRISTUP</b></span></label>
         <div class="inline"><button class="btn" type="submit" style="flex:1">SAČUVAJ</button><button class="btn ghost" type="button" id="lgPrev">POGLEDAJ PROZOR</button></div><p class="msg" id="lgMsg" style="margin:0"></p></form>
       <div class="apanel"><h3>Top 3 dana</h3>
-        <label class="chk"><input type="checkbox" id="lgAuto"><span><b>Automatski daj pristup na 24h</b> najboljima iz prve lige čim klikneš <b>🏁 ZATVORI EMISIJU</b> (ako zaboraviš, sistem to uradi sam u 23:59h). 24h se računa od tog trenutka. Kad je isključeno, pristup daješ samo ti.</span></label>
+        <label class="chk"><input type="checkbox" id="lgAuto"><span><b>Automatski daj pristup najboljima</b> iz prve lige čim klikneš <b>🏁 ZATVORI EMISIJU</b> (ako zaboraviš, sistem to uradi sam u 23:59h). Pristup važi do kraja sledeće emisije i produžava se dok god je ponovo prvi. Ko sledeći put ne bude prvi, gubi pristup i vraća se u prvu ligu. Pristup koji ti daješ ručno se ne dira.</span></label>
         <label class="fl">Koliko prvih mesta dobija pristup<select class="inp" id="lgMesta"><option value="1">Samo 1. mesto</option><option value="2">Prva 2 mesta</option><option value="3">Prva 3 mesta</option></select></label>
         <p class="muted" style="margin:0">Ili ručno, jednim klikom:</p>
         <button class="btn ghost" id="eliTop3" type="button">DODELI PRISTUP NAJBOLJIMA ZA DANAS ODMAH</button><p class="msg" id="eliTop3Msg" style="margin:0"></p></div>
