@@ -712,6 +712,8 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
           <label class="fl">3. mesto<input class="inp" type="number" min="0" step="0.5" id="nz3"></label>
         </div>
         <label class="fl">Valuta<input class="inp" id="nzV" maxlength="4" value="€"></label>
+        <label class="fl">Tekst iznad iznosa (veliki box na Duelima)<input class="inp" id="bpzK" maxlength="60" placeholder="🏆 Večeras se igra za"></label>
+        <label class="fl">Tekst ispod iznosa (prazno = automatski)<input class="inp" id="bpzS" maxlength="120" placeholder="🥇 1. mesto · Takmičenje za novac"></label>
         <button class="btn" type="submit">SAČUVAJ NAGRADE</button>
       </form>
       <div class="sec">Dobitnici po danima</div>
@@ -929,7 +931,8 @@ function champData(){if(!S.ready)return null;const st=champState(),me=S.uid,amt=
   return card('🏆',head,sub);}
 function bigPrizeHTML(){if(typeof eliMode==='function'&&eliMode()==='niko')return '';const n=(S.NAG&&S.NAG.elita)||{},c=n.valuta||'€',p=[+n.prvo||0,+n.drugo||0,+n.trece||0];if(!p[0])return '';
   const m=v=>`${v.toLocaleString('sr-Latn-RS',{maximumFractionDigits:2})} ${esc(c)}`,rest=p.slice(1).map((v,i)=>v?`${['🥈','🥉'][i]} ${i+2}. mesto ${m(v)}`:'').filter(Boolean).join(' · ');
-  return `<div class="bigpz"><div class="k">🏆 Večeras se igra za</div><div class="v">${m(p[0])}</div><div class="s">🥇 <b>1. mesto</b> · ${esc(LNAME.elita)}${rest?`<br>${rest}`:''}</div></div>`;}
+  const L=S.LIGE||{},K=(L.bpz_k||'').trim()||'🏆 Večeras se igra za',SS=(L.bpz_s||'').trim();
+  return `<div class="bigpz"><div class="k">${esc(K)}</div><div class="v">${m(p[0])}</div><div class="s">${SS?esc(SS):`🥇 <b>1. mesto</b> · ${esc(LNAME.elita)}${rest?`<br>${rest}`:''}`}</div></div>`;}
 function topBoxHTML(){const c=S.LIGA==='otvorena'?champData():null,L=S.LIGE||{},t=(L.promo??LIGE_DEF.promo)||'',pv=L.promo_vis!==false&&t.trim()&&S.LIGA==='otvorena';
   if(!c&&!pv)return '';const n=(S.NAG&&S.NAG.elita)||{},g=(L.nagrade_tekst??LIGE_DEF.nagrade_tekst)||'';
   const pz=[+n.prvo||0,+n.drugo||0,+n.trece||0].map((v,i)=>v?`${['🥇','🥈','🥉'][i]} ${v.toLocaleString('sr-Latn-RS')} ${esc(n.valuta||'€')}`:'').filter(Boolean).join(' · ');
@@ -1424,11 +1427,12 @@ function renderNow(){
   box.querySelectorAll('[data-act]').forEach(b=>b.onclick=()=>adminAct(b));
 }
 $('#prizeForm').onsubmit=async e=>{e.preventDefault();const v={prvo:+$('#nz1').value||0,drugo:+$('#nz2').value||0,trece:+$('#nz3').value||0,valuta:$('#nzV').value.trim()||'€'};
+  const lv={...S.LIGE,bpz_k:$('#bpzK').value.trim(),bpz_s:$('#bpzS').value.trim()};try{const r=await S.sb.from('meta').upsert({key:'lige',value:lv});if(!r.error)S.LIGE=lv;}catch(_){}
   if(await w(S.sb.from('meta').upsert({key:'nagrade_elita',value:v}),'Nagrada je sačuvana i prikazuje se svuda ✓')){S.NAG.elita=v;if(S.LIGA==='elita')S.NAGRADE=v;renderAll();}};
 function renderNagrade(){
   $('#nzTitle').textContent='Iznos nagrade · '+LNAME.elita+' (menja se svuda u aplikaciji; 0 = bez nagrade za to mesto)';
   $('#prizeForm').hidden=false;
-  if(document.activeElement.closest&&!document.activeElement.closest('#prizeForm')){const n=S.NAG.elita||{};$('#nz1').value=+n.prvo||0;$('#nz2').value=+n.drugo||0;$('#nz3').value=+n.trece||0;$('#nzV').value=n.valuta||'€';}
+  if(document.activeElement.closest&&!document.activeElement.closest('#prizeForm')){const n=S.NAG.elita||{};$('#nz1').value=+n.prvo||0;$('#nz2').value=+n.drugo||0;$('#nz3').value=+n.trece||0;$('#nzV').value=n.valuta||'€';$('#bpzK').value=(S.LIGE||{}).bpz_k||'';$('#bpzS').value=(S.LIGE||{}).bpz_s||'';}
   if(S.LIGA!=='elita'){$('#adminWinners').innerHTML=`<div class="empty">Dobitnike po danima vidiš kad gore izabereš ligu <b>${esc(LNAME.elita)}</b>.</div>`;return;}
   const g=winnersByDay(),today=todayBG();
   $('#adminWinners').innerHTML=g.length?g.map(x=>`<div class="dayh">${esc(dayLabel(x.day))}${x.day===today?' · dan još traje':''}</div>`+x.list.map(p=>{
