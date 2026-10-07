@@ -952,7 +952,7 @@ const PREV={};
 function heroMultiHTML(d){
   const mine=S.myPicks[d.id],locked=isLocked(d),c=crowd(d),P=d.ucesnici.map(side);
   const pill=d.uzivo?'<span class="pill live"><i></i>UŽIVO</span>':!locked?'<span class="pill live"><i></i>Glasaj sada</span>':'<span class="pill">Čeka se rezultat</span>';
-  const show=(mine||locked)&&c.t;
+  const show=c.t>0;
   return `<article class="hero multi" data-id="${d.id}"${mine?` data-pick="${esc(mine)}"`:''}>
     <div class="hero-top">${pill}<span class="kind">${esc(d.vrsta||'Pojedinačno takmičenje')}${d.napomena?' · '+esc(d.napomena):''}</span></div>
     <div class="mq">KO POBEĐUJE?<small>${P.length} takmičara · izaberi jednog</small></div>
@@ -976,7 +976,7 @@ function heroSoloHTML(d){
       <button class="pick yes${mine==='a'?' sel':mine?' off':''}" data-s="a" ${mine||(locked&&!admV(d))?'disabled':''}>✓ DA</button>
       <button class="pick no${mine==='b'?' sel':mine?' off':''}" data-s="b" ${mine||(locked&&!admV(d))?'disabled':''}>✕ NE</button>
     </div>
-    ${(mine||locked)&&c.t?`<div class="split"><div class="bar"><i style="width:${pa}%"></i><i style="width:${100-pa}%"></i></div><div class="lbl"><span>DA ${pa}%</span><span>${c.t} prognoza</span><span>NE ${100-pa}%</span></div></div>`
+    ${c.t?`<div class="split"><div class="bar"><i style="width:${pa}%"></i><i style="width:${100-pa}%"></i></div><div class="lbl"><span>DA ${pa}%</span><span>${c.t} prognoza</span><span>NE ${100-pa}%</span></div></div>`
       :!mine&&!locked?'<div class="hint">Tačna prognoza = 1 poen.</div>':''}
     ${locked&&!d.pobednik?'<div class="closed">🔒 GLASANJE ZATVORENO</div>':''}
   </article>`;}
@@ -1001,7 +1001,7 @@ function heroHTML(d){if(isSolo(d))return heroSoloHTML(d);if(isMulti(d))return he
       <button class="pick${mine==='a'?' sel':mine?' off':''}" data-s="a" ${mine||(locked&&!admV(d))?'disabled':''}>${esc(A.name)}</button>
       <button class="pick${mine==='b'?' sel':mine?' off':''}" data-s="b" ${mine||(locked&&!admV(d))?'disabled':''}>${esc(B.name)}</button>
     </div>
-    ${(mine||locked)&&c.t?`<div class="split"><div class="bar"><i style="width:${pa}%"></i><i style="width:${100-pa}%"></i></div><div class="lbl"><span>${pa}%</span><span>${c.t} ${c.t%10===1&&c.t%100!==11?'prognoza':'prognoza'}</span><span>${100-pa}%</span></div></div>`
+    ${c.t?`<div class="split"><div class="bar"><i style="width:${pa}%"></i><i style="width:${100-pa}%"></i></div><div class="lbl"><span>${pa}%</span><span>${c.t} ${c.t%10===1&&c.t%100!==11?'prognoza':'prognoza'}</span><span>${100-pa}%</span></div></div>`
       :!mine&&!locked?'<div class="hint">'+(d.rucno?'Glasanje se zatvara u sekundi kad duel krene. ':'')+'Tačna prognoza = 1 poen.</div>':''}
     ${locked&&!d.pobednik?'<div class="closed">🔒 GLASANJE ZATVORENO</div>':''}
   </article>`;
@@ -1740,7 +1740,8 @@ $('#eliQ').oninput=()=>renderElitaAdmin();
 $('#eliTop3').onclick=async e=>{const m=$('#eliTop3Msg');e.target.disabled=true;m.className='msg';m.textContent='Sačekaj…';
   try{const {data,error}=await S.sb.functions.invoke('elita-top3',{body:{dan:todayBG()}});if(error)throw error;
     m.className='msg ok';m.textContent=data&&data.dodeljeno?`Dodato ${data.dodeljeno} igrača, poslato ${data.poslato} emailova.`:(data&&data.poruka)||'Gotovo.';await loadElita();renderElitaAdmin();}
-  catch(err){console.warn(err);m.className='msg err';m.textContent='Nije uspelo. Proveri da li je funkcija elita-top3 postavljena.';}
+  catch(err){console.warn(err);let why='';try{const r=err&&err.context;if(r&&r.json){const j=await r.clone().json().catch(()=>null);why=(j&&(j.greska||j.message||j.error))||('HTTP '+r.status);}}catch(_){}
+    if(!why)why=(err&&err.message)||'';m.className='msg err';m.textContent='Nije uspelo'+(why?': '+why:'.')+(/zabranjeno|401/.test(why)?' (odjavi se i prijavi ponovo kao admin)':'');}
   e.target.disabled=false;};
 
 /* ================= PODACI ================= */
