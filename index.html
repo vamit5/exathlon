@@ -1741,7 +1741,11 @@ $('#eliTop3').onclick=async e=>{const m=$('#eliTop3Msg');e.target.disabled=true;
   try{const {data,error}=await S.sb.functions.invoke('elita-top3',{body:{dan:todayBG()}});if(error)throw error;
     m.className='msg ok';m.textContent=data&&data.dodeljeno?`Dodato ${data.dodeljeno} igrača, poslato ${data.poslato} emailova.`:(data&&data.poruka)||'Gotovo.';await loadElita();renderElitaAdmin();}
   catch(err){console.warn(err);let why='';try{const r=err&&err.context;if(r&&r.json){const j=await r.clone().json().catch(()=>null);why=(j&&(j.greska||j.message||j.error))||('HTTP '+r.status);}}catch(_){}
-    if(!why)why=(err&&err.message)||'';m.className='msg err';m.textContent='Nije uspelo'+(why?': '+why:'.')+(/zabranjeno|401/.test(why)?' (odjavi se i prijavi ponovo kao admin)':'');}
+    if(!why)why=(err&&err.message)||'';
+    // rezerva: dodela direktno u bazi (bez emaila), ako serverska funkcija ne radi
+    try{const mesta=+((S.LIGE||{}).auto_mesta)||3;let r=await S.sb.rpc('dodeli_top3',{dan:todayBG(),mesta});if(r.error&&/mesta|function/i.test(r.error.message||''))r=await S.sb.rpc('dodeli_top3',{dan:todayBG()});
+      if(r.error)throw r.error;const n=(r.data||[]).length;m.className='msg ok';m.textContent=n?`Dodato ${n} igrača (email nije poslat: ${why||'serverska funkcija ne radi'}).`:'Gotovo. Nema novih dobitnika za danas (ili su već dodati).';await loadElita();renderElitaAdmin();}
+    catch(e2){console.warn(e2);m.className='msg err';m.textContent='Nije uspelo: '+((e2&&e2.message)||why||'nepoznata greška');}}
   e.target.disabled=false;};
 
 /* ================= PODACI ================= */
