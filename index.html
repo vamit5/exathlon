@@ -470,6 +470,11 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
 .bigpz .s b{color:#fff}
 .korb{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;background:rgba(255,192,77,.14);border:1px solid rgba(255,192,77,.45);color:#ffcf5a;font-family:var(--body);font-weight:700;font-size:10px;letter-spacing:.02em;vertical-align:middle;text-transform:none}
 .kor .korf{display:flex;gap:6px;margin-top:6px}.kor .korf .inp{flex:1;min-width:0;height:38px}.kor .korl{display:flex;justify-content:space-between;gap:8px;font-size:12px;margin-top:6px;color:var(--dim)}
+.przb{text-align:left;font-size:14px;line-height:1.5}.przb h3{margin:0 0 6px;font-family:var(--display);font-size:22px;letter-spacing:.03em;color:#ffcf5a}.przb .pi{margin:6px 0}.przb .pl{margin:6px 0 6px 18px;padding:0;display:grid;gap:7px}.przb .pl b{color:#fff}.przb i{color:#ffd78a}
+.rulesd.prz summary{border-color:rgba(255,192,77,.55);color:#ffcf5a}.rulesd.prz .przb{padding:12px 14px;border-radius:12px;background:var(--panel);border:1px solid rgba(255,192,77,.35)}
+.przbox{max-width:440px!important;max-height:86vh;overflow:auto;text-align:left!important}
+.przl{display:block;margin:10px auto 0;padding:5px 12px;border-radius:999px;border:1px solid rgba(255,192,77,.4);background:rgba(0,0,0,.25);color:#ffd78a;font:600 12px var(--body);cursor:pointer}
+.decl{align-items:flex-start;font-size:13px;line-height:1.45;margin-top:4px}.decl .link{font-size:13px}
 .pzmini{margin-top:12px;padding:8px;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid rgba(255,176,32,.3)}
 .pzmini .t{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#ffcf5a;margin-bottom:6px}
 .pzmini .r{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
@@ -587,6 +592,21 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
     <div id="prizeRang"></div>
     <div class="board" id="board"></div>
     <div id="payRang"></div>
+    <details class="rulesd prz"><summary>🛡️ Pravila za nagrade · ko ne može da osvoji nagradu</summary><div class="przb"><h3>🛡️ Pravila za nagrade</h3>
+<p class="pi">Želimo da nagrade osvajaju samo oni koji ih zaista zasluže znanjem i osećajem. Zato važi sledeće:</p>
+<ol class="pl">
+<li><b>Učešće je besplatno.</b> Nema uplate, kupovine ni bilo kakvog troška.</li>
+<li><b>Ko ne može da osvoji nagradu:</b> zaposleni, saradnici i angažovana lica produkcije Exatlona Srbija, televizije koja ga emituje i firmi koje rade na snimanju i montaži, kao i njihova porodica, partneri, prijatelji i poznanici i svako ko na bilo koji način može da sazna rezultate pre emitovanja. <i>Razlog: emisija se snima unapred, pa ta lica mogu znati ishode duela. To se već dešavalo.</i> Ova lica mogu da igraju zabave radi, ali nagradu ne mogu da dobiju.</li>
+<li><b>Fer igra.</b> Zabranjeno je glasanje uz unapred poznate rezultate, korišćenje više naloga, deljenje naloga, automatsko glasanje i zloupotreba grešaka u aplikaciji.</li>
+<li><b>Jedna osoba – jedan nalog.</b> Nagrada se isplaćuje samo na račun koji glasi na ime i prezime igrača.</li>
+<li><b>Provera pre svake isplate.</b> Svaki dobitnik prolazi proveru. Neuobičajeni rezultati (npr. skoro svi pogođeni duelovi) proveravaju se posebno. Možemo zatražiti potvrdu identiteta i pisanu izjavu da igrač nije povezan sa produkcijom. Dok provera traje, isplata čeka.</li>
+<li><b>Poništavanje.</b> Kod osnovane sumnje u kršenje pravila organizator može da poništi poene, isključi igrača iz nagrade ili trajno zatvori nalog. Nagrada tada pripada sledećem igraču na rang listi koji ispunjava uslove.</li>
+<li><b>Povraćaj.</b> Ako se kršenje pravila utvrdi i posle isplate, organizator može da traži povraćaj nagrade.</li>
+<li><b>Ručne korekcije poena</b> uvek su vidljive svima na rang listi (✎), zajedno sa razlogom.</li>
+<li><b>Izmene pravila</b> važe od trenutka objave u aplikaciji.</li>
+<li><b>Odluku o dodeli nagrade</b> donosi organizator, posle provere.</li>
+</ol>
+<p class="pi muted">EXATHLEAGUE je besplatna, nezavisna fan igra i nije zvanični proizvod Exatlona ni televizije koja ga emituje.</p></div></details>
     <details class="rulesd"><summary>ℹ️ Pravila rangiranja</summary>
     <div class="rule1 slim"><span class="ic">🎯</span><span>1 POGOĐEN DUEL = <em>1 POEN</em></span></div>
     <div class="minrule" id="minRule">✅ Za dnevni plasman i nagradu moraš odigrati najmanje <b>70% duela</b> tog dana.</div>
@@ -620,6 +640,7 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
       <label class="fl">Broj računa ili IBAN<input class="inp" id="pyRacun" maxlength="60" autocomplete="off"></label>
       <label class="fl">Banka<input class="inp" id="pyBanka" maxlength="60"></label>
       <label class="fl">Napomena (npr. PayPal email)<input class="inp" id="pyNap" maxlength="100"></label>
+      <label class="chk decl"><input type="checkbox" id="pyIzj"><span>Potvrđujem da nisam zaposlen ni saradnik produkcije Exatlona ili televizije, da nisam u porodičnoj ni bliskoj vezi sa takvim licem, da rezultate ne znam unapred i da prihvatam Pravila za nagrade. <button type="button" class="link" data-rules="1">Pravila</button></span></label>
       <button class="btn ghost" type="submit">SAČUVAJ PODATKE</button>
       <p class="msg" id="pyMsg"></p>
     </form>
@@ -771,6 +792,22 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
 </div>
 <canvas id="confetti" aria-hidden="true"></canvas>
 <div class="winbanner" id="winBanner" hidden role="status" aria-live="polite"><b>POGODAK!</b><span id="winText"></span></div>
+<div class="pop" id="rulesPop" hidden role="dialog" aria-modal="true"><div class="box przbox"><div class="przb"><h3>🛡️ Pravila za nagrade</h3>
+<p class="pi">Želimo da nagrade osvajaju samo oni koji ih zaista zasluže znanjem i osećajem. Zato važi sledeće:</p>
+<ol class="pl">
+<li><b>Učešće je besplatno.</b> Nema uplate, kupovine ni bilo kakvog troška.</li>
+<li><b>Ko ne može da osvoji nagradu:</b> zaposleni, saradnici i angažovana lica produkcije Exatlona Srbija, televizije koja ga emituje i firmi koje rade na snimanju i montaži, kao i njihova porodica, partneri, prijatelji i poznanici i svako ko na bilo koji način može da sazna rezultate pre emitovanja. <i>Razlog: emisija se snima unapred, pa ta lica mogu znati ishode duela. To se već dešavalo.</i> Ova lica mogu da igraju zabave radi, ali nagradu ne mogu da dobiju.</li>
+<li><b>Fer igra.</b> Zabranjeno je glasanje uz unapred poznate rezultate, korišćenje više naloga, deljenje naloga, automatsko glasanje i zloupotreba grešaka u aplikaciji.</li>
+<li><b>Jedna osoba – jedan nalog.</b> Nagrada se isplaćuje samo na račun koji glasi na ime i prezime igrača.</li>
+<li><b>Provera pre svake isplate.</b> Svaki dobitnik prolazi proveru. Neuobičajeni rezultati (npr. skoro svi pogođeni duelovi) proveravaju se posebno. Možemo zatražiti potvrdu identiteta i pisanu izjavu da igrač nije povezan sa produkcijom. Dok provera traje, isplata čeka.</li>
+<li><b>Poništavanje.</b> Kod osnovane sumnje u kršenje pravila organizator može da poništi poene, isključi igrača iz nagrade ili trajno zatvori nalog. Nagrada tada pripada sledećem igraču na rang listi koji ispunjava uslove.</li>
+<li><b>Povraćaj.</b> Ako se kršenje pravila utvrdi i posle isplate, organizator može da traži povraćaj nagrade.</li>
+<li><b>Ručne korekcije poena</b> uvek su vidljive svima na rang listi (✎), zajedno sa razlogom.</li>
+<li><b>Izmene pravila</b> važe od trenutka objave u aplikaciji.</li>
+<li><b>Odluku o dodeli nagrade</b> donosi organizator, posle provere.</li>
+</ol>
+<p class="pi muted">EXATHLEAGUE je besplatna, nezavisna fan igra i nije zvanični proizvod Exatlona ni televizije koja ga emituje.</p></div><button class="btn gold" id="rulesPopOk" type="button">RAZUMEM</button></div></div>
+<div class="pop" id="noticePop" hidden role="dialog" aria-modal="true" aria-labelledby="noticeT"><div class="box"><div class="big">🛡️</div><h2 id="noticeT">VAŽNO: PRAVILA ZA NAGRADE</h2><p><b>Zaposleni i saradnici Exatlona i televizije, njihova porodica, prijatelji i poznanici ne mogu da osvoje nagradu.</b><br><br>Emisija se snima unapred, pa ta lica mogu znati rezultate. To se već dešavalo, zato od sada <b>svaki dobitnik prolazi proveru pre isplate</b>.<br><br><span class="muted">Fer igra za sve. Hvala što igraš pošteno! 🙏</span></p><button class="btn gold" id="noticeOk" type="button">RAZUMEM</button><button class="btn ghost" id="noticeMore" type="button">PROČITAJ PRAVILA</button></div></div>
 <div class="pop" id="champPop" hidden role="dialog" aria-modal="true" aria-labelledby="champPopT"><div class="box"><div class="big">🏆</div><h2 id="champPopT"></h2><p id="champPopTx"></p><button class="btn gold" id="champPopOk" type="button">RANG LISTA</button><button class="btn ghost" id="champPopX" type="button">Zatvori</button></div></div>
 <div class="pop" id="eliPop" hidden role="dialog" aria-modal="true" aria-labelledby="eliPopT"><div class="box"><div class="big">🏆</div><h2 id="eliPopT">ELITNA LIGA</h2><p id="eliPopTx"></p><button class="btn gold" id="eliPopGo" type="button">IGRAJ ELITNU LIGU</button><button class="btn ghost" id="eliPopX" type="button">Kasnije</button></div></div>
 <div class="pop" id="lockPop" hidden role="dialog" aria-modal="true" aria-labelledby="lockPopT"><div class="box lk">
@@ -943,7 +980,7 @@ function champData(){if(!S.ready)return null;const st=champState(),me=S.uid,amt=
 function bigPrizeHTML(){if(typeof eliMode==='function'&&eliMode()==='niko')return '';const n=(S.NAG&&S.NAG.elita)||{},c=n.valuta||'€',p=[+n.prvo||0,+n.drugo||0,+n.trece||0];if(!p[0])return '';
   const m=v=>`${v.toLocaleString('sr-Latn-RS',{maximumFractionDigits:2})} ${esc(c)}`,rest=p.slice(1).map((v,i)=>v?`${['🥈','🥉'][i]} ${i+2}. mesto ${m(v)}`:'').filter(Boolean).join(' · ');
   const L=S.LIGE||{},el=S.LIGA==='elita',K=((el?L.bpz_k2:L.bpz_k)||'').trim()||(el?'💰 Borba za novac':'🏆 Večeras se igra za'),SS=((el?L.bpz_s2:L.bpz_s)||'').trim();
-  return `<div class="bigpz"><div class="k">${esc(K)}</div><div class="v">${m(p[0])}</div><div class="s">${SS?esc(SS):`🥇 <b>1. mesto</b> · ${esc(LNAME.elita)}${rest?`<br>${rest}`:''}`}</div></div>`;}
+  return `<div class="bigpz"><div class="k">${esc(K)}</div><div class="v">${m(p[0])}</div><div class="s">${SS?esc(SS):`🥇 <b>1. mesto</b> · ${esc(LNAME.elita)}${rest?`<br>${rest}`:''}`}</div><button type="button" class="przl" data-rules="1">🛡️ Isplata uz proveru · Pravila za nagrade</button></div>`;}
 function topBoxHTML(){const c=S.LIGA==='otvorena'?champData():null,L=S.LIGE||{},t=(L.promo??LIGE_DEF.promo)||'',pv=L.promo_vis!==false&&t.trim()&&S.LIGA==='otvorena';
   if(!c&&!pv)return '';const n=(S.NAG&&S.NAG.elita)||{},g=(L.nagrade_tekst??LIGE_DEF.nagrade_tekst)||'';
   const pz=[+n.prvo||0,+n.drugo||0,+n.trece||0].map((v,i)=>v?`${['🥇','🥈','🥉'][i]} ${v.toLocaleString('sr-Latn-RS')} ${esc(n.valuta||'€')}`:'').filter(Boolean).join(' · ');
@@ -1300,8 +1337,10 @@ function renderMyPrizes(){
 }
 function fillPay(){if(S.payFilled||!S.PAY)return;S.payFilled=true;$('#pyIme').value=S.PAY.ime_prezime||'';$('#pyRacun').value=S.PAY.racun||'';$('#pyBanka').value=S.PAY.banka||'';$('#pyNap').value=S.PAY.napomena||'';}
 $('#payForm').onsubmit=async e=>{e.preventDefault();const m=$('#pyMsg');if(!S.uid||S.anon){m.className='msg err';m.textContent='Napravi nalog da bi upisao podatke za isplatu.';return;}
+  if(!$('#pyIzj').checked){m.className='msg err';m.textContent='Da bi sačuvao podatke za isplatu, potvrdi izjavu i prihvati Pravila za nagrade.';return;}
   const row={player_id:S.uid,ime_prezime:$('#pyIme').value.trim(),racun:$('#pyRacun').value.trim(),banka:$('#pyBanka').value.trim(),napomena:$('#pyNap').value.trim(),updated_at:new Date().toISOString()};
-  const {error}=await S.sb.from('payout_info').upsert(row);if(error){console.warn(error);m.className='msg err';m.textContent='Nije sačuvano. Pokušaj ponovo.';return;}
+  let {error}=await S.sb.from('payout_info').upsert({...row,izjava_at:new Date().toISOString()});
+  if(error&&/izjava/i.test(error.message||''))({error}=await S.sb.from('payout_info').upsert(row));if(error){console.warn(error);m.className='msg err';m.textContent='Nije sačuvano. Pokušaj ponovo.';return;}
   S.PAY=row;m.className='msg ok';m.textContent='Sačuvano.';};
 $('#avIn').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f||!S.uid)return;if(S.anon){toast('Napravi nalog da bi dodao sliku.');return;}
   const bl=await cropPortrait(f,1);if(!bl)return;toast('Otpremam…');
@@ -1460,7 +1499,8 @@ function renderNagrade(){
 }
 async function copyTxt(b,t){try{await navigator.clipboard.writeText(t);}catch(e){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy');}catch(_){}a.remove();}
   b.classList.add('ok');b.textContent='Kopirano';setTimeout(()=>{b.classList.remove('ok');b.textContent='Kopiraj';},1400);}
-function bankHTML(pay){if(!pay||!(pay.ime_prezime||pay.racun||pay.napomena))return '<div class="muted" style="color:var(--loss)">Nije uneo podatke za isplatu.</div>';
+function bankHTML(pay){return bankHTML0(pay)+(pay&&(pay.ime_prezime||pay.racun)?(pay.izjava_at?`<div class="muted" style="color:var(--win);font-size:12px">✓ Potvrdio izjavu (nije povezan sa produkcijom) · ${esc(shortDate(bgParts(pay.izjava_at).datum))}</div>`:'<div class="muted" style="color:#ffcf5a;font-size:12px">⚠ Još nije potvrdio izjavu iz Pravila za nagrade</div>'):'');}
+function bankHTML0(pay){if(!pay||!(pay.ime_prezime||pay.racun||pay.napomena))return '<div class="muted" style="color:var(--loss)">Nije uneo podatke za isplatu.</div>';
   return `<div class="bank">${[['Ime i prezime',pay.ime_prezime],['Račun / IBAN',pay.racun],['Banka',pay.banka],['Napomena',pay.napomena]].filter(x=>x[1]).map(([k,v])=>`<div class="bf"><span>${k}</span><code>${esc(v)}</code><button type="button" class="cp" data-cp="${esc(v)}">Kopiraj</button></div>`).join('')}</div>`;}
 function renderIgraci(){
   const q=($('#igrQ').value||'').trim().toLowerCase(),today=todayBG(),owed={},won={};
@@ -1941,6 +1981,14 @@ function drawImg(ctx,img,W,H,zoom,cover){
   const w=iw*s,h=ih*s; ctx.drawImage(img,(W-w)/2,cover?(H-h)*.2:H-h,w,h);
 }
 
+
+/* pravila za nagrade: jednom obaveštenje + otvaranje punih pravila */
+function openRules(){$('#rulesPop').hidden=false;}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-rules]');if(b){e.preventDefault();e.stopPropagation();openRules();}},true);
+$('#rulesPopOk').onclick=()=>{$('#rulesPop').hidden=true;};
+$('#noticeOk').onclick=()=>{$('#noticePop').hidden=true;store.set('pravila_v1','1');};
+$('#noticeMore').onclick=()=>{$('#noticePop').hidden=true;store.set('pravila_v1','1');openRules();};
+setTimeout(()=>{if(store.get('pravila_v1','')!=='1'&&$('#champPop').hidden)$('#noticePop').hidden=false;},2500);
 
 boot();
 if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{}));
