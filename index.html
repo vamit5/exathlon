@@ -653,6 +653,7 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
     <div class="pagehead"><h1>Admin</h1>
       <div class="seg" id="adminSeg"><button data-t="dueli" aria-pressed="true">DUELI</button><button data-t="takmicari" aria-pressed="false">TAKMIČARI</button><button data-t="nagrade" aria-pressed="false">NAGRADE</button><button data-t="igraci" aria-pressed="false">IGRAČI</button><button data-t="elita" aria-pressed="false">ELITA<span id="eliReqN"></span></button></div></div>
     <div id="adminDueli">
+      <div class="apanel" style="margin-bottom:12px"><label class="chk"><input type="checkbox" id="demoChk"><span><b>🧪 Demo prikaz: 479 takmičara</b><br>Vidiš ga <b>samo ti</b>, na ovom uređaju. Ništa se ne upisuje u bazu, a svi ostali vide pravo stanje. Poeni demo igrača se menjaju kad upišeš pobednika duela.</span></label></div>
       <div class="apanel" style="margin-bottom:12px"><h3>⏰ Početak emisije</h3><div style="display:flex;gap:10px;align-items:center"><input class="inp" type="time" id="emT" style="max-width:150px"><button class="btn" type="button" id="emSave" style="width:auto;padding:0 22px">SAČUVAJ</button></div><p class="hint" style="margin-top:8px;opacity:.7;font-size:13px">Menja vreme svuda u aplikaciji: odbrojavanje, „Uživo danas u …h“ i podrazumevano vreme novog duela.</p></div>
       <div class="apanel" id="emBox" style="margin-bottom:12px"></div>
       <div id="nowDuel"></div>
@@ -791,6 +792,7 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
 </div>
 <canvas id="confetti" aria-hidden="true"></canvas>
 <div class="winbanner" id="winBanner" hidden role="status" aria-live="polite"><b>POGODAK!</b><span id="winText"></span></div>
+<div id="demoTag" hidden style="position:fixed;left:8px;bottom:84px;z-index:90;padding:3px 8px;border-radius:6px;background:rgba(255,192,77,.9);color:#140c00;font:800 10px var(--body);letter-spacing:.1em;pointer-events:none">DEMO</div>
 <div class="pop" id="banPop" hidden role="dialog" aria-modal="true" style="z-index:120"><div class="box"><div class="big">⛔</div><h2>NALOG JE TRAJNO ISKLJUČEN</h2><p>Sistem je prepoznao nesvakidašnje ponašanje u igri, koje ukazuje na mogućnost da su rezultati bili poznati unapred.<br><br><b>Razlog:</b> <span id="banWhy"></span><br><br>Poeni su poništeni, a sa ovom email adresom više nije moguće igrati ni osvajati nagrade. <span class="muted">Ako misliš da je greška, javi se na vamit5.team@gmail.com.</span></p><button class="btn ghost" id="banOut" type="button">ODJAVI SE</button></div></div>
 <div class="pop" id="rulesPop" hidden role="dialog" aria-modal="true"><div class="box przbox"><div class="przb"><h3>🛡️ Pravila fer igre</h3>
 <ol class="pl">
@@ -1113,8 +1115,9 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
 addEventListener('focus',wake);addEventListener('online',wake);addEventListener('pageshow',wake);
 /* ko je trenutno online (Supabase Realtime Presence) */
 const tkm=n=>(n%10===1&&n%100!==11)?'takmičar':'takmičara';
-function onlHTML(){if(!S.online)return '';return `<div class="onl"><i></i>Trenutno online: <b id="onlN">${S.online}</b> <span id="onlW">${tkm(S.online)}</span></div>`;}
-function updOnline(){const n=$('#onlN');if(n){n.textContent=S.online;$('#onlW').textContent=tkm(S.online);}else if(current==='home'&&S.ready)renderHome();}
+const onlN=()=>demoOn()?DEMO_N+(S.online||0):S.online;
+function onlHTML(){const n=onlN();if(!n)return '';return `<div class="onl"><i></i>Trenutno online: <b id="onlN">${n}</b> <span id="onlW">${tkm(n)}</span></div>`;}
+function updOnline(){const n=$('#onlN');if(n){n.textContent=onlN();$('#onlW').textContent=tkm(onlN());}else if(current==='home'&&S.ready)renderHome();}
 function startPresence(){try{
   const pc=S.sb.channel('online-igraci',{config:{presence:{key:S.uid||('g'+Math.random().toString(36).slice(2))}}});
   pc.on('presence',{event:'sync'},()=>{S.online=Object.keys(pc.presenceState()||{}).length;updOnline();});
@@ -1507,7 +1510,7 @@ function bankHTML0(pay){if(!pay||!(pay.ime_prezime||pay.racun||pay.napomena))ret
 function renderIgraci(){
   const q=($('#igrQ').value||'').trim().toLowerCase(),today=todayBG(),owed={},won={};
   for(const g of winnersByDay())for(const x of g.list){won[x.uid]=(won[x.uid]||0)+1;if(g.day!==today&&!S.ISPLATE_ALL[x.uid+'|'+g.day])owed[x.uid]=(owed[x.uid]||0)+x.iznos;}
-  const all=Object.entries(S.PLAYERS).filter(([,p])=>p.nick).map(([uid,p])=>({uid,...p,pts:scorePicks(p.picks).pts,owe:owed[uid]||0,won:won[uid]||0,pay:S.PAYALL[uid],u:(S.USERS||{})[uid]}));
+  const all=Object.entries(S.PLAYERS).filter(([,p])=>p.nick&&!p.demo).map(([uid,p])=>({uid,...p,pts:scorePicks(p.picks).pts,owe:owed[uid]||0,won:won[uid]||0,pay:S.PAYALL[uid],u:(S.USERS||{})[uid]}));
   const list=all.filter(x=>!q||x.nick.toLowerCase().includes(q)||((x.u&&x.u.email)||'').toLowerCase().includes(q)||((x.pay&&(x.pay.ime_prezime||''))+'').toLowerCase().includes(q))
     .sort((a,b)=>b.owe-a.owe||b.pts-a.pts||a.nick.localeCompare(b.nick,'sr'));
   const tot=all.reduce((t,x)=>t+x.owe,0);
@@ -1771,7 +1774,7 @@ async function banUser(uid,nick,why,btn){if(btn&&!btn.dataset.sure){btn.dataset.
 async function unBan(id){if(await w(S.sb.from('banovani').delete().eq('id',id),'Isključenje uklonjeno')){await loadBan();renderAll();renderAdmin();}}
 function sumnjaList(){const out=[],days=[...new Set(settled().map(d=>d.datum))].sort().reverse().slice(0,14);
   for(const L of ['otvorena','elita'])for(const dy of days)for(const x of rankFor(L,dy)){const n=(x.c0??x.c)+x.w;if(n<SUMNJA.min)continue;const pc=(x.c0??x.c)/n;
-    if(pc>=SUMNJA.ucinak||x.best>=SUMNJA.niz)out.push({...x,L,dy,n,pc});}
+    if(String(x.uid).startsWith('demo-'))continue;if(pc>=SUMNJA.ucinak||x.best>=SUMNJA.niz)out.push({...x,L,dy,n,pc});}
   return out.sort((a,b)=>b.dy.localeCompare(a.dy)||b.pc-a.pc);}
 function renderSumnja(){const el=$('#sumnja');if(!el)return;const l=sumnjaList();
   el.innerHTML=`<div class="apanel sumnja"><h3>⚠️ Sumnjivi rezultati <small class="muted">(učinak ≥ ${Math.round(SUMNJA.ucinak*100)}% ili niz ≥ ${SUMNJA.niz}, uz bar ${SUMNJA.min} duela)</small></h3>${l.length?l.map(x=>`<div class="srow"><div><b>${esc(x.nick)}</b> <span class="muted">· ${esc(shortDate(x.dy))} · ${esc(LNAME[x.L])}</span><br><span class="sv">${x.c0??x.c}/${x.n} · ${Math.round(x.pc*100)}% · niz ${x.best}</span></div><button type="button" class="btn small danger" data-ban="${x.uid}" data-nick="${esc(x.nick)}">IZBACI</button></div>`).join(''):'<div class="muted">Nema sumnjivih rezultata u poslednjih 14 emisija.</div>'}<p class="muted" style="font-size:12px;margin-top:8px">Ovo je samo signal. Dobar igrač može imati jedno odlično veče, zato pogledaj i ranije večeri pre nego što izbaciš nekoga.</p></div>`;
@@ -1835,7 +1838,7 @@ async function loadPlayers(){
   const M={otvorena:{},elita:{}};
   for(const L in M)pl.forEach(p=>{M[L][p.id]={nick:p.nick,avatar:p.avatar||null,picks:{},at:{}};});
 let mx=0;pk.forEach(x=>{const m=M[x.liga==='elita'?'elita':'otvorena'];const e=m[x.player_id]||(m[x.player_id]={nick:'',picks:{},at:{}});e.picks[x.duel_id]=x.izbor;const t=Date.parse(x.created_at);e.at[x.duel_id]=t;if(x.odluka_ms!=null)(e.od||(e.od={}))[x.duel_id]=x.odluka_ms;if(t>mx)mx=t;});S.lastPickAt=Math.max(S.lastPickAt||0,mx);
-  S.PL=M;applyLiga();const me=S.PL.otvorena[S.uid];if(me&&me.nick)S.nick=me.nick;
+  S.PL=M;try{demoSync();}catch(e){}applyLiga();const me=S.PL.otvorena[S.uid];if(me&&me.nick)S.nick=me.nick;
 }
 async function loadMeta(){try{const {data}=await S.sb.from('meta').select('key,value').in('key',['nagrade','nagrade_elita']);(data||[]).forEach(r=>{S.NAG[r.key==='nagrade_elita'?'elita':'otvorena']=r.value;});applyLiga();}catch(e){}}
 async function loadIsplate(){S.ISP={otvorena:{all:{},mine:{}},elita:{all:{},mine:{}}};if(S.uid&&!S.anon){try{const {data}=await S.sb.from('isplate').select('*');(data||[]).forEach(r=>{const x=S.ISP[r.liga==='elita'?'elita':'otvorena'];x.all[r.player_id+'|'+r.datum]=r;if(r.player_id===S.uid)x.mine[r.datum]=r;});}catch(e){}}applyLiga();}
@@ -1868,7 +1871,7 @@ function go(s,push){if(!SCREENS.includes(s)||(s==='admin'&&!S.admin))s='home';if
   if(push){try{history.replaceState(null,'','#'+s);}catch(e){}}scrollTo({top:0});renderAll();}
 document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.go,true)));
 $('#champPopOk').onclick=()=>{$('#champPop').hidden=true;go('rang',true);};$('#champPopX').onclick=()=>{$('#champPop').hidden=true;};
-let rq=0;function renderAll(){cancelAnimationFrame(rq);rq=requestAnimationFrame(()=>{renderChip();if(S.ready){checkWins();try{checkChampPop();}catch(e){console.warn(e);}}
+let rq=0;function renderAll(){cancelAnimationFrame(rq);rq=requestAnimationFrame(()=>{try{demoSync();}catch(e){console.warn(e);}$('#demoTag').hidden=!demoOn();renderChip();if(S.ready){checkWins();try{checkChampPop();}catch(e){console.warn(e);}}
   if(current==='home')renderHome();else if(current==='roster')renderRoster();else if(current==='rang')renderBoard();else if(current==='profil')renderProfile();else if(current==='admin')renderAdmin();});}
 
 async function boot(){
@@ -2011,6 +2014,36 @@ $('#rulesPopOk').onclick=()=>{$('#rulesPop').hidden=true;};
 $('#noticeOk').onclick=()=>{$('#noticePop').hidden=true;store.set('pravila_v2','1');};
 $('#noticeMore').onclick=()=>{$('#noticePop').hidden=true;store.set('pravila_v2','1');openRules();};
 setTimeout(()=>{if(store.get('pravila_v2','')!=='1'&&$('#champPop').hidden)$('#noticePop').hidden=false;},2500);
+
+/* ================= DEMO PRIKAZ (vidi SAMO admin na svom uređaju; ništa ne ide u bazu) ================= */
+const DEMO_N=479;
+const demoOn=()=>!!S.admin&&store.get('demo','')==='1';
+let DEMO_PL=null;
+function demoPlayers(){if(DEMO_PL)return DEMO_PL;
+  const F=['Marko','Stefan','Nikola','Luka','Milan','Jovana','Milica','Ana','Ivana','Jelena','Teodora','Sara','Nemanja','Aleksandar','Đorđe','Vuk','Filip','Uroš','Lazar','Dušan','Miloš','Petar','Ognjen','Bojan','Dejan','Zoran','Dragana','Marija','Kristina','Tamara','Nataša','Snežana','Jasmina','Emir','Amar','Haris','Adnan','Ajla','Amra','Lejla','Selma','Ivan','Ante','Josip','Matej','Mia','Ema','Lana','Petra','Nina','Vesna','Goran','Darko','Saša','Srđan','Nenad','Vladimir','Igor','Aleksa','Andrija','Mihajlo','Strahinja','Veljko','Danilo','Vukašin','Anđela','Katarina','Nevena','Isidora','Dunja','Mina','Tijana','Bojana','Sanja','Jovan','Mladen','Edin','Mirza','Dino','Kenan','Tarik','Elma','Branko','Dragan','Slobodan','Mirjana','Gordana','Biljana','Danijela','Vanja','Jelica','Radovan','Predrag','Žarko','Nebojša','Tomislav','Hana','Lucija','Dora','Sofija'];
+  const C=['BG','NS','NI','KG','SA','ZG','BL','PG','SU','ČA','KV','VA','ŠA','PO','LE','SM','PA','ZR','KŠ','ST','MO','TZ','BN','UE','VR','ZA','SO','JA','PI','ŠI'];
+  const L=['Jovanović','Petrović','Nikolić','Marković','Đorđević','Stojanović','Ilić','Stanković','Pavlović','Milošević','Popović','Kovačević','Savić','Ristić','Lukić','Hodžić','Begović','Horvat','Babić','Perić','Vuković','Mitrović','Tomić','Kostić','Simić'];
+  let sd=479;const r=()=>{sd=(sd*16807)%2147483647;return sd/2147483647;},pk=a=>a[Math.floor(r()*a.length)];
+  const used=new Set(),out=[];
+  while(out.length<DEMO_N){const f=pk(F),t=Math.floor(r()*7);let n;
+    if(t===0)n=f;else if(t===1)n=f+'_'+pk(C);else if(t===2)n=f.toLowerCase()+'.'+pk(L).charAt(0).toLowerCase();else if(t===3)n=f+(80+Math.floor(r()*26)).toString().slice(-2);
+    else if(t===4)n=f+' '+pk(L).charAt(0)+'.';else if(t===5)n=f.toLowerCase()+'_'+pk(['exa','fan','plavi','crveni','bg','ns','99','10'])+'';else n=pk(L).slice(0,6).toLowerCase()+Math.floor(r()*90+10);
+    n=n.slice(0,16);if(used.has(n.toLowerCase()))continue;used.add(n.toLowerCase());
+    const sk=0.47+r()*0.24+(r()<0.06?0.05:0);out.push({id:'demo-'+out.length,nick:n,sk:Math.min(sk,0.76),part:0.72+r()*0.26,el:out.length<26});}
+  return DEMO_PL=out;}
+const dh=(a,b)=>{let h=2166136261;const t=a+'|'+b;for(let i=0;i<t.length;i++){h^=t.charCodeAt(i);h=Math.imul(h,16777619);}return (h>>>0)/4294967296;};
+function demoPick(p,d,salt){const u=dh(p.id+salt,d.id),o=isMulti(d)?d.ucesnici:['a','b'];
+  if(dh(p.id,d.id+'p')>p.part)return null;
+  if(d.pobednik){if(u<(isMulti(d)?p.sk*0.7:p.sk))return d.pobednik;const ot=o.filter(x=>x!==d.pobednik);return ot[Math.floor(dh(p.id,d.id+'o')*ot.length)]||null;}
+  return o[Math.floor(dh(p.id,d.id+'n')*o.length)];}
+function demoSync(){if(!demoOn()||!S.PL)return;const ps=demoPlayers();
+  for(const L of ['otvorena','elita']){const M=S.PL[L]||(S.PL[L]={});
+    for(const p of ps){if(L==='elita'&&!p.el)continue;const e=M[p.id]||(M[p.id]={nick:p.nick,avatar:null,picks:{},at:{},demo:true});
+      for(const d of S.DUELS){const k=d.id+'|'+(d.pobednik||'');if(e._k&&e._k[d.id]===k)continue;(e._k||(e._k={}))[d.id]=k;
+        const v=demoPick(p,d,L);if(v){e.picks[d.id]=v;e.at[d.id]=(d.created_at?Date.parse(d.created_at):Date.now())+Math.round(3000+dh(p.id,d.id+'t')*85000);}else{delete e.picks[d.id];delete e.at[d.id];}}}}
+  S.PLAYERS=S.PL[S.LIGA]||S.PL.otvorena;}
+$('#demoChk').checked=store.get('demo','')==='1';
+$('#demoChk').onchange=e=>{store.set('demo',e.target.checked?'1':'');DEMO_PL=null;loadPlayers().then(()=>{renderAll();if(typeof renderAdmin==='function')renderAdmin();});toast(e.target.checked?'Demo uključen · 479 igrača (vidiš samo ti)':'Demo isključen');};
 
 boot();
 if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{}));
