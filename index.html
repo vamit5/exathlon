@@ -898,15 +898,20 @@ async function loadBan(){try{const {data,error}=await S.sb.rpc('banovani_ids');i
 async function checkMyBan(){if(!S.uid||S.anon||S.admin)return false;try{const {data,error}=await S.sb.rpc('moj_ban');if(error||!data||!data.length)return false;const b=data[0];
   $('#banWhy').textContent=b.razlog||'Nesvakidašnje ponašanje u igri.';$('#banPop').hidden=false;document.body.style.overflow='hidden';return true;}catch(e){return false;}}
 async function loadKor(){try{const {data,error}=await S.sb.from('korekcije').select('*');if(!error)S.KOR=data||[];}catch(e){}}
-function standingsRaw(day){
-  const inDay=id=>{const d=S.DUELS.find(x=>x.id===id);return d&&d.datum===day;};
+/* keš rang liste: računa se jednom po osvežavanju (bez ovoga aplikacija koči sa mnogo igrača/duela) */
+let ST_CACHE=new WeakMap();const stReset=()=>{ST_CACHE=new WeakMap();};
+function standingsRaw(day){const P=S.PLAYERS||{};let m=ST_CACHE.get(P);if(!m){m=new Map();ST_CACHE.set(P,m);}
+  const key=(day||'*')+'|'+curL()+'|'+S.DUELS.length+'|'+settled().length+'|'+((S.KOR||[]).length)+'|'+(S.BANIDS?S.BANIDS.size:0)+'|'+(S.lastPickAt||0)+'|'+(demoOn()?1:0)+'|'+Object.keys(P).length+'|'+(S.myPicksN||0);
+  if(m.has(key))return m.get(key);const r=standingsRaw0(day);m.set(key,r);return r;}
+function standingsRaw0(day){
+  const DD=new Map(S.DUELS.map(d=>[d.id,d.datum]));const inDay=id=>DD.get(id)===day;
   const done=settled().filter(d=>!day||d.datum===day);
   const list=Object.entries(S.PLAYERS).map(([uid,p])=>{
     let c=0,w=0,st=0,best=0,lead=0,k=0;
     for(const d of done){const v=p.picks&&p.picks[d.id];if(!v)continue;
       if(v===d.pobednik){c++;st++;best=Math.max(best,st);}else{w++;st=0;}
       const at=p.at&&p.at[d.id],pub=d.created_at?Date.parse(d.created_at):null;if(at&&pub){lead+=Math.max(0,at-pub);k++;}}
-    const n=Object.keys(p.picks||{}).filter(id=>day?inDay(id):S.DUELS.some(x=>x.id===id)).length;
+    let n=0;for(const id in (p.picks||{})){if(day?inDay(id):DD.has(id))n++;}
     const K=korOf(curL(),uid,day);
     return {uid,nick:(p.nick||'').trim(),avatar:p.avatar||null,c:c+K.k,c0:c,kor:K.k,korWhy:K.why,w,n,best,lead:k?lead/k:Infinity};})
     .filter(x=>x.nick&&x.n>0&&!(S.BANIDS&&S.BANIDS.has(x.uid)))
@@ -1263,13 +1268,16 @@ function renderBoard(){
   const pz=prizes(),medal=r=>day&&r<=3&&pz[r-1]?`<span class="medal">${['🥇','🥈','🥉'][r-1]}</span>`:'';
   let sep=false;
   const dmLeg=list.some(p=>isDm(p.uid))?'<div class="dmleg"><span class="dmb">dm</span> = demo igrač, nije stvarna osoba</div>':'';
-  $('#board').innerHTML=dmLeg+(list.length?list.map(p=>{const tot=(p.c0??p.c)+p.w;
+  const LIM=100,full=list.length,shown=S.boardAll||full<=LIM+20?list:list.filter((p,i)=>i<LIM||p.uid===S.uid);
+  const more=shown.length<full?`<button type="button" class="btn ghost" id="boardMore" style="margin-top:10px">PRIKAŽI SVE (${full})</button>`:'';
+  $('#board').innerHTML=dmLeg+(list.length?shown.map(p=>{const tot=(p.c0??p.c)+p.w;
     const hd=!p.ok&&!sep?(sep=true,`<div class="nqh">Nisu odigrali 70% duela danas · van plasmana</div>`):'';
     return hd+`<div class="brow${p.rank===1?' first':''}${p.uid===S.uid?' me':''}${p.ok?'':' nq'}"><span class="rk">${p.rank||'–'}</span>${avHTML(p)}
       <div style="min-width:0"><span class="un">${esc(p.nick)}${dmTag(p.uid)}${medal(p.rank)}${p.kor?`<span class="korb" role="button" title="${esc(p.korWhy.join(' · '))}" onclick="event.stopPropagation();toast('Korekcija: '+this.title)">✎ ${p.kor>0?'+':''}${p.kor} korekcija</span>`:''}</span>${day&&S.LIGA==='otvorena'?champBadge(p):''}
         <div class="bmeta">${!day&&p.m?`<span class="mdl">🥇<b>${p.m[0]}</b> 🥈<b>${p.m[1]}</b> 🥉<b>${p.m[2]}</b></span>`:''}${tot?`<span>Odigrano <b>${tot}</b></span><span>Učinak <b>${Math.round((p.c0??p.c)/tot*100)}%</b></span><span>Niz <b>${p.best}</b></span>${isFinite(p.lead)?`<span title="Prosečno vreme od izlaska duela do glasa">⚡ <b>${brz(p.lead)}</b></span>`:''}${p.ok?'':`<span class="need">treba još <b>${p.need-tot}</b></span>`}`:'<span>Čeka rezultat</span>'}</div></div>
       <span class="pt">${p.c}<small>poena</small></span></div>`;}).join('')
-    :`<div class="empty">${day?'Danas još niko nije dao prognozu.':'Još niko nije dao prognozu.'}</div>`);
+    :`<div class="empty">${day?'Danas još niko nije dao prognozu.':'Još niko nije dao prognozu.'}</div>`)+more;
+  const bm=$('#boardMore');if(bm)bm.onclick=()=>{S.boardAll=true;renderBoard();};
 }
 
 /* ================= NAGRADE ================= */
@@ -2047,10 +2055,12 @@ function demoPick(p,d,salt){const u=dh(p.id+salt,d.id),o=isMulti(d)?d.ucesnici:[
   if(dh(p.id,d.id+'p')>p.part)return null;
   if(d.pobednik){if(u<(isMulti(d)?p.sk*0.7:p.sk))return d.pobednik;const ot=o.filter(x=>x!==d.pobednik);return ot[Math.floor(dh(p.id,d.id+'o')*ot.length)]||null;}
   return o[Math.floor(dh(p.id,d.id+'n')*o.length)];}
+let DEMO_DD=null,DEMO_DK='';function demoDuels(){const k=S.DUELS.length+'|'+(S.DUELS[S.DUELS.length-1]||{}).id;if(DEMO_DD&&DEMO_DK===k)return DEMO_DD;
+  const days=[...new Set(S.DUELS.map(d=>d.datum))].sort().slice(-7);DEMO_DK=k;return DEMO_DD=S.DUELS.filter(d=>days.includes(d.datum));}
 function demoSync(){if(!demoOn()||!S.PL)return;const ps=demoPlayers();
   for(const L of ['otvorena','elita']){const M=S.PL[L]||(S.PL[L]={});
     for(const p of ps){if(L==='elita'&&!p.el)continue;const e=M[p.id]||(M[p.id]={nick:p.nick,avatar:null,picks:{},at:{},demo:true});
-      for(const d of S.DUELS){const k=d.id+'|'+(d.pobednik||'');if(e._k&&e._k[d.id]===k)continue;(e._k||(e._k={}))[d.id]=k;
+      for(const d of demoDuels()){const k=d.id+'|'+(d.pobednik||'');if(e._k&&e._k[d.id]===k)continue;(e._k||(e._k={}))[d.id]=k;
         const v=demoPick(p,d,L);if(v){e.picks[d.id]=v;e.at[d.id]=(d.created_at?Date.parse(d.created_at):Date.now())+Math.round(3000+dh(p.id,d.id+'t')*85000);}else{delete e.picks[d.id];delete e.at[d.id];}}}}
   S.PLAYERS=S.PL[S.LIGA]||S.PL.otvorena;}
 $('#demoChk').checked=store.get('demo','')==='1';
