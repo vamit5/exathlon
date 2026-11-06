@@ -291,6 +291,9 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
 .photo .mosaic.m2{grid-template-columns:1fr 1fr}
 .photo .mosaic.m4{grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr}
 .photo .mosaic img{position:static;width:100%;height:100%;object-fit:cover;object-position:50% 15%;min-height:0}
+.pop.lp .box{gap:14px;animation:lpIn .45s cubic-bezier(.2,1.4,.4,1)}.pop.lp .lpt{font-family:var(--display);font-weight:800;font-size:28px;line-height:1.15;color:#fff;letter-spacing:.02em}
+.pop.lp.miss .box{background:linear-gradient(160deg,#2a1012,#111318 65%);border-color:rgba(255,70,60,.6);box-shadow:0 20px 70px rgba(255,60,40,.25)}
+@keyframes lpIn{0%{opacity:0;transform:scale(.6) rotate(-3deg)}100%{opacity:1;transform:none}}
 #confetti{position:fixed;inset:0;width:100%;height:100%;z-index:90;pointer-events:none}
 .winbanner{position:fixed;left:50%;top:38%;z-index:91;transform:translate(-50%,-50%);display:grid;justify-items:center;gap:4px;padding:18px 28px;border-radius:18px;background:var(--hot);color:#fff;box-shadow:0 20px 60px rgba(255,80,30,.5);text-align:center;animation:winIn 3.2s cubic-bezier(.2,1.3,.4,1) forwards;pointer-events:none;max-width:90vw}
 .winbanner b{font-family:var(--display);font-weight:800;font-size:40px;line-height:1;letter-spacing:.04em}
@@ -657,7 +660,10 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
     <div id="adminDueli">
       <div class="apanel" style="margin-bottom:12px"><label class="chk"><input type="checkbox" id="demoChk"><span><b>🧪 Demo prikaz: 479 takmičara</b><br>Vidiš ga <b>samo ti</b>, na ovom uređaju. Ništa se ne upisuje u bazu, a svi ostali vide pravo stanje. Poeni demo igrača se menjaju kad upišeš pobednika duela.</span></label>
         <label class="chk" style="margin-top:10px"><input type="checkbox" id="demoPubChk"><span><b>Prikaži demo igrače SVIMA</b><br>Na rang listi su označeni sa <b>dm</b>, a iznad liste piše „dm = demo igrač, nije stvarna osoba“. Broj „online“ ostaje pravi.</span></label></div>
-      <div class="apanel" style="margin-bottom:12px"><h3>⏰ Početak emisije</h3><div style="display:flex;gap:10px;align-items:center"><input class="inp" type="time" id="emT" style="max-width:150px"><button class="btn" type="button" id="emSave" style="width:auto;padding:0 22px">SAČUVAJ</button></div><p class="hint" style="margin-top:8px;opacity:.7;font-size:13px">Menja vreme svuda u aplikaciji: odbrojavanje, „Uživo danas u …h“ i podrazumevano vreme novog duela.</p></div>
+      <div class="apanel" style="margin-bottom:12px"><h3>💬 Lične poruke posle duela</h3><p class="hint" style="margin:0 0 10px;opacity:.7;font-size:13px">Kad igrač pogodi ili promaši duel, iskoči mu box sa jednom od ovih rečenica (redom, naizmenično). Svaka rečenica u svom redu. Email se čuva šifrovano, ne vidi se javno.</p><div id="lpAdm"></div>
+<div style="display:grid;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.1)"><b style="font-size:14px">➕ Dodaj igrača</b><input class="inp" id="lpNewE" type="email" placeholder="email igrača"><input class="inp" id="lpNewN" placeholder="nadimak, npr. Mišo"><button class="btn ghost" type="button" id="lpAdd">DODAJ</button></div>
+<button class="btn" type="button" id="lpSave" style="margin-top:12px">SAČUVAJ PORUKE</button></div>
+<div class="apanel" style="margin-bottom:12px"><h3>⏰ Početak emisije</h3><div style="display:flex;gap:10px;align-items:center"><input class="inp" type="time" id="emT" style="max-width:150px"><button class="btn" type="button" id="emSave" style="width:auto;padding:0 22px">SAČUVAJ</button></div><p class="hint" style="margin-top:8px;opacity:.7;font-size:13px">Menja vreme svuda u aplikaciji: odbrojavanje, „Uživo danas u …h“ i podrazumevano vreme novog duela.</p></div>
       <div class="apanel" id="emBox" style="margin-bottom:12px"></div>
       <div id="nowDuel"></div>
       <div class="apanel">
@@ -807,6 +813,7 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
 </ol>
 <p class="pi muted">EXATHLEAGUE je besplatna, nezavisna fan igra i nije zvanični proizvod Exatlona ni televizije koja ga emituje.</p></div><button class="btn gold" id="rulesPopOk" type="button">RAZUMEM</button></div></div>
 <div class="pop" id="noticePop" hidden role="dialog" aria-modal="true" aria-labelledby="noticeT"><div class="box"><div class="big">🛡️</div><h2 id="noticeT">FER IGRA ZA SVE</h2><p><b>EXATHLEAGUE je samo za zabavu: bez uplata i bez novčanih nagrada.</b><br><br>Sistem automatski prepoznaje robotsko i nesvakidašnje ponašanje, kao i rezultate koji ukazuju na to da su ishodi poznati unapred. <b>Takav nalog se trajno isključuje.</b><br><br><span class="muted">Hvala što igraš pošteno! 🙏</span></p><button class="btn gold" id="noticeOk" type="button">RAZUMEM</button><button class="btn ghost" id="noticeMore" type="button">PROČITAJ PRAVILA</button></div></div>
+<div class="pop lp" id="lpPop" hidden role="dialog" aria-modal="true" aria-labelledby="lpPopT"><div class="box"><div class="big" id="lpPopE"></div><div class="lpt" id="lpPopT"></div><button class="btn gold" id="lpPopX" type="button">OK</button></div></div>
 <div class="pop" id="champPop" hidden role="dialog" aria-modal="true" aria-labelledby="champPopT"><div class="box"><div class="big">🏆</div><h2 id="champPopT"></h2><p id="champPopTx"></p><button class="btn gold" id="champPopOk" type="button">RANG LISTA</button><button class="btn ghost" id="champPopX" type="button">Zatvori</button></div></div>
 <div class="pop" id="eliPop" hidden role="dialog" aria-modal="true" aria-labelledby="eliPopT"><div class="box"><div class="big">🏆</div><h2 id="eliPopT">ELITNA LIGA</h2><p id="eliPopTx"></p><button class="btn gold" id="eliPopGo" type="button">IGRAJ ELITNU LIGU</button><button class="btn ghost" id="eliPopX" type="button">Kasnije</button></div></div>
 <div class="pop" id="lockPop" hidden role="dialog" aria-modal="true" aria-labelledby="lockPopT"><div class="box lk">
@@ -1681,6 +1688,27 @@ function celebrate(list){
   const b=$('#winBanner');b.hidden=true;void b.offsetWidth;b.hidden=false;clearTimeout(b._t);b._t=setTimeout(()=>b.hidden=true,3300);
   confetti();haptic([30,60,30,60,80]);
 }
+/* ================= LIČNE PORUKE (pogodak / promašaj) ================= */
+const LP_DEF=[{h:'0ccfb08b37cd92e2ff01e8da6e35a3ca1c1aa751a723edd79d72409c8f13eab3',ime:'Mišo',w:['Bravo maji si 🏆','Glukvunš Mišo 🏆'],l:['Ojee lošee ti to ide','Oje puko si Mišo']},
+{h:'1f800bf0924244becd196e16dfbb4814237c4bf9431813f218dd4a5f0b4570f7',ime:'Strale',w:['Opaa vadi strelu Strale 🏹','Pazi, pazi, Ibra gazi 👀','Naćii kidaš sine'],l:['Još pasulja majstore','Jebiga, neće te nešto','Ne možeš meda','Oli ubost vola?']}];
+S.LP=LP_DEF.map(x=>({...x}));
+async function loadPoruke(){try{const {data}=await S.sb.from('meta').select('value').eq('key','poruke').maybeSingle();if(data&&data.value&&Array.isArray(data.value.list))S.LP=data.value.list;}catch(e){}lpAdmRender();}
+async function sha(t){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');}
+const lpLines=v=>String(v||'').split('\n').map(x=>x.trim()).filter(Boolean);
+function lpAdmRead(){document.querySelectorAll('#lpAdm .lpe').forEach(el=>{const x=S.LP[+el.dataset.i];if(!x)return;x.ime=el.querySelector('.n').value.trim();x.w=lpLines(el.querySelector('.w').value);x.l=lpLines(el.querySelector('.l').value);});}
+function lpAdmRender(){const box=$('#lpAdm');if(!box||!S.admin)return;if(box.contains(document.activeElement))return;
+  box.innerHTML=S.LP.map((x,i)=>`<div class="lpe" data-i="${i}" style="display:grid;gap:6px;padding:10px;margin-bottom:8px;border-radius:12px;background:rgba(255,255,255,.04)"><div style="display:flex;gap:8px;align-items:center"><input class="inp n" value="${esc(x.ime||'')}" placeholder="ime"><button type="button" class="btn ghost" data-lpdel="${i}" style="width:auto;padding:0 14px">🗑</button></div><small style="opacity:.7">🎯 Kad pogodi</small><textarea class="inp w" rows="4" style="font-family:inherit;font-size:15px;line-height:1.4;height:auto;padding:10px 12px;resize:vertical">${esc((x.w||[]).join('\n'))}</textarea><small style="opacity:.7">❌ Kad promaši</small><textarea class="inp l" rows="4" style="font-family:inherit;font-size:15px;line-height:1.4;height:auto;padding:10px 12px;resize:vertical">${esc((x.l||[]).join('\n'))}</textarea></div>`).join('')||'<div class="muted">Nema igrača sa porukama.</div>';
+  box.querySelectorAll('[data-lpdel]').forEach(b=>b.onclick=()=>{lpAdmRead();S.LP.splice(+b.dataset.lpdel,1);lpAdmRender();});}
+$('#lpAdd').onclick=async()=>{const e=$('#lpNewE').value.trim().toLowerCase();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)){toast('Upiši ispravan email');return;}
+  lpAdmRead();const h=await sha(e);if(S.LP.some(x=>x.h===h)){toast('Taj igrač je već na listi');return;}
+  S.LP.push({h,ime:$('#lpNewN').value.trim()||'Igrač',w:[],l:[]});$('#lpNewE').value='';$('#lpNewN').value='';lpAdmRender();toast('Dodat. Upiši rečenice i klikni SAČUVAJ PORUKE.');};
+$('#lpSave').onclick=async()=>{lpAdmRead();const list=S.LP.filter(x=>x.h);if(await w(S.sb.from('meta').upsert({key:'poruke',value:{list}}),'Poruke su sačuvane ✓')){S.LP=list;lpAdmRender();}};
+let lpH=null,lpFor=null;async function lpHash(){const e=(S.email||'').toLowerCase();if(!e||S.anon)return null;if(lpFor===e)return lpH;lpFor=e;lpH=null;try{lpH=await sha(e);}catch(x){}return lpH;}
+async function lichnaPoruka(win){const h=await lpHash(),m=h&&(S.LP||[]).find(x=>x.h===h);if(!m)return;const arr=(win?m.w:m.l)||[];if(!arr.length)return;const k='lp_'+(win?'w':'l')+'_'+S.uid,i=(+store.get(k,0)||0)%arr.length;store.set(k,String(i+1));
+  const txt=arr[i],em=/\p{Extended_Pictographic}\s*$/u.exec(txt);
+  setTimeout(()=>{$('#lpPopT').textContent=em?txt.slice(0,em.index).trim():txt;$('#lpPopE').textContent=em?em[0].trim():(win?'🎉':'😬');
+    const p=$('#lpPop');p.classList.toggle('miss',!win);p.hidden=false;clearTimeout(p._t);p._t=setTimeout(()=>p.hidden=true,5000);},win?1600:300);}
+$('#lpPopX').onclick=()=>{$('#lpPop').hidden=true;};
 function checkWins(){
   if(!S.uid)return;
   const key='slavljeno_'+S.uid+(S.LIGA==='elita'?'_e':''),seen=new Set((store.get(key,'')||'').split(',').filter(Boolean)),first=store.get(key,null)===null;
@@ -1688,7 +1716,12 @@ function checkWins(){
   const fresh=wins.filter(d=>!seen.has(d.id));
   wins.forEach(d=>seen.add(d.id));store.set(key,[...seen].slice(-300).join(','));
   if(fresh.length&&!first)celebrate(fresh);
+  if(LP_ON()){const lk='promaseno_'+S.uid+(S.LIGA==='elita'?'_e':''),ls=new Set((store.get(lk,'')||'').split(',').filter(Boolean)),lfirst=store.get(lk,null)===null;
+    const miss=settled().filter(d=>S.myPicks[d.id]&&S.myPicks[d.id]!==d.pobednik),lf=miss.filter(d=>!ls.has(d.id));
+    miss.forEach(d=>ls.add(d.id));store.set(lk,[...ls].slice(-300).join(','));
+    if(fresh.length&&!first)lichnaPoruka(true);else if(lf.length&&!lfirst)lichnaPoruka(false);}
 }
+function LP_ON(){return !!S.email&&!S.anon;}
 
 /* ================= DVE LIGE ================= */
 S.LIGA=store.get('liga','otvorena')==='elita'?'elita':'otvorena';
@@ -1697,7 +1730,7 @@ S.LIGE={...LIGE_DEF};
 const LNAME={get otvorena(){return S.LIGE.otvorena||LIGE_DEF.otvorena;},get elita(){return S.LIGE.elita||LIGE_DEF.elita;}};
 const UP=t=>t.toLocaleUpperCase('sr-Latn');
 async function loadLige(){try{const {data}=await S.sb.from('meta').select('value').eq('key','lige').maybeSingle();S.LIGE={...LIGE_DEF,...((data&&data.value)||{})};}catch(e){}applyLiga();admUidSave();emFill();}
-function emFill(){try{$('#demoPubChk').checked=demoPub();const a=document.activeElement;if(a!==$('#emT'))$('#emT').value=EMT();if(a!==$('#fTime'))$('#fTime').value=EMT();}catch(e){}}
+function emFill(){try{$('#demoPubChk').checked=demoPub();const a=document.activeElement;if(a!==$('#emT'))$('#emT').value=EMT();if(a!==$('#fTime'))$('#fTime').value=EMT();}catch(e){}try{lpAdmRender();}catch(e){}}
 $('#emSave').onclick=async()=>{const t=$('#emT').value;if(!/^\d\d:\d\d$/.test(t)){toast('Upiši vreme, npr. 18:45');return;}const v={...S.LIGE,emisija:t};if(await w(S.sb.from('meta').upsert({key:'lige',value:v}),'Početak emisije: '+t+'h ✓')){S.LIGE=v;emFill();renderAll();}};
 async function admUidSave(){if(!S.admin||!S.uid||S.LIGE.admin_uid===S.uid)return;const v={...S.LIGE,admin_uid:S.uid};try{const {error}=await S.sb.from('meta').upsert({key:'lige',value:v});if(!error)S.LIGE=v;}catch(e){}}
 function pzTxt(n){n=n||{};const k=[+n.prvo||0,+n.drugo||0,+n.trece||0].filter(Boolean).length;return k<=1?'1. mesto':'prva '+k+' mesta';}
@@ -1861,7 +1894,7 @@ async function loadUsers(){S.USERS={};if(!S.admin)return;try{const {data,error}=
 async function loadPay(){S.PAYALL={};if(!S.uid||S.anon)return;try{const {data}=await S.sb.from('payout_info').select('*');(data||[]).forEach(r=>{S.PAYALL[r.player_id]=r;if(r.player_id===S.uid)S.PAY=r;});}catch(e){}}
 async function loadRucno(){S.RUC={otvorena:{},elita:{}};try{const {data,error}=await S.sb.from('medalje_rucno').select('*');if(error)return;(data||[]).forEach(r=>{(S.RUC[r.liga]||(S.RUC[r.liga]={}))[r.player_id]=[r.zlato|0,r.srebro|0,r.bronza|0];});}catch(e){}}
 const ruc=(L,u)=>((S.RUC||{})[L]||{})[u]||[0,0,0];
-const LOAD={banovani:loadBan,korekcije:loadKor,medalje_rucno:loadRucno,pdelta:loadPicksDelta,elita:loadElita,lige:loadLige,athletes:loadAthletes,duels:loadDuels,players:()=>Promise.all([loadPlayers(),S.admin?loadUsers():0]),picks:loadPlayers,meta:()=>Promise.all([loadMeta(),loadLige()]),isplate:loadIsplate,payout_info:loadPay};
+const LOAD={banovani:loadBan,korekcije:loadKor,medalje_rucno:loadRucno,pdelta:loadPicksDelta,elita:loadElita,lige:loadLige,athletes:loadAthletes,duels:loadDuels,players:()=>Promise.all([loadPlayers(),S.admin?loadUsers():0]),picks:loadPlayers,meta:()=>Promise.all([loadMeta(),loadLige(),loadPoruke()]),isplate:loadIsplate,payout_info:loadPay};
 const pend=new Set();let pT=0;
 const dataSig=()=>JSON.stringify([S.DUELS.map(d=>[d.id,d.pobednik,d.uzivo,d.rezA,d.rezB,d.pocetak,d.a,d.b]),Object.entries(S.PLAYERS).map(([k,p])=>[k,p.nick,p.avatar,Object.keys(p.picks).length]),Object.values(S.ATH).map(a=>[a.id,a.team,a.status,a.photo]),S.NAGRADE,Object.keys(S.ISPLATE_ALL||{}).length,S.RUC]);
 let lastSig='';
@@ -1901,7 +1934,7 @@ async function boot(){
   if(!session||S.anon){ta.setAttribute('aria-label','Prijavi se');ta.title='Prijavi se';ta.innerHTML='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h3M14 17l5-5-5-5M19 12H8"/></svg>';ta.onclick=async()=>{if(session)await S.sb.auth.signOut();store.set('guest','');location.hash='';location.reload();};}
   else ta.onclick=async()=>{await S.sb.auth.signOut();store.set('guest','');location.hash='';location.reload();};
   if(S.admin){document.querySelectorAll('.admin-only').forEach(b=>b.hidden=false);}
-  try{await Promise.all([loadAthletes(),loadDuels(),loadPlayers(),loadMeta(),loadIsplate(),loadPay(),loadUsers(),loadElita(),loadLige(),loadRucno(),loadKor(),loadBan()]);}catch(e){console.warn(e);splashEnd();$('#home').innerHTML='<div class="empty">Podaci nisu učitani. Osveži stranicu.</div>';return;}
+  try{await Promise.all([loadAthletes(),loadDuels(),loadPlayers(),loadMeta(),loadIsplate(),loadPay(),loadUsers(),loadElita(),loadLige(),loadRucno(),loadKor(),loadBan(),loadPoruke()]);}catch(e){console.warn(e);splashEnd();$('#home').innerHTML='<div class="empty">Podaci nisu učitani. Osveži stranicu.</div>';return;}
   if(S.uid&&await checkMyBan()){splashEnd();return;}
   if(S.uid)await ensurePlayer(session.user.user_metadata);
   if(S.uid&&!S.anon)await loadPod();
