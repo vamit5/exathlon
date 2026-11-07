@@ -1612,7 +1612,9 @@ function vStart(){const SR=window.SpeechRecognition||window.webkitSpeechRecognit
   r.onerror=e=>{if(e.error==='not-allowed'||e.error==='service-not-allowed'){VX.on=false;vLog('Dozvoli mikrofon za ovaj sajt (ikonica katanca pored adrese).','err');}else if(e.error!=='no-speech'&&e.error!=='aborted')vLog('Mikrofon: '+esc(e.error),'err');};
   r.onend=()=>{VX.rec=null;if(VX.on&&$('#voxCont').checked){setTimeout(()=>{if(VX.on)vStart()&&VX.rec&&VX.rec.start();},250);}else{VX.on=false;vUi();}};
   VX.rec=r;return true;}
-function vUi(){const b=$('#voxBtn');if(!b)return;const c=$('#voxCont').checked;b.textContent=VX.on?(c?'🔴 SLUŠAM STALNO · dodirni za stop':'🔴 SLUŠAM… reci komandu'):(c?'🎤 UKLJUČI STALNO SLUŠANJE':'🎤 DODIRNI I REČI KOMANDU');b.style.background=VX.on?'linear-gradient(90deg,#ff3b2b,#ff7a1a)':'linear-gradient(90deg,#1a8cff,#35c8ff)';}
+async function vWake(){try{if(VX.on&&!VX.wl&&navigator.wakeLock){VX.wl=await navigator.wakeLock.request('screen');VX.wl.addEventListener('release',()=>{VX.wl=null;});}else if(!VX.on&&VX.wl){await VX.wl.release();VX.wl=null;}}catch(e){}}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){vWake();if(VX.on&&!VX.rec&&$('#voxCont').checked&&vStart())try{VX.rec.start();}catch(e){}}});
+function vUi(){const b=$('#voxBtn');if(!b)return;vWake();const c=$('#voxCont').checked;b.textContent=VX.on?(c?'🔴 SLUŠAM STALNO · dodirni za stop':'🔴 SLUŠAM… reci komandu'):(c?'🎤 UKLJUČI STALNO SLUŠANJE':'🎤 DODIRNI I REČI KOMANDU');b.style.background=VX.on?'linear-gradient(90deg,#ff3b2b,#ff7a1a)':'linear-gradient(90deg,#1a8cff,#35c8ff)';}
 $('#voxBtn').onclick=()=>{if(VX.on){VX.on=false;try{VX.rec&&VX.rec.stop();}catch(e){}vUi();return;}if(!vStart())return;VX.on=true;try{VX.rec.start();}catch(e){}vUi();};
 $('#voxCont').onchange=()=>{try{store.set('vox_cont',$('#voxCont').checked?'1':'');}catch(e){}if(VX.on){VX.on=false;try{VX.rec&&VX.rec.abort();}catch(e){}}VX.rec=null;vUi();};
 try{$('#voxCont').checked=store.get('vox_cont','')==='1';}catch(e){}vUi();
