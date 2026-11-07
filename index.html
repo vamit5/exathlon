@@ -666,6 +666,19 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
 <div class="apanel" style="margin-bottom:12px"><h3>⏰ Početak emisije</h3><div style="display:flex;gap:10px;align-items:center"><input class="inp" type="time" id="emT" style="max-width:150px"><button class="btn" type="button" id="emSave" style="width:auto;padding:0 22px">SAČUVAJ</button></div><p class="hint" style="margin-top:8px;opacity:.7;font-size:13px">Menja vreme svuda u aplikaciji: odbrojavanje, „Uživo danas u …h“ i podrazumevano vreme novog duela.</p></div>
       <div class="apanel" id="emBox" style="margin-bottom:12px"></div>
       <div id="nowDuel"></div>
+      <div class="apanel" id="planBox" style="border-color:rgba(255,176,32,.5)">
+        <h3>📋 Plan duela za danas</h3>
+        <button class="btn gold" id="planGo" type="button" style="min-height:64px;font-size:19px" disabled>NEMA PRIPREMLJENIH DUELA</button>
+        <p class="muted" id="planHint" style="margin:6px 0 0;font-size:13px">Jedan klik = sledeći duel iz plana se objavljuje i glasanje se otvara. Zatvaranje glasanja i pobednika radiš kao i do sada.</p>
+        <div id="planList" style="display:grid;gap:6px;margin-top:10px"></div>
+        <details style="margin-top:10px"><summary style="cursor:pointer;font-weight:700">📥 Uvezi plan (tekst)</summary>
+          <p class="muted" style="font-size:13px;margin:8px 0">Jedan duel po redu, redom kako idu u emisiji. Primeri:<br>Ana - Marko<br>Crveni - Plavi<br>Ana - Marko (medalja)<br>Jovana - Mila (eliminacija)<br>Solo: Ana | Osvaja zlato?<br>Svi: Ana, Mila, Jovana<br>Ako dva takmičara imaju isto ime, dodaj prezime.</p>
+          <textarea class="inp" id="planTxt" rows="7" style="width:100%;box-sizing:border-box;font-family:inherit;font-size:15px;line-height:1.4;height:auto;padding:10px 12px;resize:vertical" placeholder="Ana - Marko&#10;Crveni - Plavi"></textarea>
+          <div id="planPrev" style="margin-top:8px;font-size:14px"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px"><button class="btn ghost" type="button" id="planChk">PROVERI</button><button class="btn" type="button" id="planLoad" style="padding:0 6px">ZAMENI PLAN</button><button class="btn ghost" type="button" id="planAppend" style="padding:0 6px">DODAJ NA KRAJ</button></div>
+        </details>
+        <button class="btn ghost" type="button" id="planClear" style="margin-top:10px">🗑 Obriši ceo plan</button>
+      </div>
       <div class="apanel">
         <h3>Brzi duel</h3>
         <div class="acts" id="qMode"><button data-m="duel" class="on">⚔️ DUEL (1 na 1)</button><button data-m="solo">🏃 SOLO (trči sam)</button><button data-m="multi">🏁 KO JE NAJBOLJI</button></div>
@@ -677,6 +690,7 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
         <p class="muted" id="qMin" style="margin:0">Glasanje je otvoreno odmah i traje dok ne klikneš <b>ZATVORI GLASANJE</b> u trenutku kad duel krene.</p>
         <div class="acts" id="qKind"><button data-k="auto" class="on">Automatski</button><button data-k="Eliminaciona borba">Eliminaciona</button><button data-k="Borba za medalju">Za medalju</button></div>
         <button class="btn" id="qGo" type="button" disabled>POKRENI DUEL</button>
+        <button class="btn ghost" id="qPlan" type="button" disabled style="margin-top:8px">➕ DODAJ U PLAN (bez objave)</button>
       </div>
       <details class="apanel"><summary><h3 style="display:inline">Zakazani duel (datum i vreme)</h3></summary>
       <form id="duelForm" style="display:grid;gap:10px;margin-top:10px">
@@ -1479,6 +1493,70 @@ $('#qGo').onclick=async()=>{
   const ok=await w(Promise.resolve(ins),'Duel je objavljen · glasanje je otvoreno');
   if(ok){Q.a=Q.b=null;await loadDuels();renderAll();ping();scrollTo({top:0,behavior:'smooth'});}else $('#qGo').disabled=false;
 };
+
+/* ================= PLAN DUELA (unapred pripremljeni, pokreće se jednim klikom) ================= */
+S.PLAN=[];
+async function loadPlan(){try{const {data}=await S.sb.from('meta').select('value').eq('key','plan').maybeSingle();S.PLAN=(data&&data.value&&Array.isArray(data.value.list))?data.value.list:[];}catch(e){}planRender();}
+async function planSave(msg){const list=S.PLAN;return await w(S.sb.from('meta').upsert({key:'plan',value:{list,updated:new Date().toISOString()}}),msg);}
+const plKey=t=>letters(String(t||'').replace(/dj/gi,'d')).toLowerCase();
+function plFind(tok){const k=plKey(tok);if(!k)return null;
+  if(/^(crveni|crvenitim|timcrveni|crvena)$/.test(k))return 'crveni';if(/^(plavi|plavitim|timplavi|plava)$/.test(k))return 'plavi';
+  const all=athList(),act=all.filter(a=>a.status!=='Eliminisan'),L=[act,all];
+  for(const arr of L){const x=arr.find(a=>plKey(a.name)===k);if(x)return x.id;}
+  for(const arr of L){const x=arr.filter(a=>a.name.split(/\s+/).some(w=>plKey(w)===k));if(x.length===1)return x[0].id;}
+  for(const arr of L){const x=arr.filter(a=>plKey(a.name).startsWith(k)||k.startsWith(plKey(a.name)));if(x.length===1)return x[0].id;}
+  for(const arr of L){const x=arr.filter(a=>plKey(a.name).includes(k)&&k.length>=3);if(x.length===1)return x[0].id;}
+  return null;}
+const plWhy=n=>{const k=plKey(n),m=athList().filter(a=>a.name.split(/\s+/).some(w=>plKey(w)===k)||plKey(a.name).startsWith(k));return m.length>1?'„'+n+'“ ima više: '+m.map(a=>a.name).join(' / ')+' (dodaj prezime)':'„'+n+'“ nije u aplikaciji';};
+function plParse(txt){return String(txt||'').split('\n').map(l=>l.replace(/^\s*\d+[\.\)]\s*/,'').trim()).filter(Boolean).map(line=>{
+  let vrsta=null,m=/\((.*?)\)\s*$/.exec(line),l=line;if(m){const k=plKey(m[1]);vrsta=/medal/.test(k)?'Borba za medalju':/elim/.test(k)?'Eliminaciona borba':null;l=line.slice(0,m.index).trim();}
+  let r;
+  if(r=/^solo\s*:\s*(.+)$/i.exec(l)){const [n,pit]=r[1].split('|').map(x=>x.trim());const id=plFind(n);return {t:'solo',a:id,pit:pit||'Osvaja medalju?',src:line,err:id?null:plWhy(n)};}
+  if(r=/^(svi|ko je najbolji|multi)\s*:\s*(.+)$/i.exec(l)){const ns=r[2].split(/[,;]/).map(x=>x.trim()).filter(Boolean),ids=ns.map(plFind),bad=ns.filter((n,i)=>!ids[i]);return {t:'multi',u:ids,src:line,err:bad.length?bad.map(plWhy).join(' · '):ids.length<3?'Treba najmanje 3 takmičara':null};}
+  const p=l.split(/\s+(?:-|–|—|vs\.?|:|protiv)\s+|\s*[–—]\s*/i).map(x=>x.trim()).filter(Boolean);
+  if(p.length!==2)return {t:'duel',src:line,err:'Napiši u obliku: Ime - Ime'};
+  const a=plFind(p[0]),b=plFind(p[1]);const bad=[!a&&p[0],!b&&p[1]].filter(Boolean);
+  return {t:'duel',a,b,vrsta,src:line,err:bad.length?bad.map(plWhy).join(' · '):a===b?'Isti takmičar dva puta':null};});}
+function plLabel(x){const n=id=>{const s=side(id);return s.isTeam?s.name+' TIM':s.name;};
+  if(x.t==='solo')return '🏃 '+n(x.a)+' · '+(x.pit||'');if(x.t==='multi')return '🏁 '+(x.u||[]).map(n).join(', ');
+  return '⚔️ '+n(x.a)+' – '+n(x.b)+(x.vrsta&&x.vrsta!=='Pojedinačni duel'&&x.vrsta!=='Timska igra'?' · '+x.vrsta:'');}
+function planRender(){const g=$('#planGo');if(!g||!S.admin)return;const nx=S.PLAN.findIndex(x=>!x.done),left=S.PLAN.filter(x=>!x.done).length;
+  g.disabled=nx<0;g.textContent=nx<0?(S.PLAN.length?'✓ SVI DUELI IZ PLANA SU OBJAVLJENI':'NEMA PRIPREMLJENIH DUELA'):'▶ POKRENI: '+plLabel(S.PLAN[nx]).replace(/^\S+\s/,'');
+  $('#planHint').textContent=nx<0?'Uvezi plan ispod ili dodaj duele iz „Brzi duel“ dugmetom DODAJ U PLAN.':`Sledeći je ${nx+1}. duel · u planu još ${left}. Jedan klik = objava i glasanje otvoreno.`;
+  $('#planList').innerHTML=S.PLAN.map((x,i)=>`<div style="display:flex;gap:6px;align-items:center;padding:8px 10px;border-radius:10px;background:${i===nx?'rgba(255,176,32,.14)':'rgba(255,255,255,.04)'};${x.done?'opacity:.45':''}"><b style="width:22px">${i+1}.</b><span style="flex:1;min-width:0;font-size:14px">${esc(plLabel(x))}${x.done?' <small>✓ objavljen</small>':''}</span>${x.done?`<button type="button" class="btn ghost" data-pl="re" data-i="${i}" style="width:auto;padding:0 10px;min-height:34px" title="Vrati u plan">↺</button>`:`<button type="button" class="btn ghost" data-pl="go" data-i="${i}" style="width:auto;padding:0 10px;min-height:34px" title="Objavi ovaj odmah">▶</button><button type="button" class="btn ghost" data-pl="up" data-i="${i}" style="width:auto;padding:0 10px;min-height:34px" title="Pomeri gore">↑</button>`}<button type="button" class="btn ghost" data-pl="del" data-i="${i}" style="width:auto;padding:0 10px;min-height:34px" title="Ukloni">✕</button></div>`).join('');
+  $('#planList').querySelectorAll('[data-pl]').forEach(b=>b.onclick=async()=>{const i=+b.dataset.i,a=b.dataset.pl;
+    if(a==='go')return planPublish(i);
+    if(a==='up'&&i>0){[S.PLAN[i-1],S.PLAN[i]]=[S.PLAN[i],S.PLAN[i-1]];}
+    else if(a==='del')S.PLAN.splice(i,1);else if(a==='re')S.PLAN[i].done=false;else return;
+    planRender();await planSave();});}
+let planBusy=false;
+async function planPublish(i){if(planBusy)return;const x=S.PLAN[i];if(!x||x.done)return;planBusy=true;$('#planGo').disabled=true;
+  const at=new Date(Date.now()+6*3600e3).toISOString();let row;
+  if(x.t==='solo')row={a:x.a,b:'solo',ucesnici:[x.a],pitanje:x.pit||'Osvaja medalju?',pocetak:at,vrsta:'Solo nastup',cilj:0,rucno:true};
+  else if(x.t==='multi')row={a:x.u[0],b:x.u[1],ucesnici:x.u,pocetak:at,vrsta:'Pojedinačno takmičenje',cilj:0,rucno:true};
+  else{const team=TEAM_ATH[x.a]&&TEAM_ATH[x.b];row={a:x.a,b:x.b,pocetak:at,vrsta:x.vrsta||(team?'Timska igra':'Pojedinačni duel'),cilj:team?10:0,rucno:true};}
+  let ins=await S.sb.from('duels').insert(row).select();if(ins.error&&/rucno/.test(ins.error.message||'')&&x.t==='duel'){delete row.rucno;ins=await S.sb.from('duels').insert(row).select();}
+  if(!ins.error&&ins.data&&ins.data[0]){S.DUELS=[...S.DUELS,mapDuel(ins.data[0])].sort((a,b)=>startOf(a)-startOf(b));ping();renderAll();}
+  const ok=await w(Promise.resolve(ins),'▶ Objavljeno: '+plLabel(x).replace(/^\S+\s/,'')+' · glasanje je otvoreno');
+  if(ok){x.done=true;x.duel_id=ins.data&&ins.data[0]&&ins.data[0].id;haptic([40]);await planSave();await loadDuels();renderAll();}
+  planBusy=false;planRender();}
+$('#planGo').onclick=()=>{const i=S.PLAN.findIndex(x=>!x.done);if(i>=0)planPublish(i);};
+function planPrev(){const L=plParse($('#planTxt').value),bad=L.filter(x=>x.err).length;
+  $('#planPrev').innerHTML=L.length?L.map((x,i)=>`<div style="color:${x.err?'#ff6b5b':'inherit'}">${i+1}. ${x.err?'⚠️ '+esc(x.src)+' — '+esc(x.err):'✓ '+esc(plLabel(x))}</div>`).join('')+(bad?`<div style="margin-top:6px;color:#ff6b5b">Ispravi ${bad} ${bad===1?'red':'reda'} (napiši ime kao u aplikaciji).</div>`:''):'';
+  return {L,bad};}
+$('#planChk').onclick=planPrev;
+async function planImport(add){const {L,bad}=planPrev();if(!L.length){toast('Upiši bar jedan duel');return;}if(bad){toast('Neki redovi nisu prepoznati');return;}
+  const items=L.map(({err,src,...x})=>({...x,done:false}));S.PLAN=add?[...S.PLAN,...items]:items;
+  if(await planSave('Plan je sačuvan · '+items.length+' duela')){$('#planTxt').value='';$('#planPrev').innerHTML='';planRender();}}
+$('#planLoad').onclick=()=>planImport(false);$('#planAppend').onclick=()=>planImport(true);
+$('#planClear').onclick=async()=>{const b=$('#planClear');if(!b.dataset.sure){b.dataset.sure=1;b.textContent='Sigurno? Klikni ponovo';setTimeout(()=>{delete b.dataset.sure;b.textContent='🗑 Obriši ceo plan';},3000);return;}
+  delete b.dataset.sure;b.textContent='🗑 Obriši ceo plan';S.PLAN=[];await planSave('Plan je obrisan');planRender();};
+$('#qPlan').onclick=async()=>{let x=null;
+  if(Q.mode==='solo'){if(!Q.S)return;x={t:'solo',a:Q.S,pit:$('#qPit').value.trim()||'Osvaja medalju?'};Q.S=null;}
+  else if(Q.multi){if(Q.M.length<3)return;x={t:'multi',u:Q.M.slice()};Q.M=[];}
+  else{if(!Q.a||!Q.b)return;x={t:'duel',a:Q.a,b:Q.b,vrsta:Q.kind!=='auto'?Q.kind:null};Q.a=Q.b=null;}
+  S.PLAN.push({...x,done:false});qRender();planRender();await planSave('Dodato u plan ('+S.PLAN.filter(y=>!y.done).length+' čeka)');};
+new MutationObserver(()=>{$('#qPlan').disabled=$('#qGo').disabled;}).observe($('#qGo'),{attributes:true,attributeFilter:['disabled']});
 function duelTiming(d){const pub=d.created_at?Date.parse(d.created_at):null;if(!pub)return '';let n=0,tot=0,seen=0,dec=0,k=0;
   const seenU=new Set();for(const L of ['otvorena','elita'])for(const [uid,p] of Object.entries(S.PL[L]||{})){const at=p.at&&p.at[d.id];if(!at||seenU.has(uid))continue;seenU.add(uid);n++;tot+=Math.max(0,at-pub);const o=p.od&&p.od[d.id];if(o!=null){k++;dec+=o;seen+=Math.max(0,at-pub-o);}}
   if(!n)return '';const f=ms=>brz(ms);
@@ -1730,7 +1808,7 @@ S.LIGE={...LIGE_DEF};
 const LNAME={get otvorena(){return S.LIGE.otvorena||LIGE_DEF.otvorena;},get elita(){return S.LIGE.elita||LIGE_DEF.elita;}};
 const UP=t=>t.toLocaleUpperCase('sr-Latn');
 async function loadLige(){try{const {data}=await S.sb.from('meta').select('value').eq('key','lige').maybeSingle();S.LIGE={...LIGE_DEF,...((data&&data.value)||{})};}catch(e){}applyLiga();admUidSave();emFill();}
-function emFill(){try{$('#demoPubChk').checked=demoPub();const a=document.activeElement;if(a!==$('#emT'))$('#emT').value=EMT();if(a!==$('#fTime'))$('#fTime').value=EMT();}catch(e){}try{lpAdmRender();}catch(e){}}
+function emFill(){try{$('#demoPubChk').checked=demoPub();const a=document.activeElement;if(a!==$('#emT'))$('#emT').value=EMT();if(a!==$('#fTime'))$('#fTime').value=EMT();}catch(e){}try{lpAdmRender();}catch(e){}try{planRender();}catch(e){}}
 $('#emSave').onclick=async()=>{const t=$('#emT').value;if(!/^\d\d:\d\d$/.test(t)){toast('Upiši vreme, npr. 18:45');return;}const v={...S.LIGE,emisija:t};if(await w(S.sb.from('meta').upsert({key:'lige',value:v}),'Početak emisije: '+t+'h ✓')){S.LIGE=v;emFill();renderAll();}};
 async function admUidSave(){if(!S.admin||!S.uid||S.LIGE.admin_uid===S.uid)return;const v={...S.LIGE,admin_uid:S.uid};try{const {error}=await S.sb.from('meta').upsert({key:'lige',value:v});if(!error)S.LIGE=v;}catch(e){}}
 function pzTxt(n){n=n||{};const k=[+n.prvo||0,+n.drugo||0,+n.trece||0].filter(Boolean).length;return k<=1?'1. mesto':'prva '+k+' mesta';}
@@ -1894,7 +1972,7 @@ async function loadUsers(){S.USERS={};if(!S.admin)return;try{const {data,error}=
 async function loadPay(){S.PAYALL={};if(!S.uid||S.anon)return;try{const {data}=await S.sb.from('payout_info').select('*');(data||[]).forEach(r=>{S.PAYALL[r.player_id]=r;if(r.player_id===S.uid)S.PAY=r;});}catch(e){}}
 async function loadRucno(){S.RUC={otvorena:{},elita:{}};try{const {data,error}=await S.sb.from('medalje_rucno').select('*');if(error)return;(data||[]).forEach(r=>{(S.RUC[r.liga]||(S.RUC[r.liga]={}))[r.player_id]=[r.zlato|0,r.srebro|0,r.bronza|0];});}catch(e){}}
 const ruc=(L,u)=>((S.RUC||{})[L]||{})[u]||[0,0,0];
-const LOAD={banovani:loadBan,korekcije:loadKor,medalje_rucno:loadRucno,pdelta:loadPicksDelta,elita:loadElita,lige:loadLige,athletes:loadAthletes,duels:loadDuels,players:()=>Promise.all([loadPlayers(),S.admin?loadUsers():0]),picks:loadPlayers,meta:()=>Promise.all([loadMeta(),loadLige(),loadPoruke()]),isplate:loadIsplate,payout_info:loadPay};
+const LOAD={banovani:loadBan,korekcije:loadKor,medalje_rucno:loadRucno,pdelta:loadPicksDelta,elita:loadElita,lige:loadLige,athletes:loadAthletes,duels:loadDuels,players:()=>Promise.all([loadPlayers(),S.admin?loadUsers():0]),picks:loadPlayers,meta:()=>Promise.all([loadMeta(),loadLige(),loadPoruke(),loadPlan()]),isplate:loadIsplate,payout_info:loadPay};
 const pend=new Set();let pT=0;
 const dataSig=()=>JSON.stringify([S.DUELS.map(d=>[d.id,d.pobednik,d.uzivo,d.rezA,d.rezB,d.pocetak,d.a,d.b]),Object.entries(S.PLAYERS).map(([k,p])=>[k,p.nick,p.avatar,Object.keys(p.picks).length]),Object.values(S.ATH).map(a=>[a.id,a.team,a.status,a.photo]),S.NAGRADE,Object.keys(S.ISPLATE_ALL||{}).length,S.RUC]);
 let lastSig='';
@@ -1934,7 +2012,7 @@ async function boot(){
   if(!session||S.anon){ta.setAttribute('aria-label','Prijavi se');ta.title='Prijavi se';ta.innerHTML='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h3M14 17l5-5-5-5M19 12H8"/></svg>';ta.onclick=async()=>{if(session)await S.sb.auth.signOut();store.set('guest','');location.hash='';location.reload();};}
   else ta.onclick=async()=>{await S.sb.auth.signOut();store.set('guest','');location.hash='';location.reload();};
   if(S.admin){document.querySelectorAll('.admin-only').forEach(b=>b.hidden=false);}
-  try{await Promise.all([loadAthletes(),loadDuels(),loadPlayers(),loadMeta(),loadIsplate(),loadPay(),loadUsers(),loadElita(),loadLige(),loadRucno(),loadKor(),loadBan(),loadPoruke()]);}catch(e){console.warn(e);splashEnd();$('#home').innerHTML='<div class="empty">Podaci nisu učitani. Osveži stranicu.</div>';return;}
+  try{await Promise.all([loadAthletes(),loadDuels(),loadPlayers(),loadMeta(),loadIsplate(),loadPay(),loadUsers(),loadElita(),loadLige(),loadRucno(),loadKor(),loadBan(),loadPoruke(),loadPlan()]);}catch(e){console.warn(e);splashEnd();$('#home').innerHTML='<div class="empty">Podaci nisu učitani. Osveži stranicu.</div>';return;}
   if(S.uid&&await checkMyBan()){splashEnd();return;}
   if(S.uid)await ensurePlayer(session.user.user_metadata);
   if(S.uid&&!S.anon)await loadPod();
