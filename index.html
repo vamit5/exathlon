@@ -670,6 +670,7 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
         <h3>🎤 Glasovne komande</h3>
         <button class="btn" id="voxBtn" type="button" style="min-height:70px;font-size:20px;background:linear-gradient(90deg,#1a8cff,#35c8ff)">🎤 DRŽI ILI DODIRNI I REČI KOMANDU</button>
         <label style="display:flex;gap:8px;align-items:center;margin-top:8px;font-size:14px"><input type="checkbox" id="voxCont"> Slušaj stalno (bez dodira)</label>
+        <label style="display:flex;gap:8px;align-items:center;margin-top:6px;font-size:14px">Jezik prepoznavanja: <select class="inp" id="voxLang" style="width:auto;min-height:34px;padding:0 8px"><option value="0">Srpski</option><option value="1">Hrvatski</option><option value="2">Bosanski</option><option value="3">Nemački</option><option value="4">Engleski</option></select></label>
         <div id="voxLog" style="display:grid;gap:4px;margin-top:8px;font-size:14px"></div>
         <details style="margin-top:8px"><summary style="cursor:pointer;font-weight:700;font-size:14px">Šta mogu da kažem?</summary><div class="muted" style="font-size:13px;line-height:1.6;margin-top:6px">
         <b>Pokreni duel:</b> „Mark“ · „Maja“ · „Mark Maja“ · „Crveni“ · „Crveni Plavi“. Pokreće se taj duel iz plana. Ako duel nije u planu, a kažeš dva imena, pravi se novi duel.<br>
@@ -1560,8 +1561,10 @@ function planPrev(){const L=plParse($('#planTxt').value),bad=L.filter(x=>x.err).
   return {L,bad};}
 $('#planChk').onclick=planPrev;
 /* ================= GLASOVNE KOMANDE (admin) ================= */
-const VX={rec:null,on:false,lastWin:null,busy:false};
-function vLog(t,c){const l=$('#voxLog');if(!l)return;const d=document.createElement('div');d.style.cssText='padding:8px 10px;border-radius:10px;background:'+(c==='ok'?'rgba(52,211,127,.15)':c==='err'?'rgba(255,80,60,.15)':'rgba(255,255,255,.05)');d.innerHTML=t;l.prepend(d);while(l.children.length>5)l.lastChild.remove();}
+const VX={rec:null,on:false,lastWin:null,busy:false,li:0};
+const VX_LANGS=['sr-RS','hr-HR','bs-BA','de-DE','en-GB'];
+try{const sv=store.get('vox_li',null);VX.li=sv!==null&&sv!==''?Math.min(VX_LANGS.length-1,+sv||0):(/iP(hone|ad|od)/.test(navigator.userAgent)?1:0);}catch(e){}
+function vLog(t,c){const l=$('#voxLog');if(!l)return;if(l.firstChild&&l.firstChild.dataset.t===t)return;const d=document.createElement('div');d.style.cssText='padding:8px 10px;border-radius:10px;background:'+(c==='ok'?'rgba(52,211,127,.15)':c==='err'?'rgba(255,80,60,.15)':'rgba(255,255,255,.05)');d.innerHTML=t;d.dataset.t=t;l.prepend(d);while(l.children.length>5)l.lastChild.remove();}
 const vW=t=>String(t||'').toLowerCase().split(/[\s,.!?]+/).map(plKey).filter(Boolean);
 function vScore(word,id){if(TEAM_ATH[id]){const k=id==='crveni'?'crveni':'plavi';return lev(word,k)<=2||word.startsWith(k.slice(0,4))?0:99;}
   const a=S.ATH[id];if(!a)return 99;let best=99;for(const part of a.name.split(/\s+/)){const pk=plKey(part);if(pk.length<2)continue;const tol=pk.length>=6?2:pk.length>=3?1:0;
@@ -1575,11 +1578,11 @@ function vNames(words){const ids=[];const pool=[...athList().filter(a=>a.status!
 async function vCmd(alts){const cont=$('#voxCont').checked;
   for(const raw of alts){const words=vW(raw),has=re=>words.some(w=>re.test(w));if(!words.length)continue;
     // POBEDNIK
-    if(has(/^(pobed|pobjed|pobeda|pobednik|pobednica|osvoj|dobio|dobila|uspeo|uspela|uspio|nijeuspeo)/)||(has(/^nije$/)&&has(/^usp/))){
+    if(has(/^(pobed|pobjed|pobijed|sieg|gewinn|gewonnen|pobeda|pobednik|pobednica|osvoj|dobio|dobila|uspeo|uspela|uspio|nijeuspeo)/)||(has(/^nije$/)&&has(/^usp/))){
       const open=S.DUELS.filter(d=>!d.pobednik&&(isLocked(d)||d.rucno));
       const solo=open.filter(isSolo);
       if(has(/^usp/)&&!has(/^pobed/)&&solo.length===1){const neg=has(/^nije$/)||has(/^nijeuspeo/);return vWin(solo[0],neg?'b':'a',raw);}
-      let best=99,hit=[];const ww=words.filter(w=>!/^(pobed|pobjed|pobeda|pobednik|pobednica|osvoj|dobio|dobila|je|tim|ekipa)/.test(w));
+      let best=99,hit=[];const ww=words.filter(w=>!/^(pobed|pobjed|pobijed|sieg|gewinn|gewonnen|pobeda|pobednik|pobednica|osvoj|dobio|dobila|je|tim|ekipa)/.test(w));
       for(const d of open.filter(d=>!isSolo(d)))for(const id of vParts(d))for(const w of ww){const sc=vScore(w,id);if(sc<best){best=sc;hit=[[d,id]];}else if(sc===best&&sc<99&&!hit.some(h=>h[0]===d&&h[1]===id))hit.push([d,id]);}
       if(best>=99){vLog('🎤 „'+esc(raw)+'“ → ne vidim tog takmičara u otvorenim duelima','err');return;}
       if(hit.length>1){vLog('🎤 „'+esc(raw)+'“ → nije jasno ko, reci puno ime','err');return;}
@@ -1607,17 +1610,31 @@ async function vUndo(id){const d=S.DUELS.find(x=>x.id===id);if(d){await adminAct
 function vStart(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!SR){vLog('Ovaj pregledač ne podržava glasovne komande. Koristi Chrome (Android/računar) ili Safari (iPhone).','err');return false;}
   if(!isSecureContext){vLog('Mikrofon radi samo na <b>https://</b>. <a href="https://'+location.host+location.pathname+'#admin" style="color:#35c8ff">Otvori https://'+esc(location.host)+'</a>','err');return false;}
-  if(VX.rec)return true;const r=new SR();r.lang='sr-RS';r.interimResults=false;r.maxAlternatives=4;r.continuous=$('#voxCont').checked;
+  if(VX.rec)return true;const r=new SR();r.lang=VX_LANGS[VX.li||0];r.interimResults=false;r.maxAlternatives=4;r.continuous=$('#voxCont').checked;
   r.onresult=e=>{const res=e.results[e.results.length-1];if(!res.isFinal)return;const alts=[...res].map(x=>x.transcript.trim()).filter(Boolean);vCmd(alts).catch(err=>{console.warn(err);vLog('Greška: '+esc(err.message||err),'err');});};
-  r.onerror=e=>{if(e.error==='not-allowed'||e.error==='service-not-allowed'){VX.on=false;vLog('Dozvoli mikrofon za ovaj sajt (ikonica katanca pored adrese).','err');}else if(e.error!=='no-speech'&&e.error!=='aborted')vLog('Mikrofon: '+esc(e.error),'err');};
-  r.onend=()=>{VX.rec=null;if(VX.on&&$('#voxCont').checked){setTimeout(()=>{if(VX.on)vStart()&&VX.rec&&VX.rec.start();},250);}else{VX.on=false;vUi();}};
+  r.onerror=e=>{const ios=/iP(hone|ad|od)/.test(navigator.userAgent);
+    if((e.error==='language-not-supported'||(ios&&e.error==='service-not-allowed'&&VX.mic))&&VX.li<VX_LANGS.length-1){VX.li++;try{store.set('vox_li',VX.li);}catch(x){}try{$('#voxLang').value=String(VX.li);}catch(x){}VX.rec=null;
+      vLog('Telefon nema '+(VX.li===1?'srpski':'prethodni')+' jezik za diktat, prelazim na <b>'+VX_LANGS[VX.li]+'</b>. Dodirni 🎤 ponovo.','');VX.on=false;vUi();return;}
+    if(e.error==='not-allowed'||e.error==='service-not-allowed'||e.error==='audio-capture'){VX.on=false;VX.mic=false;try{store.set('vox_mic','');}catch(x){}
+      vLog(ios?(e.error==='service-not-allowed'?'iPhone blokira prepoznavanje govora. Uključi: <b>Podešavanja → Opšte → Tastatura → Uključi diktat</b> (i Siri), pa dodirni 🎤 ponovo.':'iPhone ne dozvoljava mikrofon. U Safariju dodirni <b>aA</b> levo od adrese → <b>Podešavanja veb-sajta</b> → <b>Mikrofon → Dozvoli</b>, pa dodirni 🎤 ponovo.')
+        :'Mikrofon je blokiran. Dodirni katanac/ikonicu levo od adrese → <b>Dozvole</b> → <b>Mikrofon → Dozvoli</b>, pa dodirni 🎤 ponovo.','err');vUi();}
+    else if(e.error==='network')vLog('Prepoznavanje govora traži internet. Proveri vezu.','err');
+    else if(e.error!=='no-speech'&&e.error!=='aborted')vLog('Mikrofon: '+esc(e.error),'err');};
+  r.onend=()=>{VX.rec=null;if(VX.on&&$('#voxCont').checked&&!/iP(hone|ad|od)/.test(navigator.userAgent)){setTimeout(()=>{if(VX.on)vStart()&&VX.rec&&VX.rec.start();},250);}else{VX.on=false;vUi();}};
   VX.rec=r;return true;}
 async function vWake(){try{if(VX.on&&!VX.wl&&navigator.wakeLock){VX.wl=await navigator.wakeLock.request('screen');VX.wl.addEventListener('release',()=>{VX.wl=null;});}else if(!VX.on&&VX.wl){await VX.wl.release();VX.wl=null;}}catch(e){}}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){vWake();if(VX.on&&!VX.rec&&$('#voxCont').checked&&vStart())try{VX.rec.start();}catch(e){}}});
 function vUi(){const b=$('#voxBtn');if(!b)return;vWake();const c=$('#voxCont').checked;b.textContent=VX.on?(c?'🔴 SLUŠAM STALNO · dodirni za stop':'🔴 SLUŠAM… reci komandu'):(c?'🎤 UKLJUČI STALNO SLUŠANJE':'🎤 DODIRNI I REČI KOMANDU');b.style.background=VX.on?'linear-gradient(90deg,#ff3b2b,#ff7a1a)':'linear-gradient(90deg,#1a8cff,#35c8ff)';}
-$('#voxBtn').onclick=()=>{if(VX.on){VX.on=false;try{VX.rec&&VX.rec.stop();}catch(e){}vUi();return;}if(!vStart())return;VX.on=true;try{VX.rec.start();}catch(e){}vUi();};
+$('#voxBtn').onclick=async()=>{if(VX.on){VX.on=false;try{VX.rec&&VX.rec.stop();}catch(e){}vUi();return;}
+  if(!VX.mic&&store.get('vox_mic','')!=='1'){if(!isSecureContext){vStart();return;}
+    if(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia){vLog('Telefon će sada pitati za mikrofon → izaberi <b>Dozvoli</b>.','');
+      try{const st=await navigator.mediaDevices.getUserMedia({audio:true});st.getTracks().forEach(t=>t.stop());VX.mic=true;try{store.set('vox_mic','1');}catch(e){}vLog('✓ Mikrofon je dozvoljen. <b>Dodirni 🎤 još jednom</b> i reci komandu.','ok');}
+      catch(e){vLog(/iP(hone|ad|od)/.test(navigator.userAgent)?'Mikrofon nije dozvoljen. U Safariju dodirni <b>aA</b> levo od adrese → <b>Podešavanja veb-sajta</b> → <b>Mikrofon → Dozvoli</b>. U Chromeu na iPhoneu: <b>Podešavanja telefona → Chrome → Mikrofon</b> uključi.':'Mikrofon nije dozvoljen. Dodirni ikonicu levo od adrese → <b>Dozvole → Mikrofon → Dozvoli</b>.','err');}
+      return;}}
+  if(!vStart())return;VX.on=true;try{VX.rec.start();}catch(e){}vUi();};
 $('#voxCont').onchange=()=>{try{store.set('vox_cont',$('#voxCont').checked?'1':'');}catch(e){}if(VX.on){VX.on=false;try{VX.rec&&VX.rec.abort();}catch(e){}}VX.rec=null;vUi();};
 try{$('#voxCont').checked=store.get('vox_cont','')==='1';}catch(e){}vUi();
+$('#voxLang').value=String(VX.li);$('#voxLang').onchange=()=>{VX.li=+$('#voxLang').value;try{store.set('vox_li',VX.li);}catch(e){}if(VX.on){VX.on=false;try{VX.rec&&VX.rec.abort();}catch(e){}}VX.rec=null;vUi();vLog('Jezik: <b>'+VX_LANGS[VX.li]+'</b>','');};
 
 /* ---- čitanje slike sa duelima (OCR u pregledaču, besplatno, bez ključa) ---- */
 function lev(a,b){if(a===b)return 0;const m=a.length,n=b.length;if(!m||!n)return m||n;let p=Array.from({length:n+1},(_,j)=>j);for(let i=1;i<=m;i++){const c=[i];for(let j=1;j<=n;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=c;}return p[n];}
