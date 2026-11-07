@@ -669,17 +669,17 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
       <div class="apanel" id="voxBox" style="border-color:rgba(60,200,255,.5)">
         <h3>🎤 Glasovne komande</h3>
         <button class="btn" id="voxBtn" type="button" style="min-height:70px;font-size:20px;background:linear-gradient(90deg,#1a8cff,#35c8ff)">🎤 DRŽI ILI DODIRNI I REČI KOMANDU</button>
-        <div id="voxLive" style="min-height:22px;margin-top:8px;font-size:16px;font-weight:700;color:#35c8ff"></div><label style="display:flex;gap:8px;align-items:center;margin-top:8px;font-size:14px"><input type="checkbox" id="voxCont"> Slušaj stalno (bez dodira)</label>
+        <div id="voxLive" style="min-height:22px;margin-top:8px;font-size:16px;font-weight:700;color:#35c8ff"></div><div id="voxDbg" style="margin-top:4px;font-size:12px;opacity:.6;font-family:monospace;word-break:break-all"></div><label style="display:flex;gap:8px;align-items:center;margin-top:8px;font-size:14px"><input type="checkbox" id="voxCont"> Slušaj stalno (bez dodira)</label>
         <label style="display:flex;gap:8px;align-items:center;margin-top:6px;font-size:14px">Jezik prepoznavanja: <select class="inp" id="voxLang" style="width:auto;min-height:34px;padding:0 8px"><option value="0">Srpski</option><option value="1">Hrvatski</option><option value="2">Bosanski</option><option value="3">Nemački</option><option value="4">Engleski</option></select></label>
         <div id="voxLog" style="display:grid;gap:4px;margin-top:8px;font-size:14px"></div>
         <details style="margin-top:8px"><summary style="cursor:pointer;font-weight:700;font-size:14px">Šta mogu da kažem?</summary><div class="muted" style="font-size:13px;line-height:1.6;margin-top:6px">
-        <b>Pokreni duel:</b> „Mark“ · „Maja“ · „Mark Maja“ · „Crveni“ · „Crveni Plavi“. Pokreće se taj duel iz plana. Ako duel nije u planu, a kažeš dva imena, pravi se novi duel.<br>
+        <b>Pokreni duel:</b> reci oba imena: „Mark Maja“ · „Crveni Plavi“. Za „Ko je najbolji“ reci sva imena: „Ivana Maja Lana“.<br>
         <b>Zatvori glasanje:</b> „Zatvori“ · „Kreće“ · „Start“<br>
         <b>Pobednik:</b> „Pobedio Mark“ · „Pobedila Ivana“ · „Pobeda Crveni“. Solo nastup: „Uspeo“ / „Nije uspeo“<br>
         <b>Greška:</b> „Poništi“ vraća poslednjeg pobednika.<br>
         Kad je uključeno <b>Slušaj stalno</b>, duel pokrećeš sa „Duel Mark“ ili „Kreni Mark“, da ga ne pokrene TV kad voditelj izgovori ime.</div></details>
       </div>
-      <div class="apanel" id="planBox" style="border-color:rgba(255,176,32,.5)">
+      <div class="apanel" id="planBox" hidden style="display:none">
         <h3>📋 Plan duela za danas</h3>
         <button class="btn gold" id="planGo" type="button" style="min-height:64px;font-size:19px" disabled>NEMA PRIPREMLJENIH DUELA</button>
         <p class="muted" id="planHint" style="margin:6px 0 0;font-size:13px">Jedan klik = sledeći duel iz plana se objavljuje i glasanje se otvara. Zatvaranje glasanja i pobednika radiš kao i do sada.</p>
@@ -705,7 +705,7 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
         <p class="muted" id="qMin" style="margin:0">Glasanje je otvoreno odmah i traje dok ne klikneš <b>ZATVORI GLASANJE</b> u trenutku kad duel krene.</p>
         <div class="acts" id="qKind"><button data-k="auto" class="on">Automatski</button><button data-k="Eliminaciona borba">Eliminaciona</button><button data-k="Borba za medalju">Za medalju</button></div>
         <button class="btn" id="qGo" type="button" disabled>POKRENI DUEL</button>
-        <button class="btn ghost" id="qPlan" type="button" disabled style="margin-top:8px">➕ DODAJ U PLAN (bez objave)</button>
+        <button class="btn ghost" id="qPlan" type="button" disabled hidden style="display:none">➕ DODAJ U PLAN (bez objave)</button>
       </div>
       <details class="apanel"><summary><h3 style="display:inline">Zakazani duel (datum i vreme)</h3></summary>
       <form id="duelForm" style="display:grid;gap:10px;margin-top:10px">
@@ -1511,7 +1511,7 @@ $('#qGo').onclick=async()=>{
 
 /* ================= PLAN DUELA (unapred pripremljeni, pokreće se jednim klikom) ================= */
 S.PLAN=[];
-async function loadPlan(){try{const {data}=await S.sb.from('meta').select('value').eq('key','plan').maybeSingle();S.PLAN=(data&&data.value&&Array.isArray(data.value.list))?data.value.list:[];}catch(e){}planRender();}
+async function loadPlan(){S.PLAN=[];return;try{const {data}=await S.sb.from('meta').select('value').eq('key','plan').maybeSingle();S.PLAN=(data&&data.value&&Array.isArray(data.value.list))?data.value.list:[];}catch(e){}planRender();}
 async function planSave(msg){const list=S.PLAN;return await w(S.sb.from('meta').upsert({key:'plan',value:{list,updated:new Date().toISOString()}}),msg);}
 const plKey=t=>letters(String(t||'').replace(/dj/gi,'d')).toLowerCase();
 function plFind(tok){const k=plKey(tok);if(!k)return null;
@@ -1600,8 +1600,8 @@ async function vCmd(alts){const cont=$('#voxCont').checked;
     const inc=x=>{const p=x.t==='multi'?x.u:x.t==='solo'?[x.a]:[x.a,x.b];return ids.every(id=>p.includes(id));};
     const i=S.PLAN.findIndex(x=>!x.done&&inc(x));
     if(i>=0){vLog('🎤 „'+esc(raw)+'“ → '+esc(plLabel(S.PLAN[i])),'');await planPublish(i);return;}
-    if(ids.length>=2){const x=ids.length===2?{t:'duel',a:ids[0],b:ids[1],done:false}:{t:'multi',u:ids,done:false};S.PLAN.push(x);vLog('🎤 „'+esc(raw)+'“ → novi duel van plana: '+esc(plLabel(x)),'');await planPublish(S.PLAN.length-1);return;}
-    vLog('🎤 „'+esc(raw)+'“ → '+esc(side(ids[0]).name)+' nije u planu. Reci oba imena da napravim novi duel.','err');return;}
+    if(ids.length>=2){const x=ids.length===2?{t:'duel',a:ids[0],b:ids[1],done:false}:{t:'multi',u:ids,done:false};S.PLAN.push(x);vLog('🎤 „'+esc(raw)+'“ → pokrenut duel: '+esc(plLabel(x)),'');await planPublish(S.PLAN.length-1);return;}
+    vLog('🎤 „'+esc(raw)+'“ → '+esc(side(ids[0]).name)+': reci oba imena, npr. „'+esc(side(ids[0]).name)+' Maja“.','err');return;}
   if(!cont)vLog('🎤 Nisam razumeo: „'+esc(alts[0]||'')+'“','err');}
 const evName=d=>isSolo(d)||isMulti(d)?(typeof evTitle==='function'?evTitle(d):side(d.a).name):side(d.a).name+' – '+side(d.b).name;
 async function vWin(d,sd,raw){await adminAct(vFake(d,'win',sd));VX.lastWin=d.id;const who=isSolo(d)?(sd==='a'?'USPEO ✓':'NIJE USPEO ✕'):side(isMulti(d)?sd:sd==='a'?d.a:d.b).name;
@@ -1618,7 +1618,11 @@ function vStart(){const SR=window.SpeechRecognition||window.webkitSpeechRecognit
     vCmd(alts).catch(err=>{console.warn(err);vLog('Greška: '+esc(err.message||err),'err');});};
   r.onresult=e=>{const R=e.results;let txt='';for(let i=VX.used;i<R.length;i++)txt+=R[i][0].transcript+' ';txt=txt.trim();$('#voxLive').textContent=txt?'🎤 čujem: „'+txt+'“':'';
     if(R[R.length-1].isFinal){fin(R,R.length);return;}clearTimeout(VX.t);VX.t=setTimeout(()=>fin(R,R.length),1200);};
-  r.onstart=()=>{$('#voxLive').textContent='🎤 slušam… reci komandu';};
+  const dbg=t=>{const d=$('#voxDbg');if(d)d.textContent=(d.textContent+' › '+t).slice(-260);};$('#voxDbg').textContent='v3 '+r.lang+(r.continuous?' stalno':' dodir');
+  ['audiostart','soundstart','speechstart','speechend','soundend','audioend','nomatch'].forEach(ev=>r.addEventListener(ev,()=>dbg(ev)));
+  r.addEventListener('result',e=>{try{const R=e.results;dbg('result:'+R.length+(R[R.length-1].isFinal?'F':'')+':'+R[R.length-1][0].transcript);}catch(x){dbg('result?');}});
+  r.addEventListener('error',e=>dbg('ERROR:'+e.error));r.addEventListener('end',()=>dbg('end'));
+  r.onstart=()=>{dbg('start');$('#voxLive').textContent='🎤 slušam… reci komandu';};
   r.onspeechend=()=>{};
   r.onerror=e=>{const ios=/iP(hone|ad|od)/.test(navigator.userAgent);
     if((e.error==='language-not-supported'||(ios&&e.error==='service-not-allowed'&&VX.mic))&&VX.li<VX_LANGS.length-1){VX.li++;try{store.set('vox_li',VX.li);}catch(x){}try{$('#voxLang').value=String(VX.li);}catch(x){}VX.rec=null;
