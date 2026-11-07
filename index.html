@@ -669,7 +669,7 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
       <div class="apanel" id="voxBox" style="border-color:rgba(60,200,255,.5)">
         <h3>🎤 Glasovne komande</h3>
         <button class="btn" id="voxBtn" type="button" style="min-height:70px;font-size:20px;background:linear-gradient(90deg,#1a8cff,#35c8ff)">🎤 DRŽI ILI DODIRNI I REČI KOMANDU</button>
-        <label style="display:flex;gap:8px;align-items:center;margin-top:8px;font-size:14px"><input type="checkbox" id="voxCont"> Slušaj stalno (bez dodira)</label>
+        <div id="voxLive" style="min-height:22px;margin-top:8px;font-size:16px;font-weight:700;color:#35c8ff"></div><label style="display:flex;gap:8px;align-items:center;margin-top:8px;font-size:14px"><input type="checkbox" id="voxCont"> Slušaj stalno (bez dodira)</label>
         <label style="display:flex;gap:8px;align-items:center;margin-top:6px;font-size:14px">Jezik prepoznavanja: <select class="inp" id="voxLang" style="width:auto;min-height:34px;padding:0 8px"><option value="0">Srpski</option><option value="1">Hrvatski</option><option value="2">Bosanski</option><option value="3">Nemački</option><option value="4">Engleski</option></select></label>
         <div id="voxLog" style="display:grid;gap:4px;margin-top:8px;font-size:14px"></div>
         <details style="margin-top:8px"><summary style="cursor:pointer;font-weight:700;font-size:14px">Šta mogu da kažem?</summary><div class="muted" style="font-size:13px;line-height:1.6;margin-top:6px">
@@ -1610,8 +1610,16 @@ async function vUndo(id){const d=S.DUELS.find(x=>x.id===id);if(d){await adminAct
 function vStart(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!SR){vLog('Ovaj pregledač ne podržava glasovne komande. Koristi Chrome (Android/računar) ili Safari (iPhone).','err');return false;}
   if(!isSecureContext){vLog('Mikrofon radi samo na <b>https://</b>. <a href="https://'+location.host+location.pathname+'#admin" style="color:#35c8ff">Otvori https://'+esc(location.host)+'</a>','err');return false;}
-  if(VX.rec)return true;const r=new SR();r.lang=VX_LANGS[VX.li||0];r.interimResults=false;r.maxAlternatives=4;r.continuous=$('#voxCont').checked;
-  r.onresult=e=>{const res=e.results[e.results.length-1];if(!res.isFinal)return;const alts=[...res].map(x=>x.transcript.trim()).filter(Boolean);vCmd(alts).catch(err=>{console.warn(err);vLog('Greška: '+esc(err.message||err),'err');});};
+  if(VX.rec)return true;const r=new SR();r.lang=VX_LANGS[VX.li||0];r.interimResults=true;r.maxAlternatives=4;r.continuous=$('#voxCont').checked;VX.used=0;VX.sent='';
+  const fin=(R,upto)=>{clearTimeout(VX.t);if(upto<=VX.used)return;const seg=[];for(let i=VX.used;i<upto;i++)seg.push(R[i]);VX.used=upto;
+    const main=seg.map(x=>x[0].transcript).join(' ').trim(),alts=[main,...(seg.length===1?[...seg[0]].slice(1).map(x=>x.transcript.trim()):[])].filter(Boolean);
+    $('#voxLive').textContent='';if(!main||main===VX.sent)return;VX.sent=main;
+    if(!$('#voxCont').checked){try{r.stop();}catch(x){}}
+    vCmd(alts).catch(err=>{console.warn(err);vLog('Greška: '+esc(err.message||err),'err');});};
+  r.onresult=e=>{const R=e.results;let txt='';for(let i=VX.used;i<R.length;i++)txt+=R[i][0].transcript+' ';txt=txt.trim();$('#voxLive').textContent=txt?'🎤 čujem: „'+txt+'“':'';
+    if(R[R.length-1].isFinal){fin(R,R.length);return;}clearTimeout(VX.t);VX.t=setTimeout(()=>fin(R,R.length),1200);};
+  r.onstart=()=>{$('#voxLive').textContent='🎤 slušam… reci komandu';};
+  r.onspeechend=()=>{};
   r.onerror=e=>{const ios=/iP(hone|ad|od)/.test(navigator.userAgent);
     if((e.error==='language-not-supported'||(ios&&e.error==='service-not-allowed'&&VX.mic))&&VX.li<VX_LANGS.length-1){VX.li++;try{store.set('vox_li',VX.li);}catch(x){}try{$('#voxLang').value=String(VX.li);}catch(x){}VX.rec=null;
       vLog('Telefon nema '+(VX.li===1?'srpski':'prethodni')+' jezik za diktat, prelazim na <b>'+VX_LANGS[VX.li]+'</b>. Dodirni 🎤 ponovo.','');VX.on=false;vUi();return;}
@@ -1620,7 +1628,7 @@ function vStart(){const SR=window.SpeechRecognition||window.webkitSpeechRecognit
         :'Mikrofon je blokiran. Dodirni katanac/ikonicu levo od adrese → <b>Dozvole</b> → <b>Mikrofon → Dozvoli</b>, pa dodirni 🎤 ponovo.','err');vUi();}
     else if(e.error==='network')vLog('Prepoznavanje govora traži internet. Proveri vezu.','err');
     else if(e.error!=='no-speech'&&e.error!=='aborted')vLog('Mikrofon: '+esc(e.error),'err');};
-  r.onend=()=>{VX.rec=null;if(VX.on&&$('#voxCont').checked&&!/iP(hone|ad|od)/.test(navigator.userAgent)){setTimeout(()=>{if(VX.on)vStart()&&VX.rec&&VX.rec.start();},250);}else{VX.on=false;vUi();}};
+  r.onend=()=>{VX.rec=null;clearTimeout(VX.t);$('#voxLive').textContent='';if(!VX.sent&&!$('#voxCont').checked&&VX.on)vLog('🎤 Nisam ništa čuo. Dodirni 🎤 i odmah reci komandu, glasno i blizu telefona.','');if(VX.on&&$('#voxCont').checked&&!/iP(hone|ad|od)/.test(navigator.userAgent)){setTimeout(()=>{if(VX.on)vStart()&&VX.rec&&VX.rec.start();},250);}else{VX.on=false;vUi();}};
   VX.rec=r;return true;}
 async function vWake(){try{if(VX.on&&!VX.wl&&navigator.wakeLock){VX.wl=await navigator.wakeLock.request('screen');VX.wl.addEventListener('release',()=>{VX.wl=null;});}else if(!VX.on&&VX.wl){await VX.wl.release();VX.wl=null;}}catch(e){}}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){vWake();if(VX.on&&!VX.rec&&$('#voxCont').checked&&vStart())try{VX.rec.start();}catch(e){}}});
@@ -1628,7 +1636,7 @@ function vUi(){const b=$('#voxBtn');if(!b)return;vWake();const c=$('#voxCont').c
 $('#voxBtn').onclick=async()=>{if(VX.on){VX.on=false;try{VX.rec&&VX.rec.stop();}catch(e){}vUi();return;}
   if(!VX.mic&&store.get('vox_mic','')!=='1'){if(!isSecureContext){vStart();return;}
     if(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia){vLog('Telefon će sada pitati za mikrofon → izaberi <b>Dozvoli</b>.','');
-      try{const st=await navigator.mediaDevices.getUserMedia({audio:true});st.getTracks().forEach(t=>t.stop());VX.mic=true;try{store.set('vox_mic','1');}catch(e){}vLog('✓ Mikrofon je dozvoljen. <b>Dodirni 🎤 još jednom</b> i reci komandu.','ok');}
+      try{const st=await navigator.mediaDevices.getUserMedia({audio:true});st.getTracks().forEach(t=>t.stop());VX.mic=true;try{store.set('vox_mic','1');}catch(e){}vLog('✓ Mikrofon je dozvoljen.','ok');if(vStart()){try{VX.rec.start();VX.on=true;vUi();}catch(e){VX.rec=null;vLog('Dodirni 🎤 još jednom i reci komandu.','');}}}
       catch(e){vLog(/iP(hone|ad|od)/.test(navigator.userAgent)?'Mikrofon nije dozvoljen. U Safariju dodirni <b>aA</b> levo od adrese → <b>Podešavanja veb-sajta</b> → <b>Mikrofon → Dozvoli</b>. U Chromeu na iPhoneu: <b>Podešavanja telefona → Chrome → Mikrofon</b> uključi.':'Mikrofon nije dozvoljen. Dodirni ikonicu levo od adrese → <b>Dozvole → Mikrofon → Dozvoli</b>.','err');}
       return;}}
   if(!vStart())return;VX.on=true;try{VX.rec.start();}catch(e){}vUi();};
