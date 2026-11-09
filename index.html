@@ -1945,7 +1945,7 @@ $('#lpSave').onclick=async()=>{lpAdmRead();const list=S.LP.filter(x=>x.h);if(awa
 let lpH=null,lpFor=null;async function lpHash(){const e=(S.email||'').toLowerCase();if(!e||S.anon)return null;if(lpFor===e)return lpH;lpFor=e;lpH=null;try{lpH=await sha(e);}catch(x){}return lpH;}
 const LPA=new Audio();LPA.preload='auto';LPA.setAttribute('playsinline','');let lpaOk=false;
 const SILENT='data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA=';
-function lpaUnlock(){if(lpaOk)return;try{LPA.src=SILENT;const pr=LPA.play();if(pr&&pr.then)pr.then(()=>{LPA.pause();lpaOk=true;}).catch(()=>{});}catch(e){}}
+function lpaUnlock(){if(lpaOk)return;try{LPA.src=SILENT;const pr=LPA.play();if(pr&&pr.then)pr.then(()=>{if(LPA.src===SILENT)LPA.pause();lpaOk=true;}).catch(()=>{});}catch(e){}}
 ['pointerdown','touchend','keydown'].forEach(ev=>document.addEventListener(ev,lpaUnlock,{passive:true}));
 function lpaPlay(url){const b=$('#lpPopA');try{LPA.pause();LPA.src=url;LPA.currentTime=0;const pr=LPA.play();if(pr&&pr.catch)pr.catch(()=>{if(b)b.classList.add('pulse');});}catch(e){}}
 async function lichnaPoruka(win,test){const h=test?null:await lpHash(),m=test||(h&&(S.LP||[]).find(x=>x.h===h));if(!m)return;
@@ -1972,12 +1972,12 @@ function ndzRender(){const L=$('#ndzList');if(!L||!S.admin)return;$('#ndzOn').ch
     const up=await S.sb.storage.from('zvuci').upload(path,f,{contentType:f.type||'audio/mp4'});if(up.error){toast('Zvuk nije otpremljen: '+(up.error.message||'greška'));return;}
     S.NDZ.list.push(S.sb.storage.from('zvuci').getPublicUrl(path).data.publicUrl);ndzRender();await ndzSave('🔊 Zvuk za novi duel je sačuvan');};}
 $('#ndzOn').onchange=async()=>{S.NDZ.on=$('#ndzOn').checked;await ndzSave(S.NDZ.on?'Zvuk za novi duel: uključen':'Zvuk za novi duel: isključen');};
-function checkNewDuel(){if(!S.NDZ||!S.NDZ.on||!S.NDZ.list.length)return;
+function checkNewDuel(){if(!S.ready||!S.DUELS)return;
   const key='nd_zvuk_seen',raw=store.get(key,null),seen=new Set((raw||'').split(',').filter(Boolean)),now=Date.now();
   const open=S.DUELS.filter(d=>!d.pobednik&&!isLocked(d)&&d.created_at&&now-new Date(d.created_at).getTime()<10*60e3);
   const fresh=open.filter(d=>!seen.has(String(d.id)));
   S.DUELS.forEach(d=>{if(!d.pobednik&&!isLocked(d))seen.add(String(d.id));});store.set(key,[...seen].slice(-200).join(','));
-  if(raw===null||!fresh.length)return;
+  if(raw===null||!fresh.length||!S.NDZ||!S.NDZ.on||!S.NDZ.list.length)return;
   const k='nd_zvuk_i',i=(+store.get(k,0)||0)%S.NDZ.list.length;store.set(k,String(i+1));lpaPlay(S.NDZ.list[i]);}
 function checkWins(){
   try{checkNewDuel();}catch(e){console.warn(e);}
