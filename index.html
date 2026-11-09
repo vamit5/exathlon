@@ -695,6 +695,11 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
         </details>
         <button class="btn ghost" type="button" id="planClear" style="margin-top:10px">🗑 Obriši ceo plan</button>
       </div>
+      <div class="apanel" id="ndzBox"><h3>🔊 Zvuk za novi duel</h3>
+        <p class="muted" style="margin:0 0 8px;font-size:13px">Pušta se svim igračima čim klikneš POKRENI DUEL. Više zvukova = puštaju se redom, naizmenično.</p>
+        <label class="chk" style="margin-bottom:8px"><input type="checkbox" id="ndzOn"><span><b>Uključeno</b></span></label>
+        <div id="ndzList" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:13px"></div>
+      </div>
       <div class="apanel">
         <h3>Brzi duel</h3>
         <div class="acts" id="qMode"><button data-m="duel" class="on">⚔️ DUEL (1 na 1)</button><button data-m="solo">🏃 SOLO (trči sam)</button><button data-m="multi">🏁 KO JE NAJBOLJI</button></div>
@@ -1952,7 +1957,30 @@ async function lichnaPoruka(win,test){const h=test?null:await lpHash(),m=test||(
     const p=$('#lpPop'),b=$('#lpPopA');p.classList.toggle('miss',!win);b.hidden=!url;b.classList.remove('pulse');b.onclick=()=>{if(url)lpaPlay(url);clearTimeout(p._t);};
     p.hidden=false;clearTimeout(p._t);p._t=setTimeout(()=>p.hidden=true,url?9000:5000);if(url)lpaPlay(url);},win?1600:300);}
 $('#lpPopX').onclick=()=>{$('#lpPop').hidden=true;try{LPA.pause();}catch(e){}};
+
+/* ================= ZVUK ZA NOVI DUEL (svim igračima) ================= */
+S.NDZ={on:true,list:[]};
+async function loadNdz(){try{const {data}=await S.sb.from('meta').select('value').eq('key','zvuk_duel').maybeSingle();if(data&&data.value)S.NDZ={on:data.value.on!==false,list:Array.isArray(data.value.list)?data.value.list:[]};}catch(e){}ndzRender();}
+async function ndzSave(msg){return await w(S.sb.from('meta').upsert({key:'zvuk_duel',value:S.NDZ}),msg);}
+function ndzRender(){const L=$('#ndzList');if(!L||!S.admin)return;$('#ndzOn').checked=S.NDZ.on;
+  L.innerHTML=S.NDZ.list.map((u,j)=>`<span style="display:inline-flex;gap:2px;align-items:center;background:rgba(255,255,255,.07);border-radius:8px;padding:2px 4px">#${j+1}<button type="button" class="btn ghost" data-nzp="${j}" style="width:auto;min-height:30px;padding:0 8px">▶</button><button type="button" class="btn ghost" data-nzd="${j}" style="width:auto;min-height:30px;padding:0 8px">✕</button></span>`).join('')+
+  `<label class="btn ghost" style="width:auto;min-height:34px;padding:0 12px;display:inline-flex;align-items:center;cursor:pointer">+ dodaj zvuk<input type="file" id="ndzIn" accept="audio/*,.m4a,.mp3,.wav,.aac,.caf,.ogg" hidden></label>`;
+  L.querySelectorAll('[data-nzp]').forEach(b=>b.onclick=()=>{lpaUnlock();lpaPlay(S.NDZ.list[+b.dataset.nzp]);});
+  L.querySelectorAll('[data-nzd]').forEach(b=>b.onclick=async()=>{S.NDZ.list.splice(+b.dataset.nzd,1);ndzRender();await ndzSave('Zvuk je uklonjen');});
+  $('#ndzIn').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;if(f.size>8e6){toast('Zvuk je prevelik (max 8 MB)');return;}toast('Otpremam zvuk…');
+    const ext=((f.name.match(/\.([a-z0-9]{2,4})$/i)||[])[1]||'m4a').toLowerCase(),path=`duel/${Date.now()}.${ext}`;
+    const up=await S.sb.storage.from('zvuci').upload(path,f,{contentType:f.type||'audio/mp4'});if(up.error){toast('Zvuk nije otpremljen: '+(up.error.message||'greška'));return;}
+    S.NDZ.list.push(S.sb.storage.from('zvuci').getPublicUrl(path).data.publicUrl);ndzRender();await ndzSave('🔊 Zvuk za novi duel je sačuvan');};}
+$('#ndzOn').onchange=async()=>{S.NDZ.on=$('#ndzOn').checked;await ndzSave(S.NDZ.on?'Zvuk za novi duel: uključen':'Zvuk za novi duel: isključen');};
+function checkNewDuel(){if(!S.NDZ||!S.NDZ.on||!S.NDZ.list.length)return;
+  const key='nd_zvuk_seen',raw=store.get(key,null),seen=new Set((raw||'').split(',').filter(Boolean)),now=Date.now();
+  const open=S.DUELS.filter(d=>!d.pobednik&&!isLocked(d)&&d.created_at&&now-new Date(d.created_at).getTime()<10*60e3);
+  const fresh=open.filter(d=>!seen.has(String(d.id)));
+  S.DUELS.forEach(d=>{if(!d.pobednik&&!isLocked(d))seen.add(String(d.id));});store.set(key,[...seen].slice(-200).join(','));
+  if(raw===null||!fresh.length)return;
+  const k='nd_zvuk_i',i=(+store.get(k,0)||0)%S.NDZ.list.length;store.set(k,String(i+1));lpaPlay(S.NDZ.list[i]);}
 function checkWins(){
+  try{checkNewDuel();}catch(e){console.warn(e);}
   if(!S.uid)return;
   const key='slavljeno_'+S.uid+(S.LIGA==='elita'?'_e':''),seen=new Set((store.get(key,'')||'').split(',').filter(Boolean)),first=store.get(key,null)===null;
   const wins=settled().filter(d=>S.myPicks[d.id]&&S.myPicks[d.id]===d.pobednik);
@@ -2137,7 +2165,7 @@ async function loadUsers(){S.USERS={};if(!S.admin)return;try{const {data,error}=
 async function loadPay(){S.PAYALL={};if(!S.uid||S.anon)return;try{const {data}=await S.sb.from('payout_info').select('*');(data||[]).forEach(r=>{S.PAYALL[r.player_id]=r;if(r.player_id===S.uid)S.PAY=r;});}catch(e){}}
 async function loadRucno(){S.RUC={otvorena:{},elita:{}};try{const {data,error}=await S.sb.from('medalje_rucno').select('*');if(error)return;(data||[]).forEach(r=>{(S.RUC[r.liga]||(S.RUC[r.liga]={}))[r.player_id]=[r.zlato|0,r.srebro|0,r.bronza|0];});}catch(e){}}
 const ruc=(L,u)=>((S.RUC||{})[L]||{})[u]||[0,0,0];
-const LOAD={banovani:loadBan,korekcije:loadKor,medalje_rucno:loadRucno,pdelta:loadPicksDelta,elita:loadElita,lige:loadLige,athletes:loadAthletes,duels:loadDuels,players:()=>Promise.all([loadPlayers(),S.admin?loadUsers():0]),picks:loadPlayers,meta:()=>Promise.all([loadMeta(),loadLige(),loadPoruke(),loadPlan()]),isplate:loadIsplate,payout_info:loadPay};
+const LOAD={banovani:loadBan,korekcije:loadKor,medalje_rucno:loadRucno,pdelta:loadPicksDelta,elita:loadElita,lige:loadLige,athletes:loadAthletes,duels:loadDuels,players:()=>Promise.all([loadPlayers(),S.admin?loadUsers():0]),picks:loadPlayers,meta:()=>Promise.all([loadMeta(),loadLige(),loadPoruke(),loadPlan(),loadNdz()]),isplate:loadIsplate,payout_info:loadPay};
 const pend=new Set();let pT=0;
 const dataSig=()=>JSON.stringify([S.DUELS.map(d=>[d.id,d.pobednik,d.uzivo,d.rezA,d.rezB,d.pocetak,d.a,d.b]),Object.entries(S.PLAYERS).map(([k,p])=>[k,p.nick,p.avatar,Object.keys(p.picks).length]),Object.values(S.ATH).map(a=>[a.id,a.team,a.status,a.photo]),S.NAGRADE,Object.keys(S.ISPLATE_ALL||{}).length,S.RUC]);
 let lastSig='';
@@ -2177,7 +2205,7 @@ async function boot(){
   if(!session||S.anon){ta.setAttribute('aria-label','Prijavi se');ta.title='Prijavi se';ta.innerHTML='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h3M14 17l5-5-5-5M19 12H8"/></svg>';ta.onclick=async()=>{if(session)await S.sb.auth.signOut();store.set('guest','');location.hash='';location.reload();};}
   else ta.onclick=async()=>{await S.sb.auth.signOut();store.set('guest','');location.hash='';location.reload();};
   if(S.admin){document.querySelectorAll('.admin-only').forEach(b=>b.hidden=false);}
-  try{await Promise.all([loadAthletes(),loadDuels(),loadPlayers(),loadMeta(),loadIsplate(),loadPay(),loadUsers(),loadElita(),loadLige(),loadRucno(),loadKor(),loadBan(),loadPoruke(),loadPlan()]);}catch(e){console.warn(e);splashEnd();$('#home').innerHTML='<div class="empty">Podaci nisu učitani. Osveži stranicu.</div>';return;}
+  try{await Promise.all([loadAthletes(),loadDuels(),loadPlayers(),loadMeta(),loadIsplate(),loadPay(),loadUsers(),loadElita(),loadLige(),loadRucno(),loadKor(),loadBan(),loadPoruke(),loadPlan(),loadNdz()]);}catch(e){console.warn(e);splashEnd();$('#home').innerHTML='<div class="empty">Podaci nisu učitani. Osveži stranicu.</div>';return;}
   if(S.uid&&await checkMyBan()){splashEnd();return;}
   if(S.uid)await ensurePlayer(session.user.user_metadata);
   if(S.uid&&!S.anon)await loadPod();
