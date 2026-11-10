@@ -367,6 +367,9 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
 .stBig{font-family:var(--display);font-weight:800;font-size:40px;line-height:1;color:#ffcf5a}
 .stMed{display:flex;gap:12px;font-weight:700;white-space:nowrap}
 .stMrow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 10px;margin-top:6px;border-radius:10px;background:var(--panel2);font-size:14px}
+.hstrip{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin:0 0 12px;padding:0 2px 10px;border-bottom:1px solid var(--line2);font-size:13px;font-weight:600;color:var(--metal)}.hstrip b{color:#ff8a7e;letter-spacing:.06em}
+.hon{display:inline-flex;align-items:center;gap:5px}.hon i{width:8px;height:8px;border-radius:50%;background:var(--win);box-shadow:0 0 8px var(--win);animation:cdp 1.6s infinite}.hon b{color:#fff!important;letter-spacing:0!important}.hon small{color:var(--faint);font-weight:500}
+.hinfo{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:2px 0 0;padding:4px 2px;font-size:13px;font-weight:600;color:var(--metal)}.hinfo b{color:#ffb020}.hinfo button{background:none;border:0;padding:4px 0;color:#5ce39b;font-weight:700;font-size:13px;cursor:pointer}
 .onl{display:flex;align-items:center;justify-content:center;gap:8px;margin:0 0 10px;font-size:14px;color:var(--metal)}
 .onl i{width:9px;height:9px;border-radius:50%;background:var(--win);box-shadow:0 0 10px var(--win);animation:cdp 1.6s infinite}.onl b{color:#fff;font-size:16px}
 .bmeta .mdl{background:rgba(255,176,32,.12)!important;color:#ffcf5a}.bmeta .mdl b{margin:0 4px 0 2px}
@@ -1173,6 +1176,7 @@ addEventListener('focus',wake);addEventListener('online',wake);addEventListener(
 const tkm=n=>(n%10===1&&n%100!==11)?'takmičar':'takmičara';
 const onlN=()=>demoPriv()?DEMO_N+(S.online||0):S.online;
 const dmOnl=()=>demoPub()&&!demoPriv()?100+Math.floor(dh('onl',String(Math.floor(Date.now()/45000)))*38):0;
+function hStrip(){const n=(onlN()||0)+dmOnl(),dm=dmOnl()>0;return `<div class="hstrip"><span>📅 ${esc(dateLong())} · <b>UŽIVO</b></span>${n?`<span class="hon"><i></i><b id="onlN">${n}</b> <span id="onlW">${dm?'korisnika':tkm(n)}</span> online${dm?' <small>(uklj. dm)</small>':''}</span>`:''}</div>`;}
 function onlHTML(){const n=(onlN()||0)+dmOnl();if(!n)return '';const dm=dmOnl()>0;
   return `<div class="onl"><i></i>Trenutno online: <b id="onlN">${n}</b> <span id="onlW">${dm?'korisnika':tkm(n)}</span>${dm?' <span class="muted">(uklj. dm)</span>':''}</div>`;}
 function updOnline(){const n=$('#onlN');if(n){const k=(onlN()||0)+dmOnl();n.textContent=k;$('#onlW').textContent=dmOnl()?'korisnika':tkm(k);}else if(current==='home'&&S.ready)renderHome();}
@@ -1216,7 +1220,7 @@ function renderHome(){
   const rest=open.filter(d=>!heroes.includes(d));
   const res=settled().slice().reverse();
   const today=todayBG(),mine=scoreDay(S.myPicks,today);
-  let h=(cdHTML()||`<div class="today">📅 ${esc(dateLong())} · <b>EMISIJA UŽIVO</b></div>`)+bigPrizeHTML()+onlHTML()+topBoxHTML()+`<div class="rule1 slim"><span class="ic">🎯</span><span>1 POGOĐEN DUEL = <em>1 POEN</em></span></div>`+fairBar()+(S.LIGA==='elita'?`<div class="elinfo">★ ${esc(UP(LNAME.elita))} · ${S.admin&&!hasElite()?'pregled (admin)':vaziTxt(S.ELITA)}</div>`:'')+prizeHTML();
+  const cdh=cdHTML();let h=(cdh?cdh+onlHTML():hStrip())+bigPrizeHTML()+topBoxHTML()+`<div class="hinfo"><span>🎯 1 pogođen duel = <b>1 poen</b></span><button type="button" data-rules="1">🛡️ Fer igra ›</button></div>`+(S.LIGA==='elita'?`<div class="elinfo">★ ${esc(UP(LNAME.elita))} · ${S.admin&&!hasElite()?'pregled (admin)':vaziTxt(S.ELITA)}</div>`:'')+prizeHTML();
   h+=posBoxHTML();
   if(heroD){
     const lbl=heroes.length>1?'Aktuelno · '+heroes.length:heroD.uzivo?'Uživo':isLocked(heroD)?'U toku':(heroD.rucno?'Glasaj sada':'Sledeći duel');
@@ -1993,11 +1997,11 @@ function checkWins(){
   const recent=d=>Date.now()-startOf(d)<36*3600e3;
   const fresh=wins.filter(d=>!seen.has(d.id)&&recent(d));
   wins.forEach(d=>seen.add(d.id));store.set(key,[...seen].slice(-2000).join(','));
-  if(fresh.length&&!first&&!S.admin)celebrate(fresh);
+  if(fresh.length&&!first)celebrate(fresh);
   if(LP_ON()){const lk='promaseno_'+S.uid+(S.LIGA==='elita'?'_e':''),ls=new Set((store.get(lk,'')||'').split(',').filter(Boolean)),lfirst=store.get(lk,null)===null;
     const miss=settled().filter(d=>S.myPicks[d.id]&&S.myPicks[d.id]!==d.pobednik),lf=miss.filter(d=>!ls.has(d.id)&&recent(d));
     miss.forEach(d=>ls.add(d.id));store.set(lk,[...ls].slice(-2000).join(','));
-    if(S.admin){}else if(fresh.length&&!first)lichnaPoruka(true);else if(lf.length&&!lfirst)lichnaPoruka(false);}
+    if(fresh.length&&!first)lichnaPoruka(true);else if(lf.length&&!lfirst)lichnaPoruka(false);}
 }
 function LP_ON(){return !!S.email&&!S.anon;}
 
