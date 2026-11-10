@@ -107,6 +107,9 @@ main{max-width:980px;margin:0 auto;padding-inline:16px;padding-block:18px 110px}
 .pick:not(:disabled):hover{border-color:var(--orange)}
 .pick:not(:disabled):active{transform:scale(.97)}
 .pick.sel{background:var(--hot);border-color:transparent;color:#fff}
+.pick.tr{background:rgba(255,59,48,.13);border-color:rgba(255,80,70,.45)}.pick.tb{background:rgba(40,120,255,.13);border-color:rgba(70,140,255,.45)}
+.pick.tr:not(:disabled):hover{border-color:#ff5a4e}.pick.tb:not(:disabled):hover{border-color:#4d8dff}
+.pick.tr.sel{background:linear-gradient(90deg,#e8352a,#ff5a3c);border-color:transparent}.pick.tb.sel{background:linear-gradient(90deg,#1f63e0,#3c8bff);border-color:transparent}
 .pick.off{opacity:.35}
 .pick:disabled{cursor:default}
 .hint{padding:0 16px 16px;margin-top:-4px;font-size:13px;color:var(--dim);text-align:center}
@@ -412,6 +415,7 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
 .wl{display:inline-flex;align-items:center;gap:4px;margin-top:2px;padding:3px 10px;border-radius:999px;background:rgba(0,0,0,.45);border:1px solid var(--line2);font-size:12px;font-weight:600;color:var(--dim);white-space:nowrap}
 .wltab{margin:0 0 16px;padding:12px 14px;border-radius:16px;background:rgba(255,255,255,.04);border:1px solid var(--line2)}.wlh{font-family:var(--display);font-weight:800;font-size:18px;margin-bottom:6px}.wlh small{font-size:12px;color:var(--dim);font-weight:600;margin-left:6px}
 .wlr{display:flex;align-items:center;gap:8px;padding:6px 2px;border-top:1px solid rgba(255,255,255,.06)}.wln{width:24px;color:var(--dim)}.wlnm{flex:1;font-weight:700}.wlr .dot{width:10px;height:10px;border-radius:50%;background:#e33}.wlr .dot.plavi{background:#2f7bff}
+.wl2{display:inline-flex;flex-wrap:wrap;justify-content:center;gap:4px;margin-top:4px}.wl2 .wl{margin:0;gap:3px;padding:2px 8px;font-size:11px}.wl2 .wl i{font-style:normal;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin-right:2px}.wl2 .wl b{font-size:14px}
 .wl b{font-family:var(--display);font-size:15px;font-weight:800}.wl b.w{color:var(--win)}.wl b.l{color:#ff6b5e}.wl span{color:var(--faint)}
 .acard .info .wl{margin-top:6px}.mtile .wl{justify-self:center;font-size:11px;padding:2px 8px}
 .bmeta .vk{background:rgba(255,176,32,.15);color:#ffcf5a}
@@ -483,9 +487,7 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
 .decl{align-items:flex-start;font-size:13px;line-height:1.45;margin-top:4px}.decl .link{font-size:13px}
 .ruc.ban.on{border-color:rgba(255,74,59,.6)!important;background:rgba(255,74,59,.08)}.btn.danger{background:#d8281b;color:#fff;border:0}
 .sumnja h3 small{font-family:var(--body);font-size:11px;font-weight:600;letter-spacing:0}.sumnja .srow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line)}.sumnja .sv{font-weight:700;color:#ffcf5a;font-size:13px}
-.posbox{display:grid;gap:2px;width:100%;margin:12px 0 4px;padding:14px 16px;border-radius:18px;text-align:left;cursor:pointer;color:#fff;background:linear-gradient(120deg,rgba(255,176,32,.22),rgba(255,90,40,.12));border:1px solid rgba(255,190,60,.55);box-shadow:0 8px 30px rgba(255,150,30,.18)}
-.posbox .pbl{font-family:var(--display);font-weight:800;letter-spacing:.12em;font-size:13px;color:#ffc94a}.posbox .pbm{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
-.posbox .pbn{font-family:var(--display);font-weight:900;font-size:44px;line-height:1;color:#ffd35a;text-shadow:0 0 24px rgba(255,190,60,.45)}.posbox .pbs{font-weight:700;color:#fff}.posbox .pbu{font-size:13px;color:var(--dim);margin-top:2px}.posbox .pbu b{color:#fff}
+.posline{display:flex;align-items:center;gap:8px;width:100%;margin:14px 0 -4px;padding:6px 2px;background:none;border:0;border-bottom:1px solid var(--line2);color:var(--dim);font-size:13px;font-weight:700;text-align:left;cursor:pointer}.posline b{font-family:var(--display);font-size:20px;font-weight:900;color:#ffc94a;margin-left:auto}.posline span:last-of-type{color:var(--dim);font-weight:600}.posline em{font-style:normal;color:var(--faint)}
 .fairbar{display:flex;align-items:center;gap:12px;width:100%;margin:10px 0;padding:10px 14px;border-radius:14px;text-align:left;cursor:pointer;background:linear-gradient(90deg,rgba(52,211,127,.12),rgba(52,211,127,.03));border:1px solid rgba(52,211,127,.45);color:#d9f7e7;font:600 13px var(--body);line-height:1.35}
 .fairbar .fi{font-size:24px}.fairbar b{font-family:var(--display);font-weight:800;letter-spacing:.08em;color:#5ce39b}.fairbar small{display:block;color:#9fe8c0;font-weight:700;font-size:12px;margin-top:2px}
 .dmb{display:inline-block;margin-left:5px;padding:0 5px;border-radius:5px;background:rgba(255,255,255,.1);color:#9aa0a8;font:700 10px var(--body);letter-spacing:.04em;vertical-align:middle;text-transform:lowercase}
@@ -597,9 +599,7 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
 
   <section class="screen" id="s-roster">
     <div class="pagehead"><h1>Takmičari</h1>
-      <div class="seg" id="teamSeg" hidden><button data-f="svi" aria-pressed="true">SVI</button></div>
-      <div class="seg" id="wlSeg"><button data-m="nedelja">OVE NEDELJE</button><button data-m="ukupno">UKUPNO</button></div></div>
-    <div id="wlTable"></div>
+      <div class="seg" id="teamSeg" hidden><button data-f="svi" aria-pressed="true">SVI</button></div></div>
     <div class="roster" id="roster"></div>
   </section>
 
@@ -984,7 +984,7 @@ const glTx=t=>demoPub()&&!demoPriv()?`${t} glasova <span class="muted">(uklj. dm
 function crowd(d){let a=0,b=0;const by={},pv=demoPriv()||demoPub();for(const p of Object.values(S.PLAYERS)){if(p.demo&&!pv)continue;const v=p.picks&&p.picks[d.id];if(!v)continue;by[v]=(by[v]||0)+1;if(v==='a')a++;else if(v==='b')b++;}return {a,b,t:Object.values(by).reduce((x,y)=>x+y,0),by};}
 function weekStart(){const n=new Date(),d=new Date(n.getFullYear(),n.getMonth(),n.getDate());d.setDate(d.getDate()-((d.getDay()+6)%7));return d.getTime();}
 S.WLM=store.get('wlm','nedelja');
-function wlHTML(id,ws){const r=record(id,ws||0);return `<span class="wl"><b class="w">${r.w}</b> pob. <span>·</span> <b class="l">${r.l}</b> por.</span>`;}
+function wlHTML(id){const w=record(id,weekStart()),t=record(id);return `<span class="wl2"><span class="wl"><i>Nedelja</i><b class="w">${w.w}</b><span>–</span><b class="l">${w.l}</b></span><span class="wl"><i>Ukupno</i><b class="w">${t.w}</b><span>–</span><b class="l">${t.l}</b></span></span>`;}
 function record(id,since){const ra=(S.ATH[id]||{}).raw||{};let w=since?0:(+ra.pob_pre||0),l=since?0:(+ra.por_pre||0);for(const d of settled()){if(isSolo(d))continue;if(since&&startOf(d)<since)continue;if(isMulti(d)){if(d.ucesnici.includes(id))(d.pobednik===id?w++:l++);continue;}if(d.a!==id&&d.b!==id)continue;((d.pobednik==='a')===(d.a===id))?w++:l++;}return {w,l};}
 
 
@@ -1029,12 +1029,9 @@ function champData(){if(!S.ready)return null;const st=champState(),me=S.uid,amt=
   const sub=pick1(['Da li ćeš ga večeras skinuti?','Ti si izazivač.','Šampion je poznat. Sada ga skidaš ti.'],seed+1)+'';
   return card('🏆',head,sub);}
 function posBoxHTML(){if(!S.uid||S.anon||!S.ready)return '';
-  const td=standings(todayBG()),me=td.find(x=>x.uid===S.uid),uk=standings(null),mu=uk.find(x=>x.uid===S.uid),nT=td.filter(x=>x.rank).length,nU=uk.length,pn=n=>n===1?'poen':'poena';
-  let big,small;
-  if(me&&me.rank){big=`<b class="pbn">#${me.rank}</b><span class="pbs">od ${nT} danas · <b>${me.c}</b> ${pn(me.c)}</span>`;small=mu&&mu.c>0?`Ukupno: <b>#${mu.rank}</b> od ${nU} · ${mu.c} ${pn(mu.c)} ›`:'Rang lista ›';}
-  else if(mu&&mu.c>0){big=`<b class="pbn">#${mu.rank}</b><span class="pbs">od ${nU} ukupno · <b>${mu.c}</b> ${pn(mu.c)}</span>`;small=me?'Danas: glasaj još da uđeš na dnevnu listu ›':'Danas: glasaj i uđi na dnevnu rang listu ›';}
-  else{big=`<b class="pbn" style="font-size:24px">GLASAJ</b><span class="pbs">i uđi na rang listu</span>`;small='Rang lista ›';}
-  return `<button type="button" class="posbox"><span class="pbl">🏆 TVOJA POZICIJA</span><span class="pbm">${big}</span><span class="pbu">${small}</span></button>`;}
+  const td=standings(todayBG()),me=td.find(x=>x.uid===S.uid),n=td.filter(x=>x.rank).length;
+  const v=me&&me.rank?`<b>#${me.rank}</b><span>od ${n}</span>`:`<b>—</b><span>${me?'glasaj još da uđeš na listu':'glasaj da uđeš na listu'}</span>`;
+  return `<button type="button" class="posline"><span>🏆 Tvoja pozicija danas</span>${v}<em>›</em></button>`;}
 const fairBar=()=>`<button type="button" class="fairbar" data-rules="1"><span class="fi">🛡️</span><span><b>FER IGRA</b> · sistem prepoznaje nesvakidašnje ponašanje<small>Pravila fer igre ›</small></span></button>`;
 const hasPrize=()=>{const z=n=>n&&(+n.prvo||+n.drugo||+n.trece);return !!(z((S.NAG||{}).elita)||z((S.NAG||{}).otvorena));};
 function bigPrizeHTML(){if(typeof eliMode==='function'&&eliMode()==='niko')return '';const n=(S.NAG&&S.NAG.elita)||{},c=n.valuta||'€',p=[+n.prvo||0,+n.drugo||0,+n.trece||0];if(!p[0])return '';
@@ -1088,6 +1085,7 @@ function heroSoloHTML(d){
       :!mine&&!locked?'<div class="hint">Tačna prognoza = 1 poen.</div>':''}
     ${locked&&!d.pobednik?'<div class="closed">🔒 GLASANJE ZATVORENO</div>':''}
   </article>`;}
+const tcl=x=>{const t=x.isTeam?x.id:x.team;return t==='crveni'?'tr':t==='plavi'?'tb':'';};
 function heroHTML(d){if(isSolo(d))return heroSoloHTML(d);if(isMulti(d))return heroMultiHTML(d);
   const A=side(d.a),B=side(d.b),mine=S.myPicks[d.id],locked=isLocked(d),c=crowd(d);
   const cd=countdown(startOf(d)-Date.now());
@@ -1106,8 +1104,8 @@ function heroHTML(d){if(isSolo(d))return heroSoloHTML(d);if(isMulti(d))return he
       <div class="face b">${photoBox(B,-.5)}<div class="fname">${esc(B.name)}</div>${B.isTeam?'<div class="fsub">Tim</div>':''}${wlHTML(B.id)}</div>
     </div>
     <div class="picks">
-      <button class="pick${mine==='a'?' sel':mine?' off':''}" data-s="a" ${mine||(locked&&!admV(d))?'disabled':''}>${esc(A.name)}</button>
-      <button class="pick${mine==='b'?' sel':mine?' off':''}" data-s="b" ${mine||(locked&&!admV(d))?'disabled':''}>${esc(B.name)}</button>
+      <button class="pick ${tcl(A)}${mine==='a'?' sel':mine?' off':''}" data-s="a" ${mine||(locked&&!admV(d))?'disabled':''}>${esc(A.name)}</button>
+      <button class="pick ${tcl(B)}${mine==='b'?' sel':mine?' off':''}" data-s="b" ${mine||(locked&&!admV(d))?'disabled':''}>${esc(B.name)}</button>
     </div>
     ${c.t?`<div class="split"><div class="bar"><i style="width:${pa}%"></i><i style="width:${100-pa}%"></i></div><div class="lbl"><span>${pa}%</span><span>${glTx(c.t)}</span><span>${100-pa}%</span></div></div>`
       :!mine&&!locked?'<div class="hint">'+(d.rucno?'Glasanje se zatvara u sekundi kad duel krene. ':'')+'Tačna prognoza = 1 poen.</div>':''}
@@ -1263,12 +1261,8 @@ let teamF='svi';
 $('#teamSeg').onclick=e=>{const b=e.target.closest('button');if(!b)return;teamF=b.dataset.f;$('#teamSeg').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));renderRoster();};
 function renderRoster(){
   const box=$('#roster');if(!S.ready)return;
-  $('#wlSeg').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.m===S.WLM)));
-  {const ws=S.WLM==='nedelja'?weekStart():0,rows=athList().filter(a=>a.status!=='Eliminisan').map(a=>({a,r:record(a.id,ws)})).filter(x=>x.r.w+x.r.l>0).sort((x,y)=>y.r.w-x.r.w||x.r.l-y.r.l||x.a.name.localeCompare(y.a.name,'sr'));
-   const od=new Date(ws),lbl=ws?`od ponedeljka ${od.getDate()}.${od.getMonth()+1}.`:'cela sezona';
-   $('#wlTable').innerHTML=`<div class="wltab"><div class="wlh">📊 Pobede i porazi <small>${lbl}</small></div>${rows.length?rows.map((x,i)=>`<div class="wlr"><b class="wln">${i+1}.</b><span class="dot ${x.a.team}"></span><span class="wlnm">${esc(x.a.name)}</span><span class="wl"><b class="w">${x.r.w}</b> pob. <span>·</span> <b class="l">${x.r.l}</b> por.</span></div>`).join(''):'<div class="muted" style="padding:10px 4px">Još nema odigranih duela ove nedelje.</div>'}</div>`;}
   const card=a=>{const hot=['Kapiten','Imunitet'].includes(a.status),show=a.status!=='Aktivan';
-    return `<button class="acard${a.status==='Eliminisan'?' out':''}" data-a="${esc(a.id)}">${photoBox(a,.35)}${show?`<span class="st${hot?' hot':''}">${esc(a.status)}</span>`:''}<div class="info"><div class="nm">${esc(a.name)}</div><div class="sub">${esc(a.raw.nadimak?a.full:(a.raw.prezime||''))}</div>${wlHTML(a.id,S.WLM==='nedelja'?weekStart():0)}</div></button>`;};
+    return `<button class="acard${a.status==='Eliminisan'?' out':''}" data-a="${esc(a.id)}">${photoBox(a,.35)}${show?`<span class="st${hot?' hot':''}">${esc(a.status)}</span>`:''}<div class="info"><div class="nm">${esc(a.name)}</div><div class="sub">${esc(a.raw.nadimak?a.full:(a.raw.prezime||''))}</div>${wlHTML(a.id)}</div></button>`;};
   const L=athList(),order=(a,b)=>(a.status==='Eliminisan')-(b.status==='Eliminisan')||(b.status==='Kapiten')-(a.status==='Kapiten')||a.name.localeCompare(b.name,'sr');
   box.innerHTML=['crveni','plavi'].map(t=>{const g=L.filter(a=>a.team===t).sort(order),act=g.filter(a=>a.status!=='Eliminisan').length;
     return `<section class="car ${t}"><div class="carh"><h2>${t==='crveni'?'Crveni':'Plavi'}<small>${act} u igri</small></h2><div class="carnav"><button type="button" data-dir="-1" aria-label="Nazad">‹</button><button type="button" data-dir="1" aria-label="Napred">›</button></div></div>
@@ -1277,7 +1271,6 @@ function renderRoster(){
   hydrate(box);box.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>openViewer(S.ATH[b.dataset.a]));
 }
 
-$('#wlSeg').onclick=e=>{const b=e.target.closest('button');if(!b)return;S.WLM=b.dataset.m;store.set('wlm',S.WLM);renderRoster();};
 /* 360° prikaz */
 const V={a:null,angle:.3,vel:0,zoom:1,tz:1,drag:false,lastX:0,lastT:0,raf:0};
 function openViewer(a){
@@ -2203,7 +2196,7 @@ function go(s,push){if(!SCREENS.includes(s)||(s==='admin'&&!S.admin))s='home';if
   document.querySelectorAll('[data-go]').forEach(b=>{if(b.classList.contains('chip'))return;b.toggleAttribute('aria-current',b.dataset.go===s);if(b.dataset.go===s)b.setAttribute('aria-current','page');});
   if(push){try{history.replaceState(null,'','#'+s);}catch(e){}}scrollTo({top:0});renderAll();}
 document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.go,true)));
-$('#home').addEventListener('click',e=>{if(e.target.closest('.posbox'))go('rang',true);});
+$('#home').addEventListener('click',e=>{if(e.target.closest('.posline'))go('rang',true);});
 $('#champPopOk').onclick=()=>{$('#champPop').hidden=true;go('rang',true);};$('#champPopX').onclick=()=>{$('#champPop').hidden=true;};
 let rq=0;function renderAll(){cancelAnimationFrame(rq);rq=requestAnimationFrame(()=>{try{demoSync();}catch(e){console.warn(e);}$('#demoTag').hidden=!demoPriv();renderChip();if(S.ready){checkWins();try{checkChampPop();}catch(e){console.warn(e);}}
   if(current==='home')renderHome();else if(current==='roster')renderRoster();else if(current==='rang')renderBoard();else if(current==='profil')renderProfile();else if(current==='admin')renderAdmin();});}
