@@ -60,7 +60,7 @@ input,select{font:inherit;color:var(--text)}
 .chip i{font-style:normal;color:var(--orange)}
 main{max-width:980px;margin:0 auto;padding-inline:16px;padding-block:18px 110px}
 .screen{display:none}
-.screen.on{display:block;animation:fade .35s ease}
+.screen.on{display:block;animation:fade .18s ease}
 @keyframes fade{from{opacity:0;transform:translateY(6px)}}
 .sec{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:28px 0 10px;font-family:var(--display);font-weight:700;font-size:18px;letter-spacing:.08em;color:var(--metal);text-transform:uppercase}
 .sec:first-child{margin-top:4px}
@@ -516,6 +516,8 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
 .splash.on{opacity:1;visibility:visible;pointer-events:auto;transition:opacity .18s ease}
 .splash img{width:min(320px,76vw);height:auto;filter:drop-shadow(0 0 18px rgba(255,120,40,.55))}
 .splash.on img{animation:flick 1.6s ease-in-out both}
+.splash.fast{transition:opacity .15s ease,visibility 0s linear .15s}.splash.fast.on{transition:opacity .08s ease}.splash.fast.on img{animation:flickF .42s ease-out both}
+@keyframes flickF{0%{opacity:0;transform:scale(.94)}35%{opacity:1;transform:scale(1)}100%{opacity:1;transform:scale(1.02)}}
 @keyframes flick{0%{opacity:0;transform:scale(.96)}25%{opacity:1;transform:scale(1)}42%{opacity:.45}60%{opacity:1}75%{opacity:.7}90%,100%{opacity:1;transform:scale(1)}}
 @media (prefers-reduced-motion:reduce){.splash.on img{animation:none}}
 .closebtn{display:grid;gap:2px;justify-items:center;width:100%;min-height:72px;border-radius:12px;background:var(--red);color:#fff;font-family:var(--display);font-weight:800;font-size:24px;letter-spacing:.06em;box-shadow:0 10px 30px -10px rgba(255,59,43,.7)}
@@ -2190,12 +2192,12 @@ async function ensurePlayer(meta){
 
 /* ================= LOGO PRI UČITAVANJU ================= */
 let splT=0,splUntil=0;
-function splash(ms){const el=$('#splash');clearTimeout(splT);el.classList.remove('on');void el.offsetWidth;el.classList.add('on');splUntil=Date.now()+ms;splT=setTimeout(()=>el.classList.remove('on'),ms);}
+function splash(ms,fast){const el=$('#splash');clearTimeout(splT);el.classList.remove('on','fast');void el.offsetWidth;el.classList.toggle('fast',!!fast);el.classList.add('on');splUntil=Date.now()+ms;splT=setTimeout(()=>el.classList.remove('on'),ms);}
 function splashEnd(){const el=$('#splash'),left=Math.max(0,splUntil-Date.now());clearTimeout(splT);splT=setTimeout(()=>el.classList.remove('on'),left);}
 
 /* ================= NAVIGACIJA ================= */
 const SCREENS=['home','roster','rang','profil','admin'];let current='home';
-function go(s,push){if(!SCREENS.includes(s)||(s==='admin'&&!S.admin))s='home';if(push&&S.ready)splash(1100);current=s;
+function go(s,push){if(!SCREENS.includes(s)||(s==='admin'&&!S.admin))s='home';if(push&&S.ready)splash(420,true);current=s;
   SCREENS.forEach(x=>$('#s-'+x).classList.toggle('on',x===s));$('#ligaBar').hidden=s==='roster'||!eliVis();
   document.querySelectorAll('[data-go]').forEach(b=>{if(b.classList.contains('chip'))return;b.toggleAttribute('aria-current',b.dataset.go===s);if(b.dataset.go===s)b.setAttribute('aria-current','page');});
   if(push){try{history.replaceState(null,'','#'+s);}catch(e){}}scrollTo({top:0});renderAll();}
