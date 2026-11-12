@@ -700,6 +700,10 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
         </details>
         <button class="btn ghost" type="button" id="planClear" style="margin-top:10px">🗑 Obriši ceo plan</button>
       </div>
+      <div class="apanel" id="zsBox"><h3>🔊 Zvukovi za sve igrače</h3>
+        <p class="muted" style="margin:0 0 8px;font-size:13px">Puštaju se svim igračima. Igrači koji imaju svoje lične poruke (Mišo, Strale, Maja…) i dalje dobijaju svoje, a admin ne dobija zvuk za pogodak/promašaj. Više zvukova = redom, naizmenično.</p>
+        <div id="zsRows" style="display:grid;gap:8px"></div>
+      </div>
       <div class="apanel" id="ndzBox"><h3>🔊 Zvuk za novi duel</h3>
         <p class="muted" style="margin:0 0 8px;font-size:13px">Pušta se svim igračima čim klikneš POKRENI DUEL. Više zvukova = puštaju se redom, naizmenično.</p>
         <label class="chk" style="margin-bottom:8px"><input type="checkbox" id="ndzOn"><span><b>Uključeno</b></span></label>
@@ -1965,7 +1969,7 @@ const SILENT='data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAAC
 function lpaUnlock(){if(lpaOk)return;try{LPA.src=SILENT;const pr=LPA.play();if(pr&&pr.then)pr.then(()=>{if(LPA.src===SILENT)LPA.pause();lpaOk=true;}).catch(()=>{});}catch(e){}}
 ['pointerdown','touchend','keydown'].forEach(ev=>document.addEventListener(ev,lpaUnlock,{passive:true}));
 function lpaPlay(url){const b=$('#lpPopA');try{LPA.pause();LPA.src=url;LPA.currentTime=0;const pr=LPA.play();if(pr&&pr.catch)pr.catch(()=>{if(b)b.classList.add('pulse');});}catch(e){}}
-async function lichnaPoruka(win,test){const h=test?null:await lpHash(),m=test||(h&&(S.LP||[]).find(x=>x.h===h));if(!m)return;
+async function lichnaPoruka(win,test){const h=test?null:await lpHash(),m=test||(h&&(S.LP||[]).find(x=>x.h===h));if(!m){if(S.admin||test)return;const u=zsPick(win?'w':'l');if(u)setTimeout(()=>lpaPlay(u),win?1600:300);return;}
   const arr=(win?m.w:m.l)||[],aud=(win?m.wa:m.la)||[];if(!arr.length&&!aud.length)return;
   let txt='';if(arr.length){const k='lp_'+(win?'w':'l')+'_'+S.uid,i=(+store.get(k,0)||0)%arr.length;store.set(k,String(i+1));txt=arr[i];}
   let url=null;if(aud.length){const k='lpa_'+(win?'w':'l')+'_'+S.uid,i=(+store.get(k,0)||0)%aud.length;store.set(k,String(i+1));url=aud[i];}
@@ -1989,6 +1993,26 @@ function ndzRender(){const L=$('#ndzList');if(!L||!S.admin)return;$('#ndzOn').ch
     const up=await S.sb.storage.from('zvuci').upload(path,f,{contentType:f.type||'audio/mp4'});if(up.error){toast('Zvuk nije otpremljen: '+(up.error.message||'greška'));return;}
     S.NDZ.list.push(S.sb.storage.from('zvuci').getPublicUrl(path).data.publicUrl);ndzRender();await ndzSave('🔊 Zvuk za novi duel je sačuvan');};}
 $('#ndzOn').onchange=async()=>{S.NDZ.on=$('#ndzOn').checked;await ndzSave(S.NDZ.on?'Zvuk za novi duel: uključen':'Zvuk za novi duel: isključen');};
+
+/* ================= ZVUKOVI ZA SVE IGRAČE (pogodak / promašaj / pobednik večeri) ================= */
+S.ZS={w:[],l:[],pob:[]};
+async function loadZs(){try{const {data}=await S.sb.from('meta').select('value').eq('key','zvuk_svi').maybeSingle();if(data&&data.value)S.ZS={w:data.value.w||[],l:data.value.l||[],pob:data.value.pob||[]};}catch(e){}zsRender();}
+async function zsSave(msg){return await w(S.sb.from('meta').upsert({key:'zvuk_svi',value:S.ZS}),msg);}
+function zsRender(){const box=$('#zsRows');if(!box||!S.admin)return;
+  const lbl={w:'🎯 Kad POGODI duel',l:'❌ Kad PROMAŠI duel',pob:'🏆 POBEDNIKU VEČERI (posle „Zatvori emisiju“)'};
+  box.innerHTML=['w','l','pob'].map(k=>`<div style="display:grid;gap:6px;padding:10px;border-radius:12px;background:rgba(255,255,255,.04)"><b style="font-size:14px">${lbl[k]}</b><div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:13px">${(S.ZS[k]||[]).map((u,j)=>`<span style="display:inline-flex;gap:2px;align-items:center;background:rgba(255,255,255,.07);border-radius:8px;padding:2px 4px">#${j+1}<button type="button" class="btn ghost" data-zsp="${k}:${j}" style="width:auto;min-height:30px;padding:0 8px">▶</button><button type="button" class="btn ghost" data-zsd="${k}:${j}" style="width:auto;min-height:30px;padding:0 8px">✕</button></span>`).join('')||'<span class="muted">nema zvuka</span>'}<label class="btn ghost" style="width:auto;min-height:34px;padding:0 12px;display:inline-flex;align-items:center;cursor:pointer">+ dodaj zvuk<input type="file" data-zsu="${k}" accept="audio/*,.m4a,.mp3,.wav,.aac,.caf,.ogg" hidden></label></div></div>`).join('');
+  box.querySelectorAll('[data-zsp]').forEach(b=>b.onclick=()=>{const [k,j]=b.dataset.zsp.split(':');lpaUnlock();lpaPlay(S.ZS[k][+j]);});
+  box.querySelectorAll('[data-zsd]').forEach(b=>b.onclick=async()=>{const [k,j]=b.dataset.zsd.split(':');S.ZS[k].splice(+j,1);zsRender();await zsSave('Zvuk je uklonjen');});
+  box.querySelectorAll('[data-zsu]').forEach(inp=>inp.onchange=async()=>{const f=inp.files[0],k=inp.dataset.zsu;inp.value='';if(!f)return;if(f.size>8e6){toast('Zvuk je prevelik (max 8 MB)');return;}toast('Otpremam zvuk…');
+    const ext=((f.name.match(/\.([a-z0-9]{2,4})$/i)||[])[1]||'m4a').toLowerCase(),path=`svi/${k}-${Date.now()}.${ext}`;
+    const up=await S.sb.storage.from('zvuci').upload(path,f,{contentType:f.type||'audio/mp4'});if(up.error){toast('Zvuk nije otpremljen: '+(up.error.message||'greška'));return;}
+    (S.ZS[k]=S.ZS[k]||[]).push(S.sb.storage.from('zvuci').getPublicUrl(path).data.publicUrl);zsRender();await zsSave('🔊 Zvuk je sačuvan');});}
+function zsPick(k){const L=(S.ZS&&S.ZS[k])||[];if(!L.length)return null;const key='zs_'+k+'_'+(S.uid||'g'),i=(+store.get(key,0)||0)%L.length;store.set(key,String(i+1));return L[i];}
+function checkVece(){if(!S.ready||!S.uid||S.anon||!emZatvorena())return;const key='vece_'+todayBG()+'_'+S.uid+(S.LIGA==='elita'?'_e':'');if(store.get(key,null))return;store.set(key,'1');
+  const td=standings(todayBG()),me=td.find(x=>x.uid===S.uid);if(!me||me.rank!==1||!(me.c>0))return;
+  const url=zsPick('pob');$('#lpPopT').textContent='POBEDNIK VEČERI! '+me.c+' '+(me.c===1?'poen':'poena');$('#lpPopE').textContent='🏆';
+  const p=$('#lpPop'),b=$('#lpPopA');p.classList.remove('miss');b.hidden=!url;b.classList.remove('pulse');b.onclick=()=>{if(url)lpaPlay(url);clearTimeout(p._t);};
+  p.hidden=false;clearTimeout(p._t);p._t=setTimeout(()=>p.hidden=true,url?12000:7000);try{confetti();}catch(e){}if(url)lpaPlay(url);}
 function checkNewDuel(){if(!S.ready||!S.DUELS)return;
   const key='nd_zvuk_seen',raw=store.get(key,null),seen=new Set((raw||'').split(',').filter(Boolean)),now=Date.now();
   const open=S.DUELS.filter(d=>!d.pobednik&&!isLocked(d)&&d.created_at&&now-new Date(d.created_at).getTime()<10*60e3);
@@ -1997,7 +2021,7 @@ function checkNewDuel(){if(!S.ready||!S.DUELS)return;
   if(raw===null||!fresh.length||!S.NDZ||!S.NDZ.on||!S.NDZ.list.length)return;
   const k='nd_zvuk_i',i=(+store.get(k,0)||0)%S.NDZ.list.length;store.set(k,String(i+1));lpaPlay(S.NDZ.list[i]);}
 function checkWins(){
-  try{checkNewDuel();}catch(e){console.warn(e);}
+  try{checkNewDuel();}catch(e){console.warn(e);}try{checkVece();}catch(e){console.warn(e);}
   if(!S.uid)return;
   const key='slavljeno_'+S.uid+(S.LIGA==='elita'?'_e':''),seen=new Set((store.get(key,'')||'').split(',').filter(Boolean)),first=store.get(key,null)===null;
   const wins=settled().filter(d=>S.myPicks[d.id]&&S.myPicks[d.id]===d.pobednik);
@@ -2183,7 +2207,7 @@ async function loadUsers(){S.USERS={};if(!S.admin)return;try{const {data,error}=
 async function loadPay(){S.PAYALL={};if(!S.uid||S.anon)return;try{const {data}=await S.sb.from('payout_info').select('*');(data||[]).forEach(r=>{S.PAYALL[r.player_id]=r;if(r.player_id===S.uid)S.PAY=r;});}catch(e){}}
 async function loadRucno(){S.RUC={otvorena:{},elita:{}};try{const {data,error}=await S.sb.from('medalje_rucno').select('*');if(error)return;(data||[]).forEach(r=>{(S.RUC[r.liga]||(S.RUC[r.liga]={}))[r.player_id]=[r.zlato|0,r.srebro|0,r.bronza|0];});}catch(e){}}
 const ruc=(L,u)=>((S.RUC||{})[L]||{})[u]||[0,0,0];
-const LOAD={banovani:loadBan,korekcije:loadKor,medalje_rucno:loadRucno,pdelta:loadPicksDelta,elita:loadElita,lige:loadLige,athletes:loadAthletes,duels:loadDuels,players:()=>Promise.all([loadPlayers(),S.admin?loadUsers():0]),picks:loadPlayers,meta:()=>Promise.all([loadMeta(),loadLige(),loadPoruke(),loadPlan(),loadNdz()]),isplate:loadIsplate,payout_info:loadPay};
+const LOAD={banovani:loadBan,korekcije:loadKor,medalje_rucno:loadRucno,pdelta:loadPicksDelta,elita:loadElita,lige:loadLige,athletes:loadAthletes,duels:loadDuels,players:()=>Promise.all([loadPlayers(),S.admin?loadUsers():0]),picks:loadPlayers,meta:()=>Promise.all([loadMeta(),loadLige(),loadPoruke(),loadPlan(),loadNdz(),loadZs()]),isplate:loadIsplate,payout_info:loadPay};
 const pend=new Set();let pT=0;
 const dataSig=()=>JSON.stringify([S.DUELS.map(d=>[d.id,d.pobednik,d.uzivo,d.rezA,d.rezB,d.pocetak,d.a,d.b]),Object.entries(S.PLAYERS).map(([k,p])=>[k,p.nick,p.avatar,Object.keys(p.picks).length]),Object.values(S.ATH).map(a=>[a.id,a.team,a.status,a.photo]),S.NAGRADE,Object.keys(S.ISPLATE_ALL||{}).length,S.RUC]);
 let lastSig='';
@@ -2224,7 +2248,7 @@ async function boot(){
   if(!session||S.anon){ta.setAttribute('aria-label','Prijavi se');ta.title='Prijavi se';ta.innerHTML='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h3M14 17l5-5-5-5M19 12H8"/></svg>';ta.onclick=async()=>{if(session)await S.sb.auth.signOut();store.set('guest','');location.hash='';location.reload();};}
   else ta.onclick=async()=>{await S.sb.auth.signOut();store.set('guest','');location.hash='';location.reload();};
   if(S.admin){document.querySelectorAll('.admin-only').forEach(b=>b.hidden=false);}
-  try{await Promise.all([loadAthletes(),loadDuels(),loadPlayers(),loadMeta(),loadIsplate(),loadPay(),loadUsers(),loadElita(),loadLige(),loadRucno(),loadKor(),loadBan(),loadPoruke(),loadPlan(),loadNdz()]);}catch(e){console.warn(e);splashEnd();$('#home').innerHTML='<div class="empty">Podaci nisu učitani. Osveži stranicu.</div>';return;}
+  try{await Promise.all([loadAthletes(),loadDuels(),loadPlayers(),loadMeta(),loadIsplate(),loadPay(),loadUsers(),loadElita(),loadLige(),loadRucno(),loadKor(),loadBan(),loadPoruke(),loadPlan(),loadNdz(),loadZs()]);}catch(e){console.warn(e);splashEnd();$('#home').innerHTML='<div class="empty">Podaci nisu učitani. Osveži stranicu.</div>';return;}
   if(S.uid&&await checkMyBan()){splashEnd();return;}
   if(S.uid)await ensurePlayer(session.user.user_metadata);
   if(S.uid&&!S.anon)await loadPod();
