@@ -1254,16 +1254,16 @@ async function makePick(id,s){
   const d=S.DUELS.find(x=>x.id===id);if(!d||S.myPicks[id]||(isLocked(d)&&!admV(d)))return;
   if(!S.uid){showLogin();return;}
   if(S.LIGA==='elita'&&!hasElite()&&!S.admin){lockPop();return;}
-  S.myPicks={...S.myPicks,[id]:s};haptic([12,40,24]);renderHome();
+  S.PEND={...(S.PEND||{}),[id]:s};S.myPicks={...S.myPicks,[id]:s};haptic([12,40,24]);renderHome();
   const card=document.querySelector(`.hero[data-id="${id}"]`);if(card)card.classList.add('locking');
   const odl=SEEN_AT[id]!=null?Math.max(0,Math.min(36e5,Math.round(performance.now()-SEEN_AT[id]))):null;
   let {error}=await S.sb.from('picks').insert({player_id:S.uid,duel_id:id,izbor:s,liga:S.LIGA,...(odl!=null?{odluka_ms:odl}:{})});
   if(error&&/odluka_ms/.test(error.message||''))({error}=await S.sb.from('picks').insert({player_id:S.uid,duel_id:id,izbor:s,liga:S.LIGA}));
   if(error&&S.LIGA==='otvorena'&&/liga/.test(error.message||''))({error}=await S.sb.from('picks').insert({player_id:S.uid,duel_id:id,izbor:s}));
-  if(error){console.warn(error);const {[id]:_,...r}=S.myPicks;S.myPicks=r;renderAll();if(/security|policy|row-level/i.test(error.message||'')&&!isLocked(d)){if(await checkMyBan())return;toast('Glas nije prihvaćen. Igra se samo sa potvrđenim, pravim emailom.');return;}
+  if(error){console.warn(error);delete S.PEND[id];const {[id]:_,...r}=S.myPicks;S.myPicks=r;renderAll();if(/security|policy|row-level/i.test(error.message||'')&&!isLocked(d)){if(await checkMyBan())return;toast('Glas nije prihvaćen. Igra se samo sa potvrđenim, pravim emailom.');return;}
     toast(admV(d)&&isLocked(d)&&/security|policy|row-level/i.test(error.message||'')?'Baza odbija glas posle zatvaranja: pokreni admin-glasanje.sql u Supabase':'Prognoza nije sačuvana. Pokušaj ponovo.');return;}
   const now=Date.now(),put=L=>{const m=S.PL[L]||(S.PL[L]={});const e=m[S.uid]||(m[S.uid]={nick:S.nick,avatar:null,picks:{},at:{}});e.picks[id]=s;(e.at||(e.at={}))[id]=now;};
-  put(S.LIGA);
+  put(S.LIGA);delete S.PEND[id];S.myPicks={...S.myPicks,[id]:s};renderAll();
   // ko ima pristup Elitnoj ligi: jedan glas važi u obe lige (ne mora da glasa dva puta)
   const L2=S.LIGA==='elita'?'otvorena':'elita';
   if((L2==='otvorena'||hasElite()||S.admin)&&!(((S.PL[L2]||{})[S.uid]||{}).picks||{})[id]){
@@ -2093,7 +2093,7 @@ const eliMode=()=>{const L=S.LIGE||{};return ['svi','clanovi','niko'].includes(L
 const eliVis=()=>{const m=eliMode();return m==='svi'||(m==='clanovi'&&(!!S.admin||hasElite()));};
 function hasElite(e=S.ELITA){return !!(e&&e.status==='odobren'&&(!e.vazi_do||Date.parse(e.vazi_do)>Date.now()));}
 function vaziTxt(e){if(!e||!e.vazi_do)return 'stalni član';const t=bgParts(e.vazi_do);return 'do '+dayLabel(t.datum).toLowerCase()+' u '+t.vreme+'h';}
-function applyLiga(){if(!eliVis()&&S.LIGA==='elita'&&(S.elOk||eliMode()==='niko')){S.LIGA='otvorena';}$('#ligaBar').classList.toggle('gone',!eliVis());if(S.elOk&&S.LIGA==='elita'&&!hasElite()&&!S.admin){S.LIGA='otvorena';store.set('liga','otvorena');}const L=S.LIGA;$('#ligaN1').textContent=UP(LNAME.otvorena);$('#ligaN2').textContent=UP(LNAME.elita);S.PLAYERS=S.PL[L]||{};const me=S.PLAYERS[S.uid];S.myPicks={...(me?me.picks:{})};
+function applyLiga(){if(!eliVis()&&S.LIGA==='elita'&&(S.elOk||eliMode()==='niko')){S.LIGA='otvorena';}$('#ligaBar').classList.toggle('gone',!eliVis());if(S.elOk&&S.LIGA==='elita'&&!hasElite()&&!S.admin){S.LIGA='otvorena';store.set('liga','otvorena');}const L=S.LIGA;$('#ligaN1').textContent=UP(LNAME.otvorena);$('#ligaN2').textContent=UP(LNAME.elita);S.PLAYERS=S.PL[L]||{};const me=S.PLAYERS[S.uid];S.myPicks={...(me?me.picks:{}),...(S.PEND||{})};
   S.NAGRADE=S.NAG[L]||null;const I=S.ISP[L]||{all:{},mine:{}};S.ISPLATE=I.mine;S.ISPLATE_ALL=I.all;
   document.body.classList.toggle('elita',L==='elita');
   $('#ligaSeg').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.l===L));$('#ligaLock').hidden=hasElite();}
