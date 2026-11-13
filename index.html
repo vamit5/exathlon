@@ -1162,8 +1162,8 @@ let liveCh=null,sigCh=null,liveT=0;
 function startLive(){try{
   if(liveCh)S.sb.removeChannel(liveCh);if(sigCh)S.sb.removeChannel(sigCh);
   const retry=st=>{if(['CHANNEL_ERROR','TIMED_OUT','CLOSED'].includes(st)){clearTimeout(liveT);liveT=setTimeout(startLive,2000);}};
-  liveCh=S.sb.channel('exatlon').on('postgres_changes',{event:'*',schema:'public'},onDb);liveCh.subscribe(retry);
-  sigCh=S.sb.channel('exa-signal',{config:{broadcast:{self:false,ack:false}}}).on('broadcast',{event:'refresh'},m=>{applyPing(m&&m.payload);queue('duels');queue('picks');});sigCh.subscribe(retry);
+  liveCh=S.sb.channel('exatlon').on('postgres_changes',{event:'*',schema:'public',table:'duels'},onDb).on('postgres_changes',{event:'*',schema:'public',table:'meta'},onDb);liveCh.subscribe(retry);
+  sigCh=S.sb.channel('exa-signal',{config:{broadcast:{self:false,ack:false}}}).on('broadcast',{event:'refresh'},m=>{applyPing(m&&m.payload);queue('pdelta');});sigCh.subscribe(retry);
 }catch(e){console.warn(e);}}
 /* promene iz baze primenjujemo odmah, bez ponovnog učitavanja svega */
 let fastT=0;function fastRender(){cancelAnimationFrame(fastT);fastT=requestAnimationFrame(()=>{const sg=dataSig();if(sg===lastSig)return;lastSig=sg;renderAll();checkWins();});}
@@ -1191,7 +1191,7 @@ function applyPing(p){if(!p||!Array.isArray(p.duels)||!S.ready)return;
   const inc=p.duels.map(mapDuel),ids=new Set(inc.map(d=>d.id));
   let list=p.all?inc:[...S.DUELS.filter(d=>!ids.has(d.id)),...inc];
   S.DUELS=list.sort((a,b)=>startOf(a)-startOf(b));const sg=dataSig();if(sg!==lastSig){lastSig=sg;renderAll();checkWins();}}
-function wake(){if(!S.ready)return;queue('duels');queue('picks');
+let wakeAt=Date.now();function wake(){if(!S.ready)return;const long=Date.now()-wakeAt>10*60e3;wakeAt=Date.now();queue(long?'duels':'dnew');queue(long?'picks':'pdelta');
   const st=liveCh&&liveCh.state;if(st&&st!=='joined'&&st!=='joining'){clearTimeout(liveT);startLive();}}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')wake();});
 addEventListener('focus',wake);addEventListener('online',wake);addEventListener('pageshow',wake);
@@ -2206,6 +2206,10 @@ async function fetchAll(t,cols){let out=[],f=0;for(;;){const {data,error}=await 
 async function loadAthletes(){const m={};(await fetchAll('athletes','*')).forEach(r=>{m[r.id]=toAthlete(r);});S.ATH=m;}
 const mapDuel=r=>({...r,...bgParts(r.pocetak),rezA:r.rez_a||0,rezB:r.rez_b||0,tok:r.tok||[]});
 async function loadDuels(){S.DUELS=(await fetchAll('duels','*')).map(mapDuel).sort((a,b)=>startOf(a)-startOf(b));}
+async function loadDuelsRecent(){if(!S.DUELS||!S.DUELS.length)return loadDuels();const since=new Date(Date.now()-3*864e5).toISOString();
+  const {data,error}=await S.sb.from('duels').select('*').gte('created_at',since).limit(500);if(error||!data)return;
+  const inc=data.map(mapDuel),ids=new Set(inc.map(d=>d.id)),old=S.DUELS.filter(d=>!ids.has(d.id)&&!(d.created_at&&Date.parse(d.created_at)>=Date.parse(since)));
+  S.DUELS=[...old,...inc].sort((a,b)=>startOf(a)-startOf(b));}
 async function loadPlayers(){
   const [pl,pk]=await Promise.all([fetchAll('players','id,nick,avatar').catch(()=>fetchAll('players','id,nick')),fetchAll('picks','player_id,duel_id,izbor,created_at,liga,odluka_ms').catch(()=>fetchAll('picks','player_id,duel_id,izbor,created_at,liga')).catch(()=>fetchAll('picks','player_id,duel_id,izbor,created_at'))]);
   const M={otvorena:{},elita:{}};
@@ -2219,7 +2223,7 @@ async function loadUsers(){S.USERS={};if(!S.admin)return;try{const {data,error}=
 async function loadPay(){S.PAYALL={};if(!S.uid||S.anon)return;try{const {data}=await S.sb.from('payout_info').select('*');(data||[]).forEach(r=>{S.PAYALL[r.player_id]=r;if(r.player_id===S.uid)S.PAY=r;});}catch(e){}}
 async function loadRucno(){S.RUC={otvorena:{},elita:{}};try{const {data,error}=await S.sb.from('medalje_rucno').select('*');if(error)return;(data||[]).forEach(r=>{(S.RUC[r.liga]||(S.RUC[r.liga]={}))[r.player_id]=[r.zlato|0,r.srebro|0,r.bronza|0];});}catch(e){}}
 const ruc=(L,u)=>((S.RUC||{})[L]||{})[u]||[0,0,0];
-const LOAD={banovani:loadBan,korekcije:loadKor,medalje_rucno:loadRucno,pdelta:loadPicksDelta,elita:loadElita,lige:loadLige,athletes:loadAthletes,duels:loadDuels,players:()=>Promise.all([loadPlayers(),S.admin?loadUsers():0]),picks:loadPlayers,meta:()=>Promise.all([loadMeta(),loadLige(),loadPoruke(),loadPlan(),loadNdz(),loadZs()]),isplate:loadIsplate,payout_info:loadPay};
+const LOAD={banovani:loadBan,korekcije:loadKor,medalje_rucno:loadRucno,pdelta:loadPicksDelta,dnew:loadDuelsRecent,elita:loadElita,lige:loadLige,athletes:loadAthletes,duels:loadDuels,players:()=>Promise.all([loadPlayers(),S.admin?loadUsers():0]),picks:loadPlayers,meta:()=>Promise.all([loadMeta(),loadLige(),loadPoruke(),loadPlan(),loadNdz(),loadZs()]),isplate:loadIsplate,payout_info:loadPay};
 const pend=new Set();let pT=0;
 const dataSig=()=>JSON.stringify([S.DUELS.map(d=>[d.id,d.pobednik,d.uzivo,d.rezA,d.rezB,d.pocetak,d.a,d.b]),Object.entries(S.PLAYERS).map(([k,p])=>[k,p.nick,p.avatar,Object.keys(p.picks).length]),Object.values(S.ATH).map(a=>[a.id,a.team,a.status,a.photo]),S.NAGRADE,Object.keys(S.ISPLATE_ALL||{}).length,S.RUC]);
 let lastSig='';
@@ -2270,8 +2274,8 @@ async function boot(){
   setInterval(()=>{if(current==='admin')renderNow();},20000);
   // rezervno osvežavanje: za vreme emisije svake 3 s, inače na 12 s
   let pollN=0;setInterval(()=>{if(document.visibilityState!=='visible')return;pollN++;
-    const hot=showTime();if(hot||pollN%6===0){queue('duels');queue('pdelta');}
-    if(pollN%20===0)queue('picks');if(pollN%6===0){queue('isplate');queue('elita');}},2000);
+    const hot=showTime();if(hot?pollN%3===0:pollN%15===0){queue('dnew');queue('pdelta');}
+    if(pollN%900===0)queue('picks');},2000);
   setInterval(()=>{if(current==='home'&&document.visibilityState==='visible'&&!document.querySelector('.hero.locking'))renderHome();},60000);
 }
 </script>
