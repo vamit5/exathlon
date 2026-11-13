@@ -493,6 +493,9 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
 .ruc.ban.on{border-color:rgba(255,74,59,.6)!important;background:rgba(255,74,59,.08)}.btn.danger{background:#d8281b;color:#fff;border:0}
 .sumnja h3 small{font-family:var(--body);font-size:11px;font-weight:600;letter-spacing:0}.sumnja .srow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line)}.sumnja .sv{font-weight:700;color:#ffcf5a;font-size:13px}
 .posline{display:flex;align-items:center;gap:8px;width:100%;margin:14px 0 -4px;padding:6px 2px;background:none;border:0;border-bottom:1px solid var(--line2);color:var(--dim);font-size:13px;font-weight:700;text-align:left;cursor:pointer}.posline b{font-family:var(--display);font-size:20px;font-weight:900;color:#ffc94a;margin-left:auto}.posline span:last-of-type{color:var(--dim);font-weight:600}.posline em{font-style:normal;color:var(--faint)}
+.agrp{padding:0!important;overflow:hidden}.agrp>summary{list-style:none;cursor:pointer;padding:16px 18px;font-family:var(--display);font-weight:800;font-size:18px;letter-spacing:.02em;display:flex;align-items:center;justify-content:space-between}.agrp>summary::-webkit-details-marker{display:none}.agrp>summary::after{content:'▾';color:var(--dim);transition:transform .2s}.agrp[open]>summary::after{transform:rotate(180deg)}
+.agrp>.apanel,.agrp>div>.apanel{margin:0 12px 12px!important;background:rgba(255,255,255,.03)!important;border-color:rgba(255,255,255,.06)!important}.agrp>.apanel h3{font-size:15px}
+#adminDueli>.apanel,#adminDueli>details,#adminDueli>#nowDuel{margin-bottom:12px}
 .fairbar{display:flex;align-items:center;gap:12px;width:100%;margin:10px 0;padding:10px 14px;border-radius:14px;text-align:left;cursor:pointer;background:linear-gradient(90deg,rgba(52,211,127,.12),rgba(52,211,127,.03));border:1px solid rgba(52,211,127,.45);color:#d9f7e7;font:600 13px var(--body);line-height:1.35}
 .fairbar .fi{font-size:24px}.fairbar b{font-family:var(--display);font-weight:800;letter-spacing:.08em;color:#5ce39b}.fairbar small{display:block;color:#9fe8c0;font-weight:700;font-size:12px;margin-top:2px}
 .dmb{display:inline-block;margin-left:5px;padding:0 5px;border-radius:5px;background:rgba(255,255,255,.1);color:#9aa0a8;font:700 10px var(--body);letter-spacing:.04em;vertical-align:middle;text-transform:lowercase}
@@ -664,14 +667,22 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
     <div class="pagehead"><h1>Admin</h1>
       <div class="seg" id="adminSeg"><button data-t="dueli" aria-pressed="true">DUELI</button><button data-t="takmicari" aria-pressed="false">TAKMIČARI</button><button data-t="nagrade" aria-pressed="false">NAGRADE</button><button data-t="igraci" aria-pressed="false">IGRAČI</button><button data-t="elita" aria-pressed="false" hidden style="display:none">ELITA<span id="eliReqN"></span></button></div></div>
     <div id="adminDueli">
-      <div class="apanel" style="margin-bottom:12px"><label class="chk"><input type="checkbox" id="demoChk"><span><b>🧪 Demo prikaz: 479 takmičara</b><br>Vidiš ga <b>samo ti</b>, na ovom uređaju. Ništa se ne upisuje u bazu, a svi ostali vide pravo stanje. Poeni demo igrača se menjaju kad upišeš pobednika duela.</span></label>
-        <label class="chk" style="margin-top:10px"><input type="checkbox" id="demoPubChk"><span><b>Prikaži demo igrače SVIMA</b><br>Na rang listi su označeni sa <b>dm</b>, a iznad liste piše „dm = demo igrač, nije stvarna osoba“. Broj „online“ ostaje pravi.</span></label></div>
-      <div class="apanel" style="margin-bottom:12px"><h3>💬 Lične poruke posle duela</h3><p class="hint" style="margin:0 0 10px;opacity:.7;font-size:13px">Kad igrač pogodi ili promaši duel, iskoči mu box sa jednom od ovih rečenica i pusti se tvoj zvuk (redom, naizmenično). Svaka rečenica u svom redu. Zvuk: snimi diktafonom na telefonu i dodaj sa „+ dodaj zvuk“ (čuva se odmah). Email se čuva šifrovano, ne vidi se javno.</p><div id="lpPorAdm"></div>
-<div style="display:grid;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.1)"><b style="font-size:14px">➕ Dodaj igrača</b><input class="inp" id="lpNewE" type="email" placeholder="email igrača"><input class="inp" id="lpNewN" placeholder="nadimak, npr. Mišo"><button class="btn ghost" type="button" id="lpAdd">DODAJ</button></div>
-<button class="btn" type="button" id="lpSave" style="margin-top:12px">SAČUVAJ PORUKE</button></div>
-<div class="apanel" style="margin-bottom:12px"><h3>⏰ Početak emisije</h3><div style="display:flex;gap:10px;align-items:center"><input class="inp" type="time" id="emT" style="max-width:150px"><button class="btn" type="button" id="emSave" style="width:auto;padding:0 22px">SAČUVAJ</button></div><p class="hint" style="margin-top:8px;opacity:.7;font-size:13px">Menja vreme svuda u aplikaciji: odbrojavanje, „Uživo danas u …h“ i podrazumevano vreme novog duela.</p></div>
-      <div class="apanel" id="emBox" style="margin-bottom:12px"></div>
       <div id="nowDuel"></div>
+      <div class="apanel">
+        <h3>Brzi duel</h3>
+        <div class="acts" id="qMode"><button data-m="duel" class="on">⚔️ DUEL (1 na 1)</button><button data-m="solo">🏃 SOLO (trči sam)</button><button data-m="multi">🏁 KO JE NAJBOLJI</button></div>
+        <p class="muted" id="qMsel" hidden style="margin:0"></p>
+        <div id="qSolo" hidden><label class="fl">Pitanje za igrače (odgovor DA / NE)<input class="inp" id="qPit" maxlength="60" value="Osvaja medalju?"></label>
+          <div class="acts" id="qPitP"><button type="button">Osvaja medalju?</button><button type="button">Osvaja zlato?</button><button type="button">Završava stazu?</button><button type="button">Ruši rekord?</button></div></div>
+        <div class="qsel" id="qSel"><span class="qslot" id="qA">Izaberi prvog</span><span class="qvs">–</span><span class="qslot" id="qB">Izaberi drugog</span></div>
+        <div class="qgrid" id="qGrid"></div>
+        <p class="muted" id="qMin" style="margin:0">Glasanje je otvoreno odmah i traje dok ne klikneš <b>ZATVORI GLASANJE</b> u trenutku kad duel krene.</p>
+        <div class="acts" id="qKind"><button data-k="auto" class="on">Automatski</button><button data-k="Eliminaciona borba">Eliminaciona</button><button data-k="Borba za medalju">Za medalju</button></div>
+        <button class="btn" id="qGo" type="button" disabled>POKRENI DUEL</button>
+        <button class="btn ghost" id="qPlan" type="button" disabled hidden style="display:none">➕ DODAJ U PLAN (bez objave)</button>
+      </div>
+      <div class="apanel" id="emBox" style="margin-bottom:12px"></div>
+      <details class="apanel agrp"><summary>🎤 Glasovne komande</summary>
       <div class="apanel" id="voxBox" style="border-color:rgba(60,200,255,.5)">
         <h3>🎤 Glasovne komande</h3>
         <button class="btn" id="voxBtn" type="button" style="min-height:70px;font-size:20px;background:linear-gradient(90deg,#1a8cff,#35c8ff)">🎤 DRŽI ILI DODIRNI I REČI KOMANDU</button>
@@ -685,6 +696,29 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
         <b>Greška:</b> „Poništi“ vraća poslednjeg pobednika.<br>
         Kad je uključeno <b>Slušaj stalno</b>, duel pokrećeš sa „Duel Mark“ ili „Kreni Mark“, da ga ne pokrene TV kad voditelj izgovori ime.</div></details>
       </div>
+      </details>
+      <details class="apanel agrp"><summary>⏰ Početak emisije · 🧪 Demo</summary>
+<div class="apanel" style="margin-bottom:12px"><h3>⏰ Početak emisije</h3><div style="display:flex;gap:10px;align-items:center"><input class="inp" type="time" id="emT" style="max-width:150px"><button class="btn" type="button" id="emSave" style="width:auto;padding:0 22px">SAČUVAJ</button></div><p class="hint" style="margin-top:8px;opacity:.7;font-size:13px">Menja vreme svuda u aplikaciji: odbrojavanje, „Uživo danas u …h“ i podrazumevano vreme novog duela.</p></div>
+
+      <div class="apanel" style="margin-bottom:12px"><label class="chk"><input type="checkbox" id="demoChk"><span><b>🧪 Demo prikaz: 479 takmičara</b><br>Vidiš ga <b>samo ti</b>, na ovom uređaju. Ništa se ne upisuje u bazu, a svi ostali vide pravo stanje. Poeni demo igrača se menjaju kad upišeš pobednika duela.</span></label>
+        <label class="chk" style="margin-top:10px"><input type="checkbox" id="demoPubChk"><span><b>Prikaži demo igrače SVIMA</b><br>Na rang listi su označeni sa <b>dm</b>, a iznad liste piše „dm = demo igrač, nije stvarna osoba“. Broj „online“ ostaje pravi.</span></label></div>
+      </details>
+      <details class="apanel agrp"><summary>🔊 Zvukovi (pogodak, promašaj, novi duel, pobednik)</summary>
+      <div class="apanel" id="zsBox"><h3>🔊 Zvukovi za sve igrače</h3>
+        <p class="muted" style="margin:0 0 8px;font-size:13px">Puštaju se svim igračima. Igrači koji imaju svoje lične poruke (Mišo, Strale, Maja…) i dalje dobijaju svoje, a admin ne dobija zvuk za pogodak/promašaj. Više zvukova = redom, naizmenično.</p>
+        <div id="zsRows" style="display:grid;gap:8px"></div>
+      </div>
+      <div class="apanel" id="ndzBox"><h3>🔊 Zvuk za novi duel</h3>
+        <p class="muted" style="margin:0 0 8px;font-size:13px">Pušta se svim igračima čim klikneš POKRENI DUEL. Više zvukova = puštaju se redom, naizmenično.</p>
+        <label class="chk" style="margin-bottom:8px"><input type="checkbox" id="ndzOn"><span><b>Uključeno</b></span></label>
+        <div id="ndzList" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:13px"></div>
+      </div>
+      </details>
+      <details class="apanel agrp"><summary>💬 Lične poruke igračima</summary>
+      <div class="apanel" style="margin-bottom:12px"><h3>💬 Lične poruke posle duela</h3><p class="hint" style="margin:0 0 10px;opacity:.7;font-size:13px">Kad igrač pogodi ili promaši duel, iskoči mu box sa jednom od ovih rečenica i pusti se tvoj zvuk (redom, naizmenično). Svaka rečenica u svom redu. Zvuk: snimi diktafonom na telefonu i dodaj sa „+ dodaj zvuk“ (čuva se odmah). Email se čuva šifrovano, ne vidi se javno.</p><div id="lpPorAdm"></div>
+<div style="display:grid;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.1)"><b style="font-size:14px">➕ Dodaj igrača</b><input class="inp" id="lpNewE" type="email" placeholder="email igrača"><input class="inp" id="lpNewN" placeholder="nadimak, npr. Mišo"><button class="btn ghost" type="button" id="lpAdd">DODAJ</button></div>
+<button class="btn" type="button" id="lpSave" style="margin-top:12px">SAČUVAJ PORUKE</button></div>
+      </details>
       <div class="apanel" id="planBox" hidden style="display:none">
         <h3>📋 Plan duela za danas</h3>
         <button class="btn gold" id="planGo" type="button" style="min-height:64px;font-size:19px" disabled>NEMA PRIPREMLJENIH DUELA</button>
@@ -699,28 +733,6 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px"><button class="btn ghost" type="button" id="planChk">PROVERI</button><button class="btn" type="button" id="planLoad" style="padding:0 6px">ZAMENI PLAN</button><button class="btn ghost" type="button" id="planAppend" style="padding:0 6px">DODAJ NA KRAJ</button></div>
         </details>
         <button class="btn ghost" type="button" id="planClear" style="margin-top:10px">🗑 Obriši ceo plan</button>
-      </div>
-      <div class="apanel" id="zsBox"><h3>🔊 Zvukovi za sve igrače</h3>
-        <p class="muted" style="margin:0 0 8px;font-size:13px">Puštaju se svim igračima. Igrači koji imaju svoje lične poruke (Mišo, Strale, Maja…) i dalje dobijaju svoje, a admin ne dobija zvuk za pogodak/promašaj. Više zvukova = redom, naizmenično.</p>
-        <div id="zsRows" style="display:grid;gap:8px"></div>
-      </div>
-      <div class="apanel" id="ndzBox"><h3>🔊 Zvuk za novi duel</h3>
-        <p class="muted" style="margin:0 0 8px;font-size:13px">Pušta se svim igračima čim klikneš POKRENI DUEL. Više zvukova = puštaju se redom, naizmenično.</p>
-        <label class="chk" style="margin-bottom:8px"><input type="checkbox" id="ndzOn"><span><b>Uključeno</b></span></label>
-        <div id="ndzList" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:13px"></div>
-      </div>
-      <div class="apanel">
-        <h3>Brzi duel</h3>
-        <div class="acts" id="qMode"><button data-m="duel" class="on">⚔️ DUEL (1 na 1)</button><button data-m="solo">🏃 SOLO (trči sam)</button><button data-m="multi">🏁 KO JE NAJBOLJI</button></div>
-        <p class="muted" id="qMsel" hidden style="margin:0"></p>
-        <div id="qSolo" hidden><label class="fl">Pitanje za igrače (odgovor DA / NE)<input class="inp" id="qPit" maxlength="60" value="Osvaja medalju?"></label>
-          <div class="acts" id="qPitP"><button type="button">Osvaja medalju?</button><button type="button">Osvaja zlato?</button><button type="button">Završava stazu?</button><button type="button">Ruši rekord?</button></div></div>
-        <div class="qsel" id="qSel"><span class="qslot" id="qA">Izaberi prvog</span><span class="qvs">–</span><span class="qslot" id="qB">Izaberi drugog</span></div>
-        <div class="qgrid" id="qGrid"></div>
-        <p class="muted" id="qMin" style="margin:0">Glasanje je otvoreno odmah i traje dok ne klikneš <b>ZATVORI GLASANJE</b> u trenutku kad duel krene.</p>
-        <div class="acts" id="qKind"><button data-k="auto" class="on">Automatski</button><button data-k="Eliminaciona borba">Eliminaciona</button><button data-k="Borba za medalju">Za medalju</button></div>
-        <button class="btn" id="qGo" type="button" disabled>POKRENI DUEL</button>
-        <button class="btn ghost" id="qPlan" type="button" disabled hidden style="display:none">➕ DODAJ U PLAN (bez objave)</button>
       </div>
       <details class="apanel"><summary><h3 style="display:inline">Zakazani duel (datum i vreme)</h3></summary>
       <form id="duelForm" style="display:grid;gap:10px;margin-top:10px">
@@ -1734,7 +1746,7 @@ function duelTiming(d){const pub=d.created_at?Date.parse(d.created_at):null;if(!
 function curEvents(){const open=S.DUELS.filter(d=>!d.pobednik);
   const rk=d=>d.uzivo?0:!isLocked(d)?1:2,ct=d=>Date.parse(d.created_at||d.pocetak)||0;
   return open.filter(d=>d.uzivo||isLocked(d)||(d.rucno&&!isLocked(d))).sort((a,b)=>rk(a)-rk(b)||(rk(a)===2?startOf(b)-startOf(a):ct(b)-ct(a)));}
-function ligaCnt(d){const n=L=>Object.values(S.PL[L]||{}).filter(p=>p.picks&&p.picks[d.id]).length;const a=n('otvorena'),b=n('elita');return `${esc(LNAME.otvorena)}: <b>${a}</b> · ${esc(LNAME.elita)}: <b>${b}</b>`;}
+function ligaCnt(d){const n=L=>Object.values(S.PL[L]||{}).filter(p=>p.picks&&p.picks[d.id]).length;const a=n('otvorena'),b=n('elita');return `Glasova: <b>${a}</b>`;}
 function nowCard(d){
   const A=side(d.a),B=side(d.b),left=startOf(d)-Date.now();
   const c=crowd(d),lk=isLocked(d),tm=duelTiming(d);
