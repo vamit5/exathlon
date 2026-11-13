@@ -863,7 +863,7 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
 <canvas id="confetti" aria-hidden="true"></canvas>
 <div class="winbanner" id="winBanner" hidden role="status" aria-live="polite"><b>POGODAK!</b><span id="winText"></span></div>
 <div id="demoTag" hidden style="position:fixed;left:8px;bottom:84px;z-index:90;padding:3px 8px;border-radius:6px;background:rgba(255,192,77,.9);color:#140c00;font:800 10px var(--body);letter-spacing:.1em;pointer-events:none">DEMO</div>
-<div class="pop" id="banPop" hidden role="dialog" aria-modal="true" style="z-index:120"><div class="box"><div class="big">⛔</div><h2>NALOG JE TRAJNO ISKLJUČEN</h2><p>Sistem je prepoznao nesvakidašnje ponašanje u igri, koje ukazuje na mogućnost da su rezultati bili poznati unapred.<br><br><b>Razlog:</b> <span id="banWhy"></span><br><br>Poeni su poništeni, a sa ovom email adresom više nije moguće igrati ni osvajati nagrade. <span class="muted">Ako misliš da je greška, javi se na vamit5.team@gmail.com.</span></p><button class="btn ghost" id="banOut" type="button">ODJAVI SE</button></div></div>
+<div class="pop" id="banPop" hidden role="dialog" aria-modal="true" style="z-index:120"><div class="box"><div class="big">⛔</div><h2>NALOG JE TRAJNO ISKLJUČEN</h2><p>Sistem je prepoznao nesvakidašnje ponašanje u igri, koje ukazuje na mogućnost da su rezultati bili poznati unapred.<br><br><b>Razlog:</b> <span id="banWhy"></span><br><br>Poeni su poništeni, a sa ovom email adresom više nije moguće igrati. <span class="muted">Ako misliš da je greška, javi se na <a href="mailto:exathleague@gmail.com" style="color:inherit">exathleague@gmail.com</a>.</span></p><button class="btn ghost" id="banOut" type="button">ODJAVI SE</button></div></div>
 <div class="pop" id="rulesPop" hidden role="dialog" aria-modal="true"><div class="box przbox"><div class="przb"><h3>🛡️ Pravila fer igre</h3>
 <ol class="pl">
 <li><b>Samo za zabavu.</b> Igra je potpuno besplatna, bez uplata i bez novčanih nagrada.</li>
@@ -1556,7 +1556,7 @@ $('#qGo').onclick=async()=>{
   $('#qGo').disabled=true;
   const row={a:Q.a,b:Q.b,pocetak:voteEnd(),vrsta,cilj:team?10:0,rucno:true};let ins=await S.sb.from('duels').insert(row).select();if(ins.error&&/rucno/.test(ins.error.message||'')){delete row.rucno;ins=await S.sb.from('duels').insert(row).select();}
   if(!ins.error&&ins.data&&ins.data[0]){S.DUELS=[...S.DUELS,mapDuel(ins.data[0])].sort((a,b)=>startOf(a)-startOf(b));ping();renderAll();}
-  const ok=await w(Promise.resolve(ins),'Duel je objavljen · glasanje je otvoreno');
+  const ok=await w(Promise.resolve(ins),'Duel je objavljen · odbrojavanje 15 s je počelo');
   if(ok){Q.a=Q.b=null;await loadDuels();renderAll();ping();scrollTo({top:0,behavior:'smooth'});}else $('#qGo').disabled=false;
 };
 
@@ -1764,6 +1764,7 @@ function nowCard(d){
   const c=crowd(d),lk=isLocked(d),tm=duelTiming(d);
   return `<div class="nowcard" data-id="${d.id}">${tm}<div class="acts" style="justify-content:space-between"><span class="pill${lk?'':' live'}">${lk?'Glasanje zatvoreno':'<i></i>Glasanje otvoreno'}</span><span class="muted">${ligaCnt(d)}</span></div>
     <div class="p">${isSolo(d)?'🏃 '+esc(evTitle(d)):isMulti(d)?'🏁 Ko pobeđuje? · '+d.ucesnici.length+' takmičara':esc(A.name)+' – '+esc(B.name)+((d.rezA||d.rezB)?` · ${d.rezA}:${d.rezB}`:'')}</div>
+    ${vcdHTML(d,lk).replace('class="vcd"','class="vcd" style="margin:10px 0"')}
     ${lk?'':'<button class="closebtn" data-act="close">⏱ ZATVORI GLASANJE<small>klikni tačno kad duel krene</small></button>'}
     ${isSolo(d)?`<div class="bigwin"><button data-act="win" data-s="a">✓ DA<br><small style="font-size:13px;color:var(--dim)">uspeo · ${c.a} glasova</small></button><button data-act="win" data-s="b">✕ NE<br><small style="font-size:13px;color:var(--dim)">nije uspeo · ${c.b} glasova</small></button></div>`:isMulti(d)?`<div class="bigwin">${d.ucesnici.map(u=>`<button data-act="win" data-s="${esc(u)}">✓ Pobedio<br>${esc(side(u).name)}<small style="display:block;font-size:13px;color:var(--dim)">${(c.by[u]||0)} glasova</small></button>`).join('')}</div>`:`<div class="bigwin"><button data-act="win" data-s="a">✓ Pobedio<br>${esc(A.name)}</button><button data-act="win" data-s="b">✓ Pobedio<br>${esc(B.name)}</button></div>`}
     ${d.cilj&&!isMulti(d)&&!isSolo(d)?`<div class="acts" style="justify-content:center"><button data-act="pt" data-s="a">+1 ${esc(A.name)}</button><button data-act="pt" data-s="b">+1 ${esc(B.name)}</button><button data-act="undo">−1</button></div>`:''}</div>`;
