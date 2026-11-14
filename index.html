@@ -1209,7 +1209,7 @@ function applyPing(p){if(!p||!Array.isArray(p.duels)||!S.ready)return;
   const inc=p.duels.map(mapDuel),ids=new Set(inc.map(d=>d.id));
   let list=p.all?inc:[...S.DUELS.filter(d=>!ids.has(d.id)),...inc];
   S.DUELS=list.sort((a,b)=>startOf(a)-startOf(b));const sg=dataSig();if(sg!==lastSig){lastSig=sg;renderAll();checkWins();}}
-let wakeAt=Date.now();function wake(){if(!S.ready)return;const long=Date.now()-wakeAt>10*60e3;wakeAt=Date.now();queue(long?'duels':'dnew');queue(long?'picks':'pdelta');
+let wakeAt=Date.now();S.quietUntil=Date.now()+15000;function wake(){S.quietUntil=Date.now()+8000;if(!S.ready)return;const long=Date.now()-wakeAt>10*60e3;wakeAt=Date.now();queue(long?'duels':'dnew');queue(long?'picks':'pdelta');
   const st=liveCh&&liveCh.state;if(st&&st!=='joined'&&st!=='joining'){clearTimeout(liveT);startLive();}}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')wake();});
 addEventListener('focus',wake);addEventListener('online',wake);addEventListener('pageshow',wake);
@@ -2056,13 +2056,14 @@ function checkNewDuel(){if(!S.ready||!S.DUELS)return;
 function checkWins(){
   try{checkNewDuel();}catch(e){console.warn(e);}try{checkVece();}catch(e){console.warn(e);}
   if(!S.uid)return;
-  const key='slavljeno_'+S.uid+(S.LIGA==='elita'?'_e':''),seen=new Set((store.get(key,'')||'').split(',').filter(Boolean)),first=store.get(key,null)===null;
+  const quiet=Date.now()<(S.quietUntil||0)||document.visibilityState==='hidden';
+  const key='slavljeno_'+S.uid+(S.LIGA==='elita'?'_e':''),seen=new Set((store.get(key,'')||'').split(',').filter(Boolean)),first=quiet||store.get(key,null)===null;
   const wins=settled().filter(d=>S.myPicks[d.id]&&S.myPicks[d.id]===d.pobednik);
   const recent=d=>Date.now()-startOf(d)<36*3600e3;
   const fresh=wins.filter(d=>!seen.has(d.id)&&recent(d));
   wins.forEach(d=>seen.add(d.id));store.set(key,[...seen].slice(-2000).join(','));
   if(fresh.length&&!first)celebrate(fresh);
-  if(LP_ON()){const lk='promaseno_'+S.uid+(S.LIGA==='elita'?'_e':''),ls=new Set((store.get(lk,'')||'').split(',').filter(Boolean)),lfirst=store.get(lk,null)===null;
+  if(LP_ON()){const lk='promaseno_'+S.uid+(S.LIGA==='elita'?'_e':''),ls=new Set((store.get(lk,'')||'').split(',').filter(Boolean)),lfirst=quiet||store.get(lk,null)===null;
     const miss=settled().filter(d=>S.myPicks[d.id]&&S.myPicks[d.id]!==d.pobednik),lf=miss.filter(d=>!ls.has(d.id)&&recent(d));
     miss.forEach(d=>ls.add(d.id));store.set(lk,[...ls].slice(-2000).join(','));
     if(fresh.length&&!first)lichnaPoruka(true);else if(lf.length&&!lfirst)lichnaPoruka(false);}
