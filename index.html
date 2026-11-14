@@ -708,7 +708,7 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
       </div>
       </details>
       <details class="apanel agrp"><summary>⏰ Početak emisije · 🧪 Demo</summary>
-<div class="apanel" style="margin-bottom:12px"><h3>⏰ Početak emisije</h3><div style="display:flex;gap:10px;align-items:center"><input class="inp" type="time" id="emT" style="max-width:150px"><button class="btn" type="button" id="emSave" style="width:auto;padding:0 22px">SAČUVAJ</button></div><p class="hint" style="margin-top:8px;opacity:.7;font-size:13px">Menja vreme svuda u aplikaciji: odbrojavanje, „Uživo danas u …h“ i podrazumevano vreme novog duela.</p></div>
+<div class="apanel" style="margin-bottom:12px"><h3>⏰ Početak emisije</h3><div style="display:flex;gap:10px;align-items:center"><input class="inp" type="time" id="emT" style="max-width:150px"><button class="btn" type="button" id="emSave" style="width:auto;padding:0 22px">SAČUVAJ</button></div><label class="chk" style="margin-top:10px"><input type="checkbox" id="emSub"><span><b>Emisija i subotom</b> · odbrojavanje i duelи rade i subotom, kao radnim danom. Isključi kad subotom nema emisije.</span></label><p class="hint" style="margin-top:8px;opacity:.7;font-size:13px">Menja vreme svuda u aplikaciji: odbrojavanje, „Uživo danas u …h“ i podrazumevano vreme novog duela.</p></div>
 
       <div class="apanel" style="margin-bottom:12px"><label class="chk"><input type="checkbox" id="demoChk"><span><b>🧪 Demo prikaz: 479 takmičara</b><br>Vidiš ga <b>samo ti</b>, na ovom uređaju. Ništa se ne upisuje u bazu, a svi ostali vide pravo stanje. Poeni demo igrača se menjaju kad upišeš pobednika duela.</span></label>
         <label class="chk" style="margin-top:10px"><input type="checkbox" id="demoPubChk"><span><b>Prikaži demo igrače SVIMA</b><br>Na rang listi su označeni sa <b>dm</b>, a iznad liste piše „dm = demo igrač, nije stvarna osoba“. Broj „online“ ostaje pravi.</span></label></div>
@@ -1173,8 +1173,9 @@ function resHTML(d){
 let showAllRes=false;
 /* uživo osvežavanje: baza (postgres_changes) + direktan signal od admina (broadcast) */
 const BGW=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Belgrade',weekday:'short',hour:'2-digit',minute:'2-digit',hour12:false});
+const subota=()=>!!(S.LIGE||{}).subota,radniDan=wd=>(wd>=1&&wd<=5)||(wd===6&&subota());
 function showTime(){const p=BGW.formatToParts(new Date()),g=k=>(p.find(x=>x.type===k)||{}).value,hm=(+g('hour')%24)*60+(+g('minute'));
-  return ['Mon','Tue','Wed','Thu','Fri'].includes(g('weekday'))&&hm>=20*60+45&&hm<=23*60+59;}
+  return radniDan(['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].indexOf(g('weekday')))&&hm>=20*60+45&&hm<=23*60+59;}
 let liveCh=null,sigCh=null,liveT=0;
 function startLive(){try{
   if(liveCh)S.sb.removeChannel(liveCh);if(sigCh)S.sb.removeChannel(sigCh);
@@ -1234,10 +1235,10 @@ const SHOW_END=23*3600+59*60; // emisija 21:30–23:59, pon–pet
 function bgNow(){const p=CD_FMT.formatToParts(new Date()),g=k=>(p.find(x=>x.type===k)||{}).value;
   return {wd:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].indexOf(g('weekday')),sod:(+g('hour')%24)*3600+(+g('minute'))*60+(+g('second'))};}
 const emZatvorena=()=>(S.LIGE||{}).zatvoreno===todayBG();
-function isLiveNow(){const n=bgNow();return !emZatvorena()&& n.wd>=1&&n.wd<=5&&n.sod>=emS()&&n.sod<SHOW_END;}
+function isLiveNow(){const n=bgNow();return !emZatvorena()&& radniDan(n.wd)&&n.sod>=emS()&&n.sod<SHOW_END;}
 // sekunde do sledećeg početka emisije (-1 dok emisija traje)
 function cdLeft(){const n=bgNow();if(isLiveNow())return -1;
-  for(let d=0;d<8;d++){const wd=(n.wd+d)%7;if(wd<1||wd>5)continue;const l=d*86400+emS()-n.sod;if(l>0)return l;}return -1;}
+  for(let d=0;d<8;d++){const wd=(n.wd+d)%7;if(!radniDan(wd))continue;const l=d*86400+emS()-n.sod;if(l>0)return l;}return -1;}
 const p2=x=>String(x).padStart(2,'0');
 function cdTxt(l){const d=Math.floor(l/86400),h=Math.floor(l%86400/3600),m=Math.floor(l%3600/60),x=l%60;
   return d?`${d}d ${p2(h)}:${p2(m)}:${p2(x)}`:h?`${p2(h)}:${p2(m)}:${p2(x)}`:`${p2(m)}:${p2(x)}`;}
@@ -1267,8 +1268,8 @@ function renderHome(){
     const lbl=heroes.length>1?'Aktuelno · '+heroes.length:heroD.uzivo?'Uživo':isLocked(heroD)?'U toku':(heroD.rucno?'Glasaj sada':'Sledeći duel');
     h+=`<div class="sec first">${lbl}${S.uid&&(mine.c+mine.w)?`<small>Danas: ${mine.c} od ${mine.c+mine.w} pogođeno</small>`:''}</div><div class="heroes">${heroes.map(heroHTML).join('')}</div>`;
   }else{const t=bgParts(Date.now()).vreme,wd=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].indexOf(new Intl.DateTimeFormat('en-US',{timeZone:'Europe/Belgrade',weekday:'short'}).format(new Date())),
-      radni=wd>=1&&wd<=5,live=radni&&t>=EMT()&&t<'23:59'&&!emZatvorena(),
-      kada=radni&&t<EMT()?'danas':(wd>=1&&wd<=4)?'sutra':'u ponedeljak',
+      radni=radniDan(wd),live=radni&&t>=EMT()&&t<'23:59'&&!emZatvorena(),
+      kada=radni&&t<EMT()?'danas':(radniDan((wd+1)%7)&&wd!==0)?'sutra':'u ponedeljak',
       msg=live?'Novi duel za par sekundi, reaguj brzo!':`Novi duel stiže ${kada} u ${EMT()}h`;
     h+=`<div class="sec">Sledeći duel</div><article class="hero anon"><div class="hero-top"><span class="pill${live?' soon':''}">${live?'Uživo večeras':kada.charAt(0).toUpperCase()+kada.slice(1)+' u '+EMT()}</span><span class="kind">Exatlon Srbija</span></div>
       <div class="faces"><div class="face a">${photoBox(ANON,.5)}<div class="fname">???</div></div><div class="mid"><div class="vs" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="#ff7a1a"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg></div></div><div class="face b">${photoBox(ANON,-.5)}<div class="fname">???</div></div></div>
@@ -2075,7 +2076,8 @@ S.LIGE={...LIGE_DEF};
 const LNAME={get otvorena(){return S.LIGE.otvorena||LIGE_DEF.otvorena;},get elita(){return S.LIGE.elita||LIGE_DEF.elita;}};
 const UP=t=>t.toLocaleUpperCase('sr-Latn');
 async function loadLige(){try{const {data}=await S.sb.from('meta').select('value').eq('key','lige').maybeSingle();S.LIGE={...LIGE_DEF,...((data&&data.value)||{})};}catch(e){}applyLiga();admUidSave();emFill();}
-function emFill(){try{$('#demoPubChk').checked=demoPub();const a=document.activeElement;if(a!==$('#emT'))$('#emT').value=EMT();if(a!==$('#fTime'))$('#fTime').value=EMT();}catch(e){}try{lpAdmRender();}catch(e){}try{planRender();}catch(e){}}
+function emFill(){try{$('#emSub').checked=subota();}catch(e){}try{$('#demoPubChk').checked=demoPub();const a=document.activeElement;if(a!==$('#emT'))$('#emT').value=EMT();if(a!==$('#fTime'))$('#fTime').value=EMT();}catch(e){}try{lpAdmRender();}catch(e){}try{planRender();}catch(e){}}
+$('#emSub').onchange=async e=>{const v={...S.LIGE,subota:e.target.checked};if(await w(S.sb.from('meta').upsert({key:'lige',value:v}),e.target.checked?'Emisija i subotom: UKLJUČENO ✓':'Emisija subotom: isključeno')){S.LIGE=v;emFill();renderAll();}else e.target.checked=!e.target.checked;};
 $('#emSave').onclick=async()=>{const t=$('#emT').value;if(!/^\d\d:\d\d$/.test(t)){toast('Upiši vreme, npr. 18:45');return;}const v={...S.LIGE,emisija:t};if(await w(S.sb.from('meta').upsert({key:'lige',value:v}),'Početak emisije: '+t+'h ✓')){S.LIGE=v;emFill();renderAll();}};
 async function admUidSave(){if(!S.admin||!S.uid||S.LIGE.admin_uid===S.uid)return;const v={...S.LIGE,admin_uid:S.uid};try{const {error}=await S.sb.from('meta').upsert({key:'lige',value:v});if(!error)S.LIGE=v;}catch(e){}}
 function pzTxt(n){n=n||{};const k=[+n.prvo||0,+n.drugo||0,+n.trece||0].filter(Boolean).length;return k<=1?'1. mesto':'prva '+k+' mesta';}
