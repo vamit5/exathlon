@@ -1814,7 +1814,7 @@ function aaCrop(r,inv){const v=AA.vid,W=v.videoWidth,H=v.videoHeight,sx=r.x*W,sy
   const im=x.getImageData(0,0,c.width,c.height),d=im.data;let sum=0;for(let i=0;i<d.length;i+=4){const l=.3*d[i]+.59*d[i+1]+.11*d[i+2];d[i]=l;sum+=l;}const avg=sum/(d.length/4);
   for(let i=0;i<d.length;i+=4){let v2=d[i]>avg?255:0;if(inv)v2=255-v2;d[i]=d[i+1]=d[i+2]=v2;}x.putImageData(im,0,0);return c;}
 function aaNames(text){const words=String(text||'').split(/[^A-Za-zČĆŽŠĐčćžšđ]+/).filter(w=>w.length>=3);const ids=[];for(let i=0;i<words.length;i++){let c=ocrCands(words[i]);if(!c)continue;
-  if(c.length>1&&words[i+1]){const n=ocrCands(words[i+1]);if(n){const both=c.filter(x=>n.includes(x));if(both.length)c=both;}}if(c.length===1&&!ids.includes(c[0]))ids.push(c[0]);}return ids;}
+  if(c.length>1&&words[i+1]){const n=ocrCands(words[i+1]);if(n){const both=c.filter(x=>n.includes(x));if(both.length)c=both;}}if(c.length===1&&!ids.includes(c[0])&&!TEAM_ATH[c[0]])ids.push(c[0]);}return ids;}
 function aaOpenDuel(){return S.DUELS.filter(d=>!d.pobednik&&!isSolo(d)&&!isMulti(d)).sort((a,b)=>(b.created_at||'').localeCompare(a.created_at||''))[0]||null;}
 async function aaTick(){if(!AA.run||AA.busy||!AA.vid||!AA.vid.videoWidth)return;AA.busy=true;try{
   const wN=await aaWorker('n'),wS=await aaWorker('s','0123456789:-');
