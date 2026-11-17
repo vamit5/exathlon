@@ -1818,8 +1818,23 @@ function aaNames(text){const words=String(text||'').split(/[^A-Za-zČĆŽŠĐč�
 function aaOpenDuel(){return S.DUELS.filter(d=>!d.pobednik&&!isSolo(d)&&!isMulti(d)).sort((a,b)=>(b.created_at||'').localeCompare(a.created_at||''))[0]||null;}
 AA.lastN={ids:[],m:null};AA.inv=false;
 function aaShow(){const m=AA.lastN.m;$('#aaRead').textContent='IMENA: '+(AA.lastN.ids.map(i=>side(i).name).join(' vs ')||'—')+'   ·   REZULTAT: '+(m?m[1]+':'+m[2]:'—');}
+async function aaScore(m,src){src=src||'c';AA.sh=AA.sh||{};
+  // rezultat: promena za +1 kod jedne strane, potvrđena 2 puta
+  if(m){const L=+m[1],Rr=+m[2],key=L+':'+Rr;if(L>30||Rr>30)return;const H=(AA.sh[src]=(AA.sh[src]||[]).concat(key).slice(-3));const stable=H.length>=2&&H.slice(-2).every(k=>k===key);
+    if(stable){if(!AA.score){AA.score=[L,Rr];aaLog('Vidim rezultat <b>'+key+'</b> — pratim promene.','');}else if(L!==AA.score[0]||Rr!==AA.score[1]){const ok=(L===AA.score[0]+1&&Rr===AA.score[1])||(Rr===AA.score[1]+1&&L===AA.score[0])||(L===0&&Rr===0);if(!ok){if(L<AA.score[0]||Rr<AA.score[1])return;AA.alt=AA.alt&&AA.alt.k===key?{k:key,n:AA.alt.n+1}:{k:key,n:1};if(AA.alt.n>=5){AA.score=[L,Rr];AA.alt=null;aaLog('Rezultat je sada <b>'+key+'</b> — pratim od njega.','');}return;}AA.alt=null;const dl=L-AA.score[0],dr=Rr-AA.score[1];const prev=AA.score;AA.score=[L,Rr];
+      if((dl===1&&dr===0)||(dl===0&&dr===1)){const team=dl===1?$('#aaLeft').value:($('#aaLeft').value==='crveni'?'plavi':'crveni');const d=aaOpenDuel()||S.DUELS.filter(x=>!x.pobednik&&isLocked(x)).slice(-1)[0];
+        if(!d){aaLog('Rezultat '+prev.join(':')+' → '+key+' ('+team+'), ali nema otvorenog duela.','err');}
+        else{const ta=TEAM_ATH[d.a]?d.a:(S.ATH[d.a]||{}).team,tb=TEAM_ATH[d.b]?d.b:(S.ATH[d.b]||{}).team;const sd=ta===team&&tb!==team?'a':tb===team&&ta!==team?'b':null;
+          const who=sd?side(sd==='a'?d.a:d.b).name:'?';
+          const win=async()=>{await adminAct(vFake(d,'win',sd));aaLog('🏆 Pobednik: <b>'+esc(who)+'</b> ('+key+')','ok');};
+          if(!sd)aaLog('Rezultat '+key+': poen za '+team+', ali oba takmičara su iz istog tima — označi ručno.','err');
+          else if($('#aaMode').value==='auto')await win();else aaLog('Rezultat '+prev.join(':')+' → <b>'+key+'</b> · pobedio <b>'+esc(who)+'</b>?','q',[['✓ UPIŠI',win],['✕ Ne',()=>{}]]);}}
+      else aaLog('Rezultat se promenio '+prev.join(':')+' → '+key+' (nova igra ili greška čitanja) — samo pamtim.','');}}}
+}
 async function aaTickN(){if(!AA.run||AA.bN||!AA.vid||!AA.vid.videoWidth)return;AA.bN=true;try{
-  const wN=await aaWorker('n');let ids=aaNames((await wN.recognize(aaCrop(AA.rN,AA.inv))).data.text);if(ids.length<2){const i2=aaNames((await wN.recognize(aaCrop(AA.rN,!AA.inv))).data.text);if(i2.length>=2){ids=i2;AA.inv=!AA.inv;}else if(i2.length>ids.length)ids=i2;}AA.lastN.ids=ids;aaShow();
+  const wN=await aaWorker('n');let t1=(await wN.recognize(aaCrop(AA.rN,AA.inv))).data.text||'',ids=aaNames(t1),tt=t1;if(ids.length<2){const t2=(await wN.recognize(aaCrop(AA.rN,!AA.inv))).data.text||'';tt+=' \n '+t2;const i2=aaNames(t2);if(i2.length>=2){ids=i2;AA.inv=!AA.inv;}else if(i2.length>ids.length)ids=i2;}
+  {for(const tx of tt.split(' \n ')){const up=tx.toUpperCase(),ic=up.search(/CRV/),ip=up.search(/PLAV/);const nums=(tx.match(/(^|[^0-9])(\d{1,2})(?=[^0-9]|$)/g)||[]).map(x=>+x.replace(/\D/g,'')).filter(n=>n<=15);
+     if(ic>=0&&ip>=0&&nums.length===2){const crv=ic<ip?nums[0]:nums[1],plv=ic<ip?nums[1]:nums[0];const L=$('#aaLeft').value==='crveni'?crv:plv,Rr=$('#aaLeft').value==='crveni'?plv:crv;AA.lastN.m=[null,L,Rr];aaShow();await aaScore([null,L,Rr],'b');break;}}}AA.lastN.ids=ids;aaShow();
   if(ids.length>=2){const [a,b]=ids;const key=[a,b].sort().join('|');const od=aaOpenDuel();const already=od&&[od.a,od.b].sort().join('|')===key;
     if(key!==AA.lastPair&&!already){AA.lastPair=key;S.PLAN.push({t:'duel',a,b,done:false});await planPublish(S.PLAN.length-1);aaLog('▶ Pokrenut duel: <b>'+esc(side(a).name)+' – '+esc(side(b).name)+'</b>','ok');}}
 }catch(e){console.warn(e);$('#aaRead').textContent='Greška čitanja imena: '+(e.message||e);}finally{AA.bN=false;}}
@@ -1831,21 +1846,11 @@ async function aaTickS(){if(!AA.run||AA.bS||!AA.vid||!AA.vid.videoWidth)return;A
   const hl=await half('L'),hr=await half('R');let m=null;if(hl.n!==null&&hr.n!==null)m=[null,hl.n,hr.n];
   {const tl=plKey(hl.t),tr=plKey(hr.t);if(/crv/.test(tl)||/plav/.test(tr))$('#aaLeft').value='crveni';else if(/plav/.test(tl)||/crv/.test(tr))$('#aaLeft').value='plavi';}
   AA.lastN.m=m;aaShow();
-  // rezultat: promena za +1 kod jedne strane, potvrđena 2 puta
-  if(m){const L=+m[1],Rr=+m[2],key=L+':'+Rr;if(L>30||Rr>30){return;}AA.scoreHist.push(key);AA.scoreHist=AA.scoreHist.slice(-3);const stable=AA.scoreHist.length>=2&&AA.scoreHist.slice(-2).every(k=>k===key);
-    if(stable){if(!AA.score){AA.score=[L,Rr];aaLog('Vidim rezultat <b>'+key+'</b> — pratim promene.','');}else if(L!==AA.score[0]||Rr!==AA.score[1]){const ok=(L===AA.score[0]+1&&Rr===AA.score[1])||(Rr===AA.score[1]+1&&L===AA.score[0])||(L===0&&Rr===0);if(!ok){AA.alt=AA.alt&&AA.alt.k===key?{k:key,n:AA.alt.n+1}:{k:key,n:1};if(AA.alt.n>=5){AA.score=[L,Rr];AA.alt=null;aaLog('Rezultat je sada <b>'+key+'</b> — pratim od njega.','');}return;}AA.alt=null;const dl=L-AA.score[0],dr=Rr-AA.score[1];const prev=AA.score;AA.score=[L,Rr];
-      if((dl===1&&dr===0)||(dl===0&&dr===1)){const team=dl===1?$('#aaLeft').value:($('#aaLeft').value==='crveni'?'plavi':'crveni');const d=aaOpenDuel()||S.DUELS.filter(x=>!x.pobednik&&isLocked(x)).slice(-1)[0];
-        if(!d){aaLog('Rezultat '+prev.join(':')+' → '+key+' ('+team+'), ali nema otvorenog duela.','err');}
-        else{const ta=TEAM_ATH[d.a]?d.a:(S.ATH[d.a]||{}).team,tb=TEAM_ATH[d.b]?d.b:(S.ATH[d.b]||{}).team;const sd=ta===team&&tb!==team?'a':tb===team&&ta!==team?'b':null;
-          const who=sd?side(sd==='a'?d.a:d.b).name:'?';
-          const win=async()=>{await adminAct(vFake(d,'win',sd));aaLog('🏆 Pobednik: <b>'+esc(who)+'</b> ('+key+')','ok');};
-          if(!sd)aaLog('Rezultat '+key+': poen za '+team+', ali oba takmičara su iz istog tima — označi ručno.','err');
-          else if($('#aaMode').value==='auto')await win();else aaLog('Rezultat '+prev.join(':')+' → <b>'+key+'</b> · pobedio <b>'+esc(who)+'</b>?','q',[['✓ UPIŠI',win],['✕ Ne',()=>{}]]);}}
-      else aaLog('Rezultat se promenio '+prev.join(':')+' → '+key+' (nova igra ili greška čitanja) — samo pamtim.','');}}}
+  await aaScore(m);
 }catch(e){console.warn(e);$('#aaRead').textContent='Greška čitanja rezultata: '+(e.message||e);}finally{AA.bS=false;}}
 async function aaTick(){aaTickN();aaTickS();}
 function aaUi(){const b=$('#aaGo');b.textContent=AA.run?'⏸ ZAUSTAVI PRAĆENJE':'▶ POKRENI PRAĆENJE';b.disabled=!(AA.stream&&AA.rN&&AA.rS);}
-$('#aaGo').onclick=async()=>{AA.run=!AA.run;aaUi();if(AA.run){aaLog('Pratim prenos… prvo učitavam čitač (10–20 sekundi samo prvi put).','');$('#aaRead').textContent='Učitavam čitač…';AA.score=null;AA.scoreHist=[];AA.nameHist=[];aaTimer(true);}else aaTimer(false);};
+$('#aaGo').onclick=async()=>{AA.run=!AA.run;aaUi();if(AA.run){aaLog('Pratim prenos… prvo učitavam čitač (10–20 sekundi samo prvi put).','');$('#aaRead').textContent='Učitavam čitač…';AA.score=null;AA.sh={};AA.alt=null;AA.nameHist=[];aaTimer(true);}else aaTimer(false);};
 /* tajmer u Web Workeru: radi i kad je tab u pozadini (Chrome tada usporava obične tajmere) */
 function aaTimer(on){try{AA.wkT&&AA.wkT.terminate();}catch(e){}AA.wkT=null;if(!on)return;
   const src='let n=0;setInterval(()=>{n++;postMessage(n)},450);';AA.wkT=new Worker(URL.createObjectURL(new Blob([src],{type:'text/javascript'})));AA.wkT.onmessage=e=>{aaTickN();if(e.data%2===0)aaTickS();};}
