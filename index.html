@@ -1809,29 +1809,28 @@ let aaPT=0;function aaPreview(){cancelAnimationFrame(aaPT);const c=$('#aaPrev'),
   c.addEventListener('pointerup',()=>{if(!st||!AA.draw)return;const r=AA.draw.cur;if(r&&r.w>.02&&r.h>.01){AA[AA.draw.k]=r;aaSaveRects();aaLog((AA.draw.k==='rN'?'Polje IMENA':'Polje REZULTAT')+' je označeno.','ok');if(AA.rN&&AA.rS&&AA.stream&&!AA.run){$('#aaGo').click();}}AA.draw=null;st=null;['aaRN','aaRS'].forEach(x=>{$('#'+x).style.background='';$('#'+x).style.color='';});});})();
 async function aaWorker(k,wl){if(AA.wk[k])return AA.wk[k];await loadTess();const w=await Tesseract.createWorker('eng');await w.setParameters(wl?{tessedit_char_whitelist:wl,tessedit_pageseg_mode:'7'}:{tessedit_pageseg_mode:'6'});AA.wk[k]=w;return w;}
 function aaHalf(r,side){return side==='L'?{x:r.x,y:r.y,w:r.w/2,h:r.h}:{x:r.x+r.w/2,y:r.y,w:r.w/2,h:r.h};}
-function aaCrop(r,inv){const v=AA.vid,W=v.videoWidth,H=v.videoHeight,sx=r.x*W,sy=r.y*H,sw=r.w*W,sh=r.h*H,sc=Math.max(1,Math.min(4,600/sw));
+function aaCrop(r,inv){const v=AA.vid,W=v.videoWidth,H=v.videoHeight,sx=r.x*W,sy=r.y*H,sw=r.w*W,sh=r.h*H,sc=Math.max(1,Math.min(3,420/sw));
   const c=document.createElement('canvas');c.width=Math.round(sw*sc);c.height=Math.round(sh*sc);const x=c.getContext('2d');x.drawImage(v,sx,sy,sw,sh,0,0,c.width,c.height);
   const im=x.getImageData(0,0,c.width,c.height),d=im.data;let sum=0;for(let i=0;i<d.length;i+=4){const l=.3*d[i]+.59*d[i+1]+.11*d[i+2];d[i]=l;sum+=l;}const avg=sum/(d.length/4);
   for(let i=0;i<d.length;i+=4){let v2=d[i]>avg?255:0;if(inv)v2=255-v2;d[i]=d[i+1]=d[i+2]=v2;}x.putImageData(im,0,0);return c;}
 function aaNames(text){const words=String(text||'').split(/[^A-Za-zČĆŽŠĐčćžšđ]+/).filter(w=>w.length>=3);const ids=[];for(let i=0;i<words.length;i++){let c=ocrCands(words[i]);if(!c)continue;
   if(c.length>1&&words[i+1]){const n=ocrCands(words[i+1]);if(n){const both=c.filter(x=>n.includes(x));if(both.length)c=both;}}if(c.length===1&&!ids.includes(c[0])&&!TEAM_ATH[c[0]])ids.push(c[0]);}return ids;}
 function aaOpenDuel(){return S.DUELS.filter(d=>!d.pobednik&&!isSolo(d)&&!isMulti(d)).sort((a,b)=>(b.created_at||'').localeCompare(a.created_at||''))[0]||null;}
-async function aaTick(){if(!AA.run||AA.busy||!AA.vid||!AA.vid.videoWidth)return;AA.busy=true;try{
-  const wN=await aaWorker('n'),wS=await aaWorker('s','0123456789:-');
-  let tn=(await wN.recognize(aaCrop(AA.rN,false))).data.text,ids=aaNames(tn);if(ids.length<2){const t2=(await wN.recognize(aaCrop(AA.rN,true))).data.text;const i2=aaNames(t2);if(i2.length>ids.length){ids=i2;tn=t2;}}
-  // rezultat: čitaj levu i desnu polovinu odvojeno (npr. "CRVENI 1 | 1 PLAVI")
-  const half=async(sd)=>{let best=null,txt='';for(const inv of [false,true]){const t=(await wN.recognize(aaCrop(aaHalf(AA.rS,sd),inv))).data.text||'';txt+=' '+t;const nums=t.match(/\d{1,2}/g);if(nums&&nums.length){best=+(sd==='L'?nums[nums.length-1]:nums[0]);break;}}return {n:best,t:txt};};
+AA.lastN={ids:[],m:null};AA.inv=false;
+function aaShow(){const m=AA.lastN.m;$('#aaRead').textContent='IMENA: '+(AA.lastN.ids.map(i=>side(i).name).join(' vs ')||'—')+'   ·   REZULTAT: '+(m?m[1]+':'+m[2]:'—');}
+async function aaTickN(){if(!AA.run||AA.bN||!AA.vid||!AA.vid.videoWidth)return;AA.bN=true;try{
+  const wN=await aaWorker('n');let ids=aaNames((await wN.recognize(aaCrop(AA.rN,AA.inv))).data.text);if(ids.length<2){const i2=aaNames((await wN.recognize(aaCrop(AA.rN,!AA.inv))).data.text);if(i2.length>=2){ids=i2;AA.inv=!AA.inv;}else if(i2.length>ids.length)ids=i2;}AA.lastN.ids=ids;aaShow();
+  if(ids.length>=2){const [a,b]=ids;const key=[a,b].sort().join('|');const od=aaOpenDuel();const already=od&&[od.a,od.b].sort().join('|')===key;
+    if(key!==AA.lastPair&&!already){AA.lastPair=key;S.PLAN.push({t:'duel',a,b,done:false});await planPublish(S.PLAN.length-1);aaLog('▶ Pokrenut duel: <b>'+esc(side(a).name)+' – '+esc(side(b).name)+'</b>','ok');}}
+}catch(e){console.warn(e);$('#aaRead').textContent='Greška čitanja imena: '+(e.message||e);}finally{AA.bN=false;}}
+async function aaTickS(){if(!AA.run||AA.bS||!AA.vid||!AA.vid.videoWidth)return;AA.bS=true;try{
+  const wS=await aaWorker('s2');
+  const half=async(sd)=>{let best=null,txt='';for(const inv of [false,true]){const t=(await wS.recognize(aaCrop(aaHalf(AA.rS,sd),inv))).data.text||'';txt+=' '+t;const nums=t.match(/\d{1,2}/g);if(nums&&nums.length){best=+(sd==='L'?nums[nums.length-1]:nums[0]);break;}}return {n:best,t:txt};};
   const hl=await half('L'),hr=await half('R');let m=null;if(hl.n!==null&&hr.n!==null)m=[null,hl.n,hr.n];
-  if(!m){const tf=(await wS.recognize(aaCrop(AA.rS,false))).data.text;const mm=/(\d{1,2})\s*[:\-\s|]\s*(\d{1,2})/.exec(tf);if(mm)m=[null,+mm[1],+mm[2]];}
   {const tl=plKey(hl.t),tr=plKey(hr.t);if(/crv/.test(tl)||/plav/.test(tr))$('#aaLeft').value='crveni';else if(/plav/.test(tl)||/crv/.test(tr))$('#aaLeft').value='plavi';}
-  $('#aaRead').textContent='IMENA: '+(ids.map(i=>side(i).name).join(' vs ')||'—')+'   ·   REZULTAT: '+(m?m[1]+':'+m[2]:'—');
-  // novi duel: ista 2 imena 2 puta zaredom
-  if(ids.length>=2){const key=ids.slice(0,2).sort().join('|');AA.nameHist.push(key);AA.nameHist=AA.nameHist.slice(-3);
-    const stable=AA.nameHist.slice(-2).every(k=>k===key)&&AA.nameHist.length>=2;const od=aaOpenDuel();const already=od&&[od.a,od.b].sort().join('|')===key;
-    if(stable&&key!==AA.lastPair&&!already){AA.lastPair=key;const [a,b]=ids;const go=async()=>{S.PLAN.push({t:'duel',a,b,done:false});await planPublish(S.PLAN.length-1);aaLog('▶ Pokrenut duel: <b>'+esc(side(a).name)+' – '+esc(side(b).name)+'</b>','ok');};
-      if($('#aaMode').value==='auto')await go();else aaLog('Vidim novi duel: <b>'+esc(side(a).name)+' – '+esc(side(b).name)+'</b>','q',[['▶ POKRENI',go],['✕ Ne',()=>{}]]);}}
+  AA.lastN.m=m;aaShow();
   // rezultat: promena za +1 kod jedne strane, potvrđena 2 puta
-  if(m){const L=+m[1],Rr=+m[2],key=L+':'+Rr;if(L>30||Rr>30){AA.busy=false;return;}AA.scoreHist.push(key);AA.scoreHist=AA.scoreHist.slice(-3);const stable=AA.scoreHist.length>=2&&AA.scoreHist.slice(-2).every(k=>k===key);
+  if(m){const L=+m[1],Rr=+m[2],key=L+':'+Rr;if(L>30||Rr>30){return;}AA.scoreHist.push(key);AA.scoreHist=AA.scoreHist.slice(-3);const stable=AA.scoreHist.length>=2&&AA.scoreHist.slice(-2).every(k=>k===key);
     if(stable){if(!AA.score){AA.score=[L,Rr];}else if(L!==AA.score[0]||Rr!==AA.score[1]){const dl=L-AA.score[0],dr=Rr-AA.score[1];const prev=AA.score;AA.score=[L,Rr];
       if((dl===1&&dr===0)||(dl===0&&dr===1)){const team=dl===1?$('#aaLeft').value:($('#aaLeft').value==='crveni'?'plavi':'crveni');const d=aaOpenDuel()||S.DUELS.filter(x=>!x.pobednik&&isLocked(x)).slice(-1)[0];
         if(!d){aaLog('Rezultat '+prev.join(':')+' → '+key+' ('+team+'), ali nema otvorenog duela.','err');}
@@ -1841,9 +1840,10 @@ async function aaTick(){if(!AA.run||AA.busy||!AA.vid||!AA.vid.videoWidth)return;
           if(!sd)aaLog('Rezultat '+key+': poen za '+team+', ali oba takmičara su iz istog tima — označi ručno.','err');
           else if($('#aaMode').value==='auto')await win();else aaLog('Rezultat '+prev.join(':')+' → <b>'+key+'</b> · pobedio <b>'+esc(who)+'</b>?','q',[['✓ UPIŠI',win],['✕ Ne',()=>{}]]);}}
       else aaLog('Rezultat se promenio '+prev.join(':')+' → '+key+' (nova igra ili greška čitanja) — samo pamtim.','');}}}
-}catch(e){console.warn(e);$('#aaRead').textContent='Greška čitanja: '+(e.message||e);}finally{AA.busy=false;}}
+}catch(e){console.warn(e);$('#aaRead').textContent='Greška čitanja rezultata: '+(e.message||e);}finally{AA.bS=false;}}
+async function aaTick(){aaTickN();aaTickS();}
 function aaUi(){const b=$('#aaGo');b.textContent=AA.run?'⏸ ZAUSTAVI PRAĆENJE':'▶ POKRENI PRAĆENJE';b.disabled=!(AA.stream&&AA.rN&&AA.rS);}
-$('#aaGo').onclick=async()=>{AA.run=!AA.run;aaUi();if(AA.run){aaLog('Pratim prenos… prvo učitavam čitač (10–20 sekundi samo prvi put).','');$('#aaRead').textContent='Učitavam čitač…';AA.score=null;AA.scoreHist=[];AA.nameHist=[];clearInterval(AA.t);AA.t=setInterval(aaTick,1000);}else clearInterval(AA.t);};
+$('#aaGo').onclick=async()=>{AA.run=!AA.run;aaUi();if(AA.run){aaLog('Pratim prenos… prvo učitavam čitač (10–20 sekundi samo prvi put).','');$('#aaRead').textContent='Učitavam čitač…';AA.score=null;AA.scoreHist=[];AA.nameHist=[];clearInterval(AA.t);clearInterval(AA.t2);AA.t=setInterval(aaTickN,500);AA.t2=setInterval(aaTickS,900);}else{clearInterval(AA.t);clearInterval(AA.t2);}};
 function curEvents(){const open=S.DUELS.filter(d=>!d.pobednik);
   const rk=d=>d.uzivo?0:!isLocked(d)?1:2,ct=d=>Date.parse(d.created_at||d.pocetak)||0;
   return open.filter(d=>d.uzivo||isLocked(d)||(d.rucno&&!isLocked(d))).sort((a,b)=>rk(a)-rk(b)||(rk(a)===2?startOf(b)-startOf(a):ct(b)-ct(a)));}
