@@ -1732,10 +1732,11 @@ $('#voxLang').value=String(VX.li);$('#voxLang').onchange=()=>{VX.li=+$('#voxLang
 
 /* ---- čitanje slike sa duelima (OCR u pregledaču, besplatno, bez ključa) ---- */
 function lev(a,b){if(a===b)return 0;const m=a.length,n=b.length;if(!m||!n)return m||n;let p=Array.from({length:n+1},(_,j)=>j);for(let i=1;i<=m;i++){const c=[i];for(let j=1;j<=n;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=c;}return p[n];}
+const athParts=a=>[...new Set(a.name.split(/\s+/).concat(String(a.id||'').split('-').filter(x=>/^[a-z]+$/.test(x))).map(plKey).filter(x=>x.length>=3))];
 function ocrCands(word){const k=plKey(word);if(k.length<3)return null;
   if(/^(crveni|crvena|crvenih|red)$/.test(k)||lev(k,'crveni')<=1)return ['crveni'];if(/^(plavi|plava|plavih|blue)$/.test(k)||lev(k,'plavi')<=1)return ['plavi'];
   const tol=k.length>=7?2:k.length>=4?1:0,act=athList().filter(a=>a.status!=='Eliminisan');let best=99,c=[];
-  for(const a of act)for(const part of a.name.split(/\s+/)){const pk=plKey(part);if(pk.length<3)continue;const d=lev(k,pk);if(d<=tol){if(d<best){best=d;c=[a.id];}else if(d===best&&!c.includes(a.id))c.push(a.id);}}
+  for(const a of act)for(const pk of athParts(a)){const d=lev(k,pk);if(d<=tol){if(d<best){best=d;c=[a.id];}else if(d===best&&!c.includes(a.id))c.push(a.id);}}
   return c.length?c:null;}
 function loadTess(){return window.Tesseract?Promise.resolve():new Promise((ok,no)=>{const sc=document.createElement('script');sc.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';sc.onload=ok;sc.onerror=no;document.head.appendChild(sc);});}
 async function prepImg(file){const bmp=await createImageBitmap(file),sc=Math.min(3,Math.max(1,2000/bmp.width)),cv=document.createElement('canvas');cv.width=Math.round(bmp.width*sc);cv.height=Math.round(bmp.height*sc);
@@ -1809,15 +1810,25 @@ let aaPT=0;function aaPreview(){cancelAnimationFrame(aaPT);const c=$('#aaPrev'),
   c.addEventListener('pointerup',()=>{if(!st||!AA.draw)return;const r=AA.draw.cur;if(r&&r.w>.02&&r.h>.01){AA[AA.draw.k]=r;aaSaveRects();aaLog((AA.draw.k==='rN'?'Polje IMENA':'Polje REZULTAT')+' je označeno.','ok');if(AA.rN&&AA.rS&&AA.stream&&!AA.run){$('#aaGo').click();}}AA.draw=null;st=null;['aaRN','aaRS'].forEach(x=>{$('#'+x).style.background='';$('#'+x).style.color='';});});})();
 async function aaWorker(k,wl){if(AA.wk[k])return AA.wk[k];await loadTess();const w=await Tesseract.createWorker('eng');await w.setParameters(wl?{tessedit_char_whitelist:wl,tessedit_pageseg_mode:'7'}:{tessedit_pageseg_mode:'6'});AA.wk[k]=w;return w;}
 function aaHalf(r,side){return side==='L'?{x:r.x,y:r.y,w:r.w/2,h:r.h}:{x:r.x+r.w/2,y:r.y,w:r.w/2,h:r.h};}
-function aaCrop(r,inv){const v=AA.vid,W=v.videoWidth,H=v.videoHeight,sx=r.x*W,sy=r.y*H,sw=r.w*W,sh=r.h*H,sc=Math.max(1,Math.min(3,420/sw));
+function aaCrop(r,inv,mode){const v=AA.vid,W=v.videoWidth,H=v.videoHeight,sx=r.x*W,sy=r.y*H,sw=r.w*W,sh=r.h*H,sc=Math.max(1,Math.min(3,420/sw));
   const c=document.createElement('canvas');c.width=Math.round(sw*sc);c.height=Math.round(sh*sc);const x=c.getContext('2d');x.drawImage(v,sx,sy,sw,sh,0,0,c.width,c.height);
-  const im=x.getImageData(0,0,c.width,c.height),d=im.data;let sum=0;for(let i=0;i<d.length;i+=4){const l=.3*d[i]+.59*d[i+1]+.11*d[i+2];d[i]=l;sum+=l;}const avg=sum/(d.length/4);
+  const im=x.getImageData(0,0,c.width,c.height),d=im.data;if(mode==='w'){for(let i=0;i<d.length;i+=4){const mx=Math.max(d[i],d[i+1],d[i+2]),mn=Math.min(d[i],d[i+1],d[i+2]);const t=(mn>165&&mx-mn<70)?0:255;d[i]=d[i+1]=d[i+2]=t;}x.putImageData(im,0,0);return c;}let sum=0;for(let i=0;i<d.length;i+=4){const l=.3*d[i]+.59*d[i+1]+.11*d[i+2];d[i]=l;sum+=l;}const avg=sum/(d.length/4);
   for(let i=0;i<d.length;i+=4){let v2=d[i]>avg?255:0;if(inv)v2=255-v2;d[i]=d[i+1]=d[i+2]=v2;}x.putImageData(im,0,0);return c;}
 function aaNames(text){const words=String(text||'').split(/[^A-Za-zČĆŽŠĐčćžšđ]+/).filter(w=>w.length>=3);const ids=[];for(let i=0;i<words.length;i++){let c=ocrCands(words[i]);if(!c)continue;
   if(c.length>1&&words[i+1]){const n=ocrCands(words[i+1]);if(n){const both=c.filter(x=>n.includes(x));if(both.length)c=both;}}if(c.length===1&&!ids.includes(c[0])&&!TEAM_ATH[c[0]])ids.push(c[0]);}return ids;}
+function aaNames2(text){let ids=aaNames(text);if(ids.length>=2)return ids;
+  const flat=plKey(String(text||'').replace(/[^A-Za-zČĆŽŠĐčćžšđ]+/g,''));if(flat.length<6)return ids;const act=athList().filter(a=>a.status!=='Eliminisan'&&!TEAM_ATH[a.id]);const hits=[];
+  for(const a of act){const parts=athParts(a).filter(p=>p.length>=4);for(const pk of parts){const tol=pk.length>=7?1:0;let pos=-1;
+      if(tol===0)pos=flat.indexOf(pk);else for(let i=0;i+pk.length<=flat.length+1&&pos<0;i++){for(const L of [pk.length,pk.length-1,pk.length+1]){if(i+L>flat.length)continue;if(lev(flat.substr(i,L),pk)<=tol){pos=i;break;}}}
+      if(pos>=0){const uniq=act.filter(b=>athParts(b).includes(pk)).length===1;hits.push({id:a.id,pos,len:pk.length,u:uniq});}}}
+  const acc=[];hits.filter(h=>h.u).sort((x,y)=>y.len-x.len).forEach(h=>{if(!acc.some(o=>h.pos<o.pos+o.len&&o.pos<h.pos+h.len))acc.push(h);});const out=[];acc.sort((x,y)=>x.pos-y.pos).forEach(h=>{if(!out.includes(h.id))out.push(h.id);});return out.length>=ids.length?out:ids;}
+async function aaSnap(txt){const now=Date.now();if(now-(AA.snapT||0)<8000||(AA.snapN||0)>=40)return;AA.snapT=now;AA.snapN=(AA.snapN||0)+1;try{const v=AA.vid,r=AA.rN,W=v.videoWidth,H=v.videoHeight;
+  const c=document.createElement('canvas');c.width=Math.round(r.w*W);c.height=Math.round(r.h*H);c.getContext('2d').drawImage(v,r.x*W,r.y*H,r.w*W,r.h*H,0,0,c.width,c.height);
+  const b=await new Promise(ok=>c.toBlob(ok,'image/jpeg',.85));const nm='aa-debug/'+new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')+'_'+plKey(txt).slice(0,40)+'.jpg';
+  await S.sb.storage.from('zvuci').upload(nm,b,{contentType:'image/jpeg',upsert:true});}catch(e){}}
 function aaOpenDuel(){return S.DUELS.filter(d=>!d.pobednik&&!isSolo(d)&&!isMulti(d)).sort((a,b)=>(b.created_at||'').localeCompare(a.created_at||''))[0]||null;}
 AA.lastN={ids:[],m:null};AA.inv=false;
-function aaShow(){const m=AA.lastN.m;$('#aaRead').textContent='IMENA: '+(AA.lastN.ids.map(i=>side(i).name).join(' vs ')||'—')+'   ·   REZULTAT: '+(m?m[1]+':'+m[2]:'—');}
+function aaShow(){const m=AA.lastN.m;$('#aaRead').textContent='IMENA: '+(AA.lastN.ids.map(i=>side(i).name).join(' vs ')||'—')+'   ·   REZULTAT: '+(m?m[1]+':'+m[2]:'—')+(AA.rawN?'   ·   vidim: „'+AA.rawN+'“':'');}
 async function aaScore(m,src){src=src||'c';AA.sh=AA.sh||{};
   // rezultat: promena za +1 kod jedne strane, potvrđena 2 puta
   if(m){const L=+m[1],Rr=+m[2],key=L+':'+Rr;if(L>30||Rr>30)return;const H=(AA.sh[src]=(AA.sh[src]||[]).concat(key).slice(-3));const stable=H.length>=2&&H.slice(-2).every(k=>k===key);
@@ -1832,11 +1843,16 @@ async function aaScore(m,src){src=src||'c';AA.sh=AA.sh||{};
       else aaLog('Rezultat se promenio '+prev.join(':')+' → '+key+' (nova igra ili greška čitanja) — samo pamtim.','');}}}
 }
 async function aaTickN(){if(!AA.run||AA.bN||!AA.vid||!AA.vid.videoWidth)return;AA.bN=true;try{
-  const wN=await aaWorker('n');let t1=(await wN.recognize(aaCrop(AA.rN,AA.inv))).data.text||'',ids=aaNames(t1),tt=t1;if(ids.length<2){const t2=(await wN.recognize(aaCrop(AA.rN,!AA.inv))).data.text||'';tt+=' \n '+t2;const i2=aaNames(t2);if(i2.length>=2){ids=i2;AA.inv=!AA.inv;}else if(i2.length>ids.length)ids=i2;}
+  const wN=await aaWorker('n');const passes=[[AA.rN,false,'w'],[AA.rN,AA.inv],[AA.rN,!AA.inv],[aaHalf(AA.rN,'L'),false,'w',1],[aaHalf(AA.rN,'L'),AA.inv,null,1]];let ids=[],tt='',halfIds=[];
+  for(const [r,inv,mode,isHalf] of passes){if(isHalf&&ids.length>=2)break;const t=(await wN.recognize(aaCrop(r,inv,mode))).data.text||'';tt+=(tt?' \n ':'')+t;
+    if(isHalf){const hl=aaNames2(t);if(hl.length){const tr=(await wN.recognize(aaCrop(aaHalf(AA.rN,'R'),inv,mode))).data.text||'';tt+=' \n '+tr;const hr=aaNames2(tr).filter(x=>x!==hl[0]);if(hr.length){ids=[hl[0],hr[0]];break;}}continue;}
+    const i2=aaNames2(t);if(i2.length>ids.length)ids=i2;if(ids.length>=2){if(!mode&&inv!==AA.inv)AA.inv=inv;break;}if(/CRV|PLAV/i.test(t)&&/\d/.test(t))break;}
+  AA.rawN=tt.replace(/\s+/g,' ').trim().slice(0,80);
+  if(ids.length<2&&(tt.match(/[A-Za-zČĆŽŠĐčćžšđ]{3,}/g)||[]).length>=2&&!/CRV|PLAV/i.test(tt))aaSnap(tt);
   {for(const tx of tt.split(' \n ')){const up=tx.toUpperCase(),ic=up.search(/CRV/),ip=up.search(/PLAV/);const nums=(tx.match(/(^|[^0-9])(\d{1,2})(?=[^0-9]|$)/g)||[]).map(x=>+x.replace(/\D/g,'')).filter(n=>n<=15);
      if(ic>=0&&ip>=0&&nums.length===2){const crv=ic<ip?nums[0]:nums[1],plv=ic<ip?nums[1]:nums[0];const L=$('#aaLeft').value==='crveni'?crv:plv,Rr=$('#aaLeft').value==='crveni'?plv:crv;AA.lastN.m=[null,L,Rr];aaShow();await aaScore([null,L,Rr],'b');break;}}}AA.lastN.ids=ids;aaShow();
   if(ids.length>=2){const [a,b]=ids;const key=[a,b].sort().join('|');const od=aaOpenDuel();const already=od&&[od.a,od.b].sort().join('|')===key;
-    if(key!==AA.lastPair&&!already){AA.lastPair=key;S.PLAN.push({t:'duel',a,b,done:false});await planPublish(S.PLAN.length-1);aaLog('▶ Pokrenut duel: <b>'+esc(side(a).name)+' – '+esc(side(b).name)+'</b>','ok');}}
+    if(!already&&(key!==AA.lastPair||Date.now()-(AA.lastPairT||0)>240000)){AA.lastPair=key;AA.lastPairT=Date.now();S.PLAN.push({t:'duel',a,b,done:false});await planPublish(S.PLAN.length-1);aaLog('▶ Pokrenut duel: <b>'+esc(side(a).name)+' – '+esc(side(b).name)+'</b>','ok');}}
 }catch(e){console.warn(e);$('#aaRead').textContent='Greška čitanja imena: '+(e.message||e);}finally{AA.bN=false;}}
 async function aaTickS(){if(!AA.run||AA.bS||!AA.vid||!AA.vid.videoWidth)return;AA.bS=true;try{
   const wS=await aaWorker('s2'),wD=await aaWorker('dg','0123456789');
