@@ -1845,7 +1845,10 @@ async function aaTickS(){if(!AA.run||AA.bS||!AA.vid||!AA.vid.videoWidth)return;A
 }catch(e){console.warn(e);$('#aaRead').textContent='Greška čitanja rezultata: '+(e.message||e);}finally{AA.bS=false;}}
 async function aaTick(){aaTickN();aaTickS();}
 function aaUi(){const b=$('#aaGo');b.textContent=AA.run?'⏸ ZAUSTAVI PRAĆENJE':'▶ POKRENI PRAĆENJE';b.disabled=!(AA.stream&&AA.rN&&AA.rS);}
-$('#aaGo').onclick=async()=>{AA.run=!AA.run;aaUi();if(AA.run){aaLog('Pratim prenos… prvo učitavam čitač (10–20 sekundi samo prvi put).','');$('#aaRead').textContent='Učitavam čitač…';AA.score=null;AA.scoreHist=[];AA.nameHist=[];clearInterval(AA.t);clearInterval(AA.t2);AA.t=setInterval(aaTickN,500);AA.t2=setInterval(aaTickS,900);}else{clearInterval(AA.t);clearInterval(AA.t2);}};
+$('#aaGo').onclick=async()=>{AA.run=!AA.run;aaUi();if(AA.run){aaLog('Pratim prenos… prvo učitavam čitač (10–20 sekundi samo prvi put).','');$('#aaRead').textContent='Učitavam čitač…';AA.score=null;AA.scoreHist=[];AA.nameHist=[];aaTimer(true);}else aaTimer(false);};
+/* tajmer u Web Workeru: radi i kad je tab u pozadini (Chrome tada usporava obične tajmere) */
+function aaTimer(on){try{AA.wkT&&AA.wkT.terminate();}catch(e){}AA.wkT=null;if(!on)return;
+  const src='let n=0;setInterval(()=>{n++;postMessage(n)},450);';AA.wkT=new Worker(URL.createObjectURL(new Blob([src],{type:'text/javascript'})));AA.wkT.onmessage=e=>{aaTickN();if(e.data%2===0)aaTickS();};}
 function curEvents(){const open=S.DUELS.filter(d=>!d.pobednik);
   const rk=d=>d.uzivo?0:!isLocked(d)?1:2,ct=d=>Date.parse(d.created_at||d.pocetak)||0;
   return open.filter(d=>d.uzivo||isLocked(d)||(d.rucno&&!isLocked(d))).sort((a,b)=>rk(a)-rk(b)||(rk(a)===2?startOf(b)-startOf(a):ct(b)-ct(a)));}
