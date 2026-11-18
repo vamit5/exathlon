@@ -725,8 +725,8 @@ details.apanel summary h3::after{content:" ▾";color:var(--dim)}
       </div>
       </details>
       <details class="apanel agrp" id="aaBox"><summary>🤖 Auto-admin (prati emisiju sam)</summary>
-      <div class="apanel"><p class="muted" style="font-size:13px;margin:0 0 10px;line-height:1.5">Radi na <b>računaru u Chromeu</b>. Otvori TV Informer prenos u drugom tabu, klikni <b>POVEŽI PRENOS</b> i izaberi taj tab. Zatim na slici ispod označi (prevuci mišem) <b>1. gde se ispisuju imena pred duel</b> i <b>2. gde je rezultat (npr. 1:2)</b>. Čim označiš oba polja, praćenje kreće samo: kad vidi dva nova imena, sama pokrene duel; kad se rezultat promeni, sama upiše pobednika. Ti ništa ne potvrđuješ.</p>
-        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" type="button" id="aaConn" style="width:auto;padding:0 18px">📺 POVEŽI PRENOS</button><button class="btn ghost" type="button" id="aaRN" style="width:auto;padding:0 14px">1 · Označi IMENA</button><button class="btn ghost" type="button" id="aaRS" style="width:auto;padding:0 14px">2 · Označi REZULTAT</button></div>
+      <div class="apanel"><p class="muted" style="font-size:13px;margin:0 0 10px;line-height:1.5">Radi na <b>računaru u Chromeu</b>. Otvori TV Informer prenos u drugom tabu, klikni <b>POVEŽI PRENOS</b> i izaberi taj tab. Ništa ne označavaš: app sama gleda dole (ekran „IME VS IME“ i traka CRVENI–PLAVI posle pobede) i gore levo (rezultat). Kad vidi dva imena, sama pokrene duel; kad se rezultat promeni, sama upiše pobednika. Prenos ostavi pušten (može i preko celog ekrana).</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" type="button" id="aaConn" style="width:auto;padding:0 18px">📺 POVEŽI PRENOS</button><button class="btn ghost" type="button" id="aaRN" hidden style="display:none">1</button><button class="btn ghost" type="button" id="aaRS" hidden style="display:none">2</button></div>
         <canvas id="aaPrev" width="640" height="360" style="width:100%;margin-top:10px;border-radius:12px;background:#000;cursor:crosshair;touch-action:none"></canvas>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;font-size:14px">
           <label>Levo u rezultatu je: <select class="inp" id="aaLeft" style="min-height:34px"><option value="crveni">Crveni</option><option value="plavi">Plavi</option></select></label>
@@ -1796,13 +1796,13 @@ $('#aaLeft').onchange=e=>store.set('aa_left',e.target.value);$('#aaMode').onchan
 function aaLog(html,c,btns){const L=$('#aaLog');const d=document.createElement('div');d.style.cssText='padding:8px 10px;border-radius:10px;background:'+(c==='ok'?'rgba(52,211,127,.14)':c==='err'?'rgba(255,80,60,.14)':c==='q'?'rgba(255,176,32,.16)':'rgba(255,255,255,.05)');
   d.innerHTML=`<span style="opacity:.6">${new Date().toLocaleTimeString('sr-RS').slice(0,8)}</span> ${html}`;if(btns){const w=document.createElement('div');w.style.cssText='display:flex;gap:6px;margin-top:6px';btns.forEach(([t,f])=>{const b=document.createElement('button');b.type='button';b.className='btn ghost';b.style.cssText='width:auto;min-height:32px;padding:0 12px';b.textContent=t;b.onclick=()=>{w.remove();f();};w.appendChild(b);});d.appendChild(w);}
   L.prepend(d);while(L.children.length>12)L.lastChild.remove();}
-function aaSaveRects(){store.set('aa_rects',JSON.stringify({n:AA.rN,s:AA.rS}));$('#aaGo').disabled=!(AA.stream&&AA.rN&&AA.rS);}
+function aaSaveRects(){store.set('aa_rects',JSON.stringify({n:AA.rN,s:AA.rS}));$('#aaGo').disabled=!AA.stream;}
 $('#aaConn').onclick=async()=>{try{if(!navigator.mediaDevices||!navigator.mediaDevices.getDisplayMedia){toast('Ovo radi samo u Chromeu na računaru');return;}
   AA.stream=await navigator.mediaDevices.getDisplayMedia({video:{frameRate:5},audio:false,preferCurrentTab:false});AA.vid=document.createElement('video');AA.vid.muted=true;AA.vid.srcObject=AA.stream;await AA.vid.play();
-  AA.stream.getVideoTracks()[0].onended=()=>{AA.stream=null;AA.run=false;aaUi();aaLog('Prenos je prekinut.','err');};aaSaveRects();aaPreview();if(AA.rN&&AA.rS){aaLog('📺 Prenos povezan. Polja su već označena — praćenje je pokrenuto automatski.','ok');if(!AA.run)$('#aaGo').click();}else aaLog('📺 Prenos povezan. Označi IMENA i REZULTAT na slici.','ok');}catch(e){toast('Povezivanje otkazano');}};
+  AA.stream.getVideoTracks()[0].onended=()=>{AA.stream=null;AA.run=false;aaUi();aaLog('Prenos je prekinut.','err');};aaSaveRects();aaPreview();aaLog('📺 Prenos povezan — praćenje je pokrenuto automatski.','ok');if(!AA.run)$('#aaGo').click();}catch(e){toast('Povezivanje otkazano');}};
 let aaPT=0;function aaPreview(){cancelAnimationFrame(aaPT);const c=$('#aaPrev'),x=c.getContext('2d');const loop=()=>{if(AA.vid&&AA.vid.videoWidth){c.height=Math.round(c.width*AA.vid.videoHeight/AA.vid.videoWidth);x.drawImage(AA.vid,0,0,c.width,c.height);}
   const R=(r,col,l)=>{if(!r)return;x.strokeStyle=col;x.lineWidth=3;x.strokeRect(r.x*c.width,r.y*c.height,r.w*c.width,r.h*c.height);x.fillStyle=col;x.font='bold 16px sans-serif';x.fillText(l,r.x*c.width+4,r.y*c.height+18);};
-  R(AA.rN,'#ffb020','IMENA');R(AA.rS,'#3cd17f','REZULTAT');if(AA.draw&&AA.draw.cur)R(AA.draw.cur,'#fff','…');if(AA.draw&&!AA.draw.cur){x.fillStyle='rgba(0,0,0,.65)';x.fillRect(0,c.height/2-30,c.width,60);x.fillStyle='#ffb020';x.font='bold 22px sans-serif';x.textAlign='center';x.fillText(AA.draw.k==='rN'?'Drži levi klik i prevuci okvir preko IMENA':'Drži levi klik i prevuci okvir preko REZULTATA',c.width/2,c.height/2+8);x.textAlign='left';}aaPT=requestAnimationFrame(loop);};loop();}
+  R(AA.rN,'#ffb020','IMENA / REZULTAT');R(AA.rS,'#3cd17f','REZULTAT');if(AA.draw&&AA.draw.cur)R(AA.draw.cur,'#fff','…');if(AA.draw&&!AA.draw.cur){x.fillStyle='rgba(0,0,0,.65)';x.fillRect(0,c.height/2-30,c.width,60);x.fillStyle='#ffb020';x.font='bold 22px sans-serif';x.textAlign='center';x.fillText(AA.draw.k==='rN'?'Drži levi klik i prevuci okvir preko IMENA':'Drži levi klik i prevuci okvir preko REZULTATA',c.width/2,c.height/2+8);x.textAlign='left';}aaPT=requestAnimationFrame(loop);};loop();}
 ['aaRN','aaRS'].forEach(id=>$('#'+id).onclick=()=>{if(!AA.stream){toast('Prvo poveži prenos');return;}AA.draw={k:id==='aaRN'?'rN':'rS'};['aaRN','aaRS'].forEach(x=>$('#'+x).style.background=x===id?'#ffb020':'');$('#'+id).style.color=id?'#000':'';});
 (()=>{const c=$('#aaPrev');let st=null;const pos=e=>{const r=c.getBoundingClientRect();return {x:cl((e.clientX-r.left)/r.width,0,1),y:cl((e.clientY-r.top)/r.height,0,1)};};
   c.addEventListener('pointerdown',e=>{if(!AA.draw)return;st=pos(e);c.setPointerCapture(e.pointerId);});
@@ -1812,7 +1812,7 @@ async function aaWorker(k,wl){if(AA.wk[k])return AA.wk[k];await loadTess();const
 function aaHalf(r,side){return side==='L'?{x:r.x,y:r.y,w:r.w/2,h:r.h}:{x:r.x+r.w/2,y:r.y,w:r.w/2,h:r.h};}
 function aaCrop(r,inv,mode){const v=AA.vid,W=v.videoWidth,H=v.videoHeight,sx=r.x*W,sy=r.y*H,sw=r.w*W,sh=r.h*H,sc=Math.max(1,Math.min(3,420/sw));
   const c=document.createElement('canvas');c.width=Math.round(sw*sc);c.height=Math.round(sh*sc);const x=c.getContext('2d');x.drawImage(v,sx,sy,sw,sh,0,0,c.width,c.height);
-  const im=x.getImageData(0,0,c.width,c.height),d=im.data;if(mode==='w'){for(let i=0;i<d.length;i+=4){const mx=Math.max(d[i],d[i+1],d[i+2]),mn=Math.min(d[i],d[i+1],d[i+2]);const t=(mn>165&&mx-mn<70)?0:255;d[i]=d[i+1]=d[i+2]=t;}x.putImageData(im,0,0);return c;}let sum=0;for(let i=0;i<d.length;i+=4){const l=.3*d[i]+.59*d[i+1]+.11*d[i+2];d[i]=l;sum+=l;}const avg=sum/(d.length/4);
+  const im=x.getImageData(0,0,c.width,c.height),d=im.data;if(mode==='w'){for(let i=0;i<d.length;i+=4){const mx=Math.max(d[i],d[i+1],d[i+2]),mn=Math.min(d[i],d[i+1],d[i+2]);const t=(mn>(AA.wT||150)&&mx-mn<90)?0:255;d[i]=d[i+1]=d[i+2]=t;}x.putImageData(im,0,0);return c;}let sum=0;for(let i=0;i<d.length;i+=4){const l=.3*d[i]+.59*d[i+1]+.11*d[i+2];d[i]=l;sum+=l;}const avg=sum/(d.length/4);
   for(let i=0;i<d.length;i+=4){let v2=d[i]>avg?255:0;if(inv)v2=255-v2;d[i]=d[i+1]=d[i+2]=v2;}x.putImageData(im,0,0);return c;}
 function aaNames(text){const words=String(text||'').split(/[^A-Za-zČĆŽŠĐčćžšđ]+/).filter(w=>w.length>=3);const ids=[];for(let i=0;i<words.length;i++){let c=ocrCands(words[i]);if(!c)continue;
   if(c.length>1&&words[i+1]){const n=ocrCands(words[i+1]);if(n){const both=c.filter(x=>n.includes(x));if(both.length)c=both;}}if(c.length===1&&!ids.includes(c[0])&&!TEAM_ATH[c[0]])ids.push(c[0]);}return ids;}
@@ -1842,30 +1842,45 @@ async function aaScore(m,src){src=src||'c';AA.sh=AA.sh||{};
           else if($('#aaMode').value==='auto')await win();else aaLog('Rezultat '+prev.join(':')+' → <b>'+key+'</b> · pobedio <b>'+esc(who)+'</b>?','q',[['✓ UPIŠI',win],['✕ Ne',()=>{}]]);}}
       else aaLog('Rezultat se promenio '+prev.join(':')+' → '+key+' (nova igra ili greška čitanja) — samo pamtim.','');}}}
 }
-async function aaTickN(){if(!AA.run||AA.bN||!AA.vid||!AA.vid.videoWidth)return;AA.bN=true;try{
-  const wN=await aaWorker('n');const passes=[[AA.rN,false,'w'],[AA.rN,AA.inv],[AA.rN,!AA.inv],[aaHalf(AA.rN,'L'),false,'w',1],[aaHalf(AA.rN,'L'),AA.inv,null,1]];let ids=[],tt='',halfIds=[];
-  for(const [r,inv,mode,isHalf] of passes){if(isHalf&&ids.length>=2)break;const t=(await wN.recognize(aaCrop(r,inv,mode))).data.text||'';tt+=(tt?' \n ':'')+t;
-    if(isHalf){const hl=aaNames2(t);if(hl.length){const tr=(await wN.recognize(aaCrop(aaHalf(AA.rN,'R'),inv,mode))).data.text||'';tt+=' \n '+tr;const hr=aaNames2(tr).filter(x=>x!==hl[0]);if(hr.length){ids=[hl[0],hr[0]];break;}}continue;}
-    const i2=aaNames2(t);if(i2.length>ids.length)ids=i2;if(ids.length>=2){if(!mode&&inv!==AA.inv)AA.inv=inv;break;}if(/CRV|PLAV/i.test(t)&&/\d/.test(t))break;}
-  AA.rawN=tt.replace(/\s+/g,' ').trim().slice(0,80);
-  if(ids.length<2&&(tt.match(/[A-Za-zČĆŽŠĐčćžšđ]{3,}/g)||[]).length>=2&&!/CRV|PLAV/i.test(tt))aaSnap(tt);
-  {for(const tx of tt.split(' \n ')){const up=tx.toUpperCase(),ic=up.search(/CRV/),ip=up.search(/PLAV/);const nums=(tx.match(/(^|[^0-9])(\d{1,2})(?=[^0-9]|$)/g)||[]).map(x=>+x.replace(/\D/g,'')).filter(n=>n<=15);
-     if(ic>=0&&ip>=0&&nums.length===2){const crv=ic<ip?nums[0]:nums[1],plv=ic<ip?nums[1]:nums[0];const L=$('#aaLeft').value==='crveni'?crv:plv,Rr=$('#aaLeft').value==='crveni'?plv:crv;AA.lastN.m=[null,L,Rr];aaShow();await aaScore([null,L,Rr],'b');break;}}}AA.lastN.ids=ids;aaShow();
+/* video u snimljenom tabu: odseci jednobojne trake sa strane (sivo/crno) */
+function aaVidBox(){const v=AA.vid;if(!v||!v.videoWidth)return null;const now=Date.now();if(AA.vb&&now-AA.vbT<4000)return AA.vb;
+  const W=200,H=Math.max(2,Math.round(200*v.videoHeight/v.videoWidth)),c=AA.vbC||(AA.vbC=document.createElement('canvas'));c.width=W;c.height=H;const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(v,0,0,W,H);const d=x.getImageData(0,0,W,H).data;
+  const L=(i)=>.3*d[i]+.59*d[i+1]+.11*d[i+2];const sd=(arr)=>{const m=arr.reduce((a,b)=>a+b,0)/arr.length;return Math.sqrt(arr.reduce((a,b)=>a+(b-m)*(b-m),0)/arr.length);};
+  const col=k=>{const a=[];for(let y=0;y<H;y++)a.push(L((y*W+k)*4));return sd(a);},row=k=>{const a=[];for(let q=0;q<W;q++)a.push(L((k*W+q)*4));return sd(a);};
+  let l=0,r=W-1,t=0,b=H-1;while(l<W/3&&col(l)<5)l++;while(r>W*2/3&&col(r)<5)r--;while(t<H/3&&row(t)<5)t++;while(b>H*2/3&&row(b)<5)b--;
+  AA.vb={x:l/W,y:t/H,w:(r-l+1)/W,h:(b-t+1)/H};AA.vbT=now;return AA.vb;}
+function aaReg(fx,fy,fw,fh){const b=aaVidBox()||{x:0,y:0,w:1,h:1};return {x:b.x+fx*b.w,y:b.y+fy*b.h,w:fw*b.w,h:fh*b.h};}
+function aaUpdRegs(){AA.rN=aaReg(.04,.70,.92,.23);AA.rS=aaReg(.03,.09,.18,.10);}
+const aaR=(a,b,c,d)=>aaReg(a,b,c-a,d-b);
+/* udeo piksela neke boje u zoni (crvena / plava) */
+function aaCol(r,kind){const v=AA.vid,W=v.videoWidth,H=v.videoHeight,c=AA.ccC||(AA.ccC=document.createElement('canvas'));c.width=40;c.height=20;const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(v,r.x*W,r.y*H,r.w*W,r.h*H,0,0,40,20);const d=x.getImageData(0,0,40,20).data;let n=0;
+  for(let i=0;i<d.length;i+=4){const R=d[i],G=d[i+1],B=d[i+2];if(kind==='r'?(R>85&&R>G*2.2&&R>B*2.2):(B>110&&B>R*1.6&&B>G*1.3))n++;}return n/(d.length/4);}
+async function aaDig(r){const wD=await aaWorker('dg','0123456789');const z=((await wD.recognize(aaCrop(r,false,'w'))).data.text||'').replace(/\D/g,'');return z.length>=1&&z.length<=2&&+z<=15?+z:null;}
+const aaLR=(crv,plv)=>$('#aaLeft').value==='crveni'?[null,crv,plv]:[null,plv,crv];
+async function aaTickN(){if(!AA.run||AA.bN||!AA.vid||!AA.vid.videoWidth)return;AA.bN=true;try{aaUpdRegs();
+  /* 1) traka posle pobede: CRVENI [x] logo [y] PLAVI dole na sredini */
+  const bRed=aaCol(aaR(.245,.815,.40,.885),'r'),bBlue=aaCol(aaR(.60,.815,.75,.885),'b');
+  if(bRed>.45&&bBlue>.45){const a=await aaDig(aaR(.405,.81,.47,.895)),b=await aaDig(aaR(.528,.81,.595,.895));AA.rawN='traka CRVENI '+(a??'?')+' : '+(b??'?')+' PLAVI';
+    if(a!==null&&b!==null){const m=aaLR(a,b);AA.lastN.m=m;aaShow();await aaScore(m,'b');}aaShow();return;}
+  /* 2) ekran IME VS IME */
+  const wN=await aaWorker('n');const t=(await wN.recognize(aaCrop(AA.rN,false,'w'))).data.text||'';AA.rawN=t.replace(/\s+/g,' ').trim().slice(0,80);
+  let ids=[];const up=t.toUpperCase();const vs=up.match(/(^|[^A-Z])V\s?[S5$]([^A-Z]|$)/);
+  const pan=aaCol(aaR(.08,.18,.15,.42),'r')>.4&&aaCol(aaR(.86,.18,.92,.42),'b')>.4;
+  if(vs){const k=vs.index+vs[0].indexOf('V');const a=aaNames2(t.slice(0,k)),b=aaNames2(t.slice(k+2)).filter(x=>!a.length||x!==a[a.length-1]);if(a.length&&b.length)ids=[a[a.length-1],b[0]];}
+  if(ids.length<2&&pan){const n2=aaNames2(t);if(n2.length===2)ids=n2;}
+  AA.lastN.ids=ids;aaShow();
   if(ids.length>=2){const [a,b]=ids;const key=[a,b].sort().join('|');const od=aaOpenDuel();const already=od&&[od.a,od.b].sort().join('|')===key;
     if(!already&&(key!==AA.lastPair||Date.now()-(AA.lastPairT||0)>240000)){AA.lastPair=key;AA.lastPairT=Date.now();S.PLAN.push({t:'duel',a,b,done:false});await planPublish(S.PLAN.length-1);aaLog('▶ Pokrenut duel: <b>'+esc(side(a).name)+' – '+esc(side(b).name)+'</b>','ok');}}
+  else if((vs||pan)&&aaNames2(t).length>=1)aaSnap(t);
 }catch(e){console.warn(e);$('#aaRead').textContent='Greška čitanja imena: '+(e.message||e);}finally{AA.bN=false;}}
-async function aaTickS(){if(!AA.run||AA.bS||!AA.vid||!AA.vid.videoWidth)return;AA.bS=true;try{
-  const wS=await aaWorker('s2'),wD=await aaWorker('dg','0123456789');
-  const half=async(sd)=>{let best=null,txt='';for(const inv of [false,true]){const r=aaCrop(aaHalf(AA.rS,sd),inv);const t=(await wS.recognize(r)).data.text||'';txt+=' '+t;
-      const d=((await wD.recognize(r)).data.text||'').replace(/\D/g,'');const tok=(t.match(/(^|\s)(\d{1,2})(?=\s|$)/g)||[]).map(x=>+x.trim());
-      const cand=tok.length?(sd==='L'?tok[tok.length-1]:tok[0]):(d.length>=1&&d.length<=2?+d:null);if(cand!==null&&cand<=15){best=cand;break;}}return {n:best,t:txt};};
-  const hl=await half('L'),hr=await half('R');let m=null;if(hl.n!==null&&hr.n!==null)m=[null,hl.n,hr.n];
-  {const tl=plKey(hl.t),tr=plKey(hr.t);if(/crv/.test(tl)||/plav/.test(tr))$('#aaLeft').value='crveni';else if(/plav/.test(tl)||/crv/.test(tr))$('#aaLeft').value='plavi';}
-  AA.lastN.m=m;aaShow();
-  await aaScore(m);
+/* 3) rezultat gore levo: CRVENI | PLAVI natpisi, ispod cifre */
+async function aaTickS(){if(!AA.run||AA.bS||!AA.vid||!AA.vid.videoWidth)return;AA.bS=true;try{aaUpdRegs();let m=null;
+  const cr=aaCol(aaR(.06,.108,.105,.128),'r'),cb=aaCol(aaR(.125,.108,.175,.128),'b');
+  if(cr>.3&&cb>.3){const a=await aaDig(aaR(.061,.133,.097,.178)),b=await aaDig(aaR(.141,.133,.176,.178));if(a!==null&&b!==null)m=aaLR(a,b);}
+  AA.lastN.m=m||AA.lastN.m;aaShow();if(m)await aaScore(m,'c');
 }catch(e){console.warn(e);$('#aaRead').textContent='Greška čitanja rezultata: '+(e.message||e);}finally{AA.bS=false;}}
 async function aaTick(){aaTickN();aaTickS();}
-function aaUi(){const b=$('#aaGo');b.textContent=AA.run?'⏸ ZAUSTAVI PRAĆENJE':'▶ POKRENI PRAĆENJE';b.disabled=!(AA.stream&&AA.rN&&AA.rS);}
+function aaUi(){const b=$('#aaGo');b.textContent=AA.run?'⏸ ZAUSTAVI PRAĆENJE':'▶ POKRENI PRAĆENJE';b.disabled=!AA.stream;}
 $('#aaGo').onclick=async()=>{AA.run=!AA.run;aaUi();if(AA.run){aaLog('Pratim prenos… prvo učitavam čitač (10–20 sekundi samo prvi put).','');$('#aaRead').textContent='Učitavam čitač…';AA.score=null;AA.sh={};AA.alt=null;AA.nameHist=[];aaTimer(true);}else aaTimer(false);};
 /* tajmer u Web Workeru: radi i kad je tab u pozadini (Chrome tada usporava obične tajmere) */
 function aaTimer(on){try{AA.wkT&&AA.wkT.terminate();}catch(e){}AA.wkT=null;if(!on)return;
